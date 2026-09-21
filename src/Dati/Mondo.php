@@ -99,10 +99,10 @@ final class Mondo
                 aspettativa:  max(0.005, min(0.06, (float) $d['crescita_pil'])),
                 clamoreSociale: 0.0,
                 qualitaVita:  1,
-                statoPolizia: 2,
-                ansiaMilitare: 10,
-                controlloInfo: 50,
-                cyberDifesa:   (int) round(20 + 60 * ((int) $d['maturita'] / 255.0)),
+                statoPolizia: 2.0,
+                ansiaMilitare: 10.0,
+                controlloInfo: 50.0,
+                cyberDifesa:   20.0 + 60.0 * ((int) $d['maturita'] / 255.0),
                 // Base strutturale dell'etica, stabile fra le corse. Non e'
                 // "buoni e cattivi": e' quanto uno Stato e' disposto ad agire
                 // fuori dalle regole quando gli conviene.

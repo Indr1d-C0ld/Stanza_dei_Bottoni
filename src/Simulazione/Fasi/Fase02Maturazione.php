@@ -155,10 +155,23 @@ final class Fase02Maturazione implements Fase
                 ]);
                 break;
 
+            // --- nucleare ---------------------------------------------------
+            case 'programma_nucleare':
+                // Il bersaglio di un programma nucleare e' se stessi: si
+                // costruisce in casa propria. Chi arriva in fondo sale di un
+                // gradino, e superata la soglia entra nel club.
+                $a->posturaNucleare = min(7, $a->posturaNucleare + 1);
+                $sogliaClub = (int) $cal->numero('nucleare.soglia_armato', 3);
+                if ($a->posturaNucleare === $sogliaClub) {
+                    $c->annota('bomba_ottenuta', ['paese' => $a->nome]);
+                }
+                $a->ansiaMilitare = max(0.0, $a->ansiaMilitare - 12.0);
+                break;
+
             // --- informazione -----------------------------------------------
             case 'disinformazione':
                 $b->clamoreSociale += 9.0 * $i;
-                $b->controlloInfo = max(0, (int) round($b->controlloInfo - 4.0 * $i));
+                $b->controlloInfo = max(0.0, $b->controlloInfo - 4.0 * $i);
                 break;
             case 'finanziamento_opposizione':
                 $b->legittimita = max(0.0, $b->legittimita - 2.6 * $i);
@@ -171,9 +184,12 @@ final class Fase02Maturazione implements Fase
                 $b->equipaggiamento *= 1.0 - 0.025 * $i;
                 break;
             case 'armare_insorti':
-                // Le armi consegnate agli insorti valgono il doppio: le usano
-                // con piu' cura perche' ne hanno poche (Crawford).
-                $b->forzaInsorti += $b->potenzaGoverno() * 0.11 * $i;
+                // Le armi consegnate agli insorti valgono piu' del loro peso:
+                // le usano con piu' cura perche' ne hanno poche (Crawford). Il
+                // commento lo diceva da sempre e il codice non lo faceva — il
+                // moltiplicatore stava in calibrazione e non lo leggeva nessuno.
+                $b->forzaInsorti += $b->potenzaGoverno() * 0.055 * $i
+                    * $cal->numero('insurrezione.moltiplicatore_armi_insorti', 2.0);
                 $c->annota('armi_ai_ribelli', ['da' => $a->nome, 'in' => $b->nome]);
                 break;
             case 'destabilizzare':
@@ -195,7 +211,7 @@ final class Fase02Maturazione implements Fase
                 $b->equipaggiamento += $b->pil * 0.012 * $i;
                 break;
             case 'dimostrazione_forza':
-                $b->ansiaMilitare = (int) min(100, $b->ansiaMilitare + 18.0 * $i);
+                $b->ansiaMilitare = min(100.0, $b->ansiaMilitare + 18.0 * $i);
                 break;
             case 'invasione':
                 $c->mondo->guerre[] = [
@@ -204,14 +220,14 @@ final class Fase02Maturazione implements Fase
                 ];
                 $a->netPeace = 6;
                 $b->netPeace = 6;
-                $b->ansiaMilitare = 100;
+                $b->ansiaMilitare = 100.0;
                 $c->annota('guerra', ['aggressore' => $a->nome, 'difensore' => $b->nome]);
                 break;
             case 'strike':
                 $b->equipaggiamento *= 1.0 - 0.07 * $i;
                 $b->legittimita = max(0.0, $b->legittimita - 4.0 * $i);
                 $b->netPeace = max($b->netPeace, 4);
-                $b->ansiaMilitare = (int) min(100, $b->ansiaMilitare + 30.0 * $i);
+                $b->ansiaMilitare = min(100.0, $b->ansiaMilitare + 30.0 * $i);
                 $c->annota('attacco', ['da' => $a->nome, 'contro' => $b->nome]);
                 break;
         }

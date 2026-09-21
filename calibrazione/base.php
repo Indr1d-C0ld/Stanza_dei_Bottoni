@@ -18,7 +18,11 @@ return [
 
     // ---------------------------------------------------------------- tempo
     'tempo' => [
-        'giorni_per_tick' => 7,      // 1 tick = 1 settimana di gioco
+        // NOTA: qui c'era 'giorni_per_tick' = 7. Tolta: diceva la stessa cosa
+        // di 'tick_per_anno' qui sotto (cinquantadue settimane fanno un anno) e
+        // nessuno la leggeva. Il numero vive in Calendario::GIORNI_PER_TICK,
+        // dove serve; due numeri per un vincolo solo si scordano di essere
+        // allineati.
         'tick_per_anno'   => 52,
     ],
 
@@ -38,14 +42,21 @@ return [
         'pressione_consumi_k'      => 1.0,
         'pressione_investimenti_k' => 0.35,
         'pressione_militare_k'     => 1.0,
-        // Peso del saldo commerciale sulla crescita. [FABBRICATO]
-        'peso_commercio'           => 0.25,
-        // Quanto uno shock di dipendenza morde, per asse. [FABBRICATO]
-        'peso_dipendenza'          => 0.30,
+        // NOTA: qui c'erano 'peso_commercio' e 'peso_dipendenza'. Sono state
+        // tolte, non dimenticate. Esprimevano un modello — il saldo
+        // commerciale che muove la crescita — che e' stato provato e scartato:
+        // legarlo alla crescita portava i colpi di Stato irregolari da 11,9 a
+        // 18,1 l'anno, perche' nel nostro grafo tutti i paesi poveri risultano
+        // in disavanzo cronico. Il racconto sta in docs/21. Il commercio agisce
+        // sulla crescita per un'altra strada, le strozzature, che ha le sue
+        // manopole sotto 'commercio'.
     ],
 
     // ------------------------------------------------------------ società
     'societa' => [
+        // [FABBRICATO] quanto in fretta passa la paura militare, per anno.
+        // Prima non passava affatto.
+        'sfogo_ansia_anno'      => 14.0,
         // Crawford usava una costante globale (-3, tarata a playtest).
         // Noi la rendiamo mobile: la gente si aspetta cio' che ha avuto di
         // recente. Finestra della media mobile, in anni.
@@ -91,7 +102,11 @@ return [
         // zero, è circa un quinto della scala. Tradurre un modello significa
         // anche tradurne le scale, ed è il genere di errore che passa inosservato.
         'soglia_legittimita'     => 38.0,
-        'peso_destabilizzazione' => 1.0,
+        // NOTA: qui c'era 'peso_destabilizzazione'. Tolta: il verbo
+        // «destabilizzare» agisce gia' su legittimita' e clamore sociale, che
+        // sono gli ingressi del rischio di colpo di Stato. Un secondo peso che
+        // dicesse la stessa cosa sarebbe una manopola da tenere allineata a
+        // mano con la prima.
         'resistenza_estremisti'  => 2.0,
         // Il rischio di cadere e' una curva logistica sulla legittimita', non
         // un cancello: massimo annuo quando la legittimita' e' a zero, e
@@ -104,6 +119,20 @@ return [
     // ----------------------------------------------------------- relazioni
     'relazioni' => [
         // Tabella degli obblighi di trattato (BoP, invariata).
+        // A che affinita' scatta ciascun gradino della tavola qui sotto.
+        //
+        // Sono tarate sull'affinita' che il mondo produce DAVVERO, non sulla scala
+        // teorica: il massimo osservato dopo quindici anni e' 104, non 127, perche'
+        // la deriva delle relazioni comprime gli estremi verso l'ancora storica.
+        // Con le soglie tarate sul 127 il gradino piu' alto non si raggiungeva mai.
+        'soglie_obbligo'    => [
+            'difesa_nuc'   => 100,
+            'difesa_conv'  => 88,
+            'basi'         => 72,
+            'commerciali'  => 50,
+            'diplomatiche' => 22,
+        ],
+
         'obbligo' => [
             'nessuna'       => 0,
             'diplomatiche'  => 16,
@@ -145,6 +174,28 @@ return [
     // Chi puo' registrarsi: aperte, invito, chiuse. Sta qui e non solo nella
     // configurazione perche' e' una leva che l'arbitro muove a mondo acceso, e
     // le leve passano tutte dalla calibrazione.
+    // [FABBRICATO] la repressione interna.
+    // [FABBRICATO] la proliferazione, che prima non esisteva: posturaNucleare
+    // non veniva scritta da nessuna fase e nessuno prendeva ne' posava la bomba.
+    // Tarato perche' nel mondo se ne armi circa uno ogni quindici anni, che e'
+    // l'ordine di grandezza storico.
+    'nucleare' => [
+        'rateo_proliferazione_anno' => 0.0022,
+        'rateo_disarmo_anno'        => 0.0016,
+        'soglia_armato'             => 3,
+        // Sotto questa volonta' non si prova nemmeno: la capacita' da sola non
+        // arma nessuno, o il modello produce la Svizzera atomica.
+        'soglia_volonta'            => 0.14,
+    ],
+
+    'sicurezza' => [
+        // Quanto in fretta un governo stringe o allenta la presa, per anno.
+        'risposta_polizia_anno' => 0.55,
+        // Sopra quanta minaccia si comincia a stringere. La minaccia somma
+        // clamore sociale, deficit di legittimita' e presenza di insorti.
+        'soglia_repressione'    => 28.0,
+    ],
+
     'gioco' => [
         'registrazioni' => 'invito',
     ],
@@ -209,6 +260,10 @@ return [
     // giocatori questa macchina governa solo le nazioni non presidiate.
     'dottrina' => [
         'attivita'             => 0.5,   // moltiplicatore generale [FABBRICATO]
+        // [FABBRICATO] la durata tipica di un'operazione coperta, in tick. Serve
+        // a normalizzare la probabilita' di sventarla: la prova si ripete a
+        // ogni giro, e senza questo un'azione lenta non arrivava mai in fondo.
+        'durata_di_riferimento' => 4.5,
         'azioni_in_volo_max'   => 4,     // quante operazioni insieme per Stato
     ],
 
@@ -224,11 +279,29 @@ return [
         // di ascoltare tutto. E' il moltiplicatore che rende possibile leggere
         // un messaggio per intero, e quindi poterlo riscrivere.
         'concentrazione_mirata' => 2.2,
+        // [FABBRICATO] le difese informatiche, che prima non si muovevano.
+        // Quanto in fretta un paese raggiunge il livello di difesa che le sue
+        // istituzioni e i suoi soldi gli consentono.
+        'manutenzione_difese_anno' => 0.35,
+        // Quanto costa, in punti di difesa, essere letti per intero senza
+        // accorgersene: la strada che l'altro ha trovato resta aperta.
+        'costo_violazione'         => 0.9,
+        // E quanto si guadagna accorgendosi di una manomissione: si tappa il
+        // buco, e si esce piu' forti di prima.
+        'premio_scoperta'          => 2.5,
         'decadimento_copertura' => 0.01,   // per tick, se non finanziata
-        'decadimento_rapporto'  => 0.03,   // l'accuratezza invecchia
+        // NOTA: qui c'era 'decadimento_rapporto'. Tolta: i rapporti non
+        // decadono, si tagliano — la fase 08 ne tiene gli ultimi
+        // millecinquecento e butta il resto. Una chiave che promette un
+        // comportamento assente e' peggio di nessuna chiave.
         // Tetto di operazioni simultanee per servizio: il collo di bottiglia
         // non è il denaro, è il numero di operazioni che puoi condurre.
-        'operazioni_max'        => 6,
-        'sonde_per_bersaglio_tick' => 1,
+        // NOTA: qui c'era 'operazioni_max' = 6. Tolta perche' diceva una cosa
+        // falsa: il tetto alle operazioni in volo esiste davvero, si chiama
+        // 'dottrina.azioni_in_volo_max' e vale 4. Chi leggeva questa credeva
+        // che fosse sei.
+        // NOTA: qui c'era 'sonde_per_bersaglio_tick'. Tolta: non esiste un
+        // limite di sonde per bersaglio nel modello, e dichiararlo faceva
+        // credere il contrario.
     ],
 ];

@@ -116,6 +116,40 @@ return [
         'dominio' => 'mil', 'maturazione' => [6, 12], 'impronta' => 1.0,
         'attribuzione' => 1.0, 'danno' => 125, 'gradino' => 9, 'attesa' => 260,
     ],
+    /**
+     * L'unica azione coperta in campo nucleare, e l'unica ragione per cui le
+     * immagini dall'alto servono a qualcosa.
+     *
+     * `imint` era la sola delle sei discipline che nessuna fase usava mai. Non
+     * per un errore nel codice: la tabella delle discipline pertinenti la
+     * assegna gia' ai domini militare e nucleare. Il punto e' che TUTTI i verbi
+     * di quei domini erano palesi — un'invasione o una dimostrazione di forza
+     * non si spiano, si vedono — e quindi il sistema di scoperta non veniva mai
+     * interpellato per loro. Mancava la cosa che in quei domini si fa di
+     * nascosto: un programma d'arma.
+     *
+     * Impronta bassa ma non nulla: un cantiere si puo' nascondere, non far
+     * sparire. Maturazione lunga, perche' la bomba non si costruisce in un
+     * trimestre. E chi ci arriva sale di un gradino nella postura nucleare —
+     * che e' l'unico modo, per un giocatore, di entrare nel club.
+     */
+    'programma_nucleare' => [
+        'dominio'      => 'nuc',
+        'maturazione'  => [26, 52],
+        'impronta'     => 0.3,
+        'attribuzione' => 0.9,
+        // Il danno non e' zero, e non e' un dettaglio contabile: la fase 01
+        // usa «danno > 0» come sinonimo di «atto ostile». Con danno zero il
+        // programma risultava un gesto amichevole verso un nemico, e veniva
+        // annullato come privo di senso — trentacinque su trentacinque. Del
+        // resto il programma d'arma di un rivale E' un danno alla sua
+        // sicurezza, e deve pesare nell'equazione dell'oltraggio quando lo
+        // scopre.
+        'danno'        => 25,
+        'gradino'      => 4,
+        'attesa'       => 208,
+    ],
+
     'strike' => [
         'dominio' => 'mil', 'maturazione' => [1, 1], 'impronta' => 1.0,
         'attribuzione' => 0.95, 'danno' => 85, 'gradino' => 8,

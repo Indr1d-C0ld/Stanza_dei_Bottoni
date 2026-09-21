@@ -156,7 +156,6 @@ final class Fase08Intelligence implements Fase
                             $c->tick, max(0.05, $analisi - $e->qualitaFalso));
                         if (!$smaschera) {
                             $accusato = $e->falsaBandiera;
-                            $smascherati = $smascherati;
                         } else {
                             $smascherati++;
                             $c->annota('falso_smascherato', [
@@ -180,6 +179,7 @@ final class Fase08Intelligence implements Fase
             }
         }
 
+        $this->manutieneLeDifese($c);
         $intercettati = $this->intercettaMessaggi($c, $intel, $osservatoriGlobali);
         $talpe = $this->uominiDentro($c, $intel);
 
@@ -422,6 +422,13 @@ final class Fase08Intelligence implements Fase
                     $spia = $this->registraIntercettazione($c, (int) $m['id'], $iso, $livello);
                     $quanti++;
 
+                    // Essere letti per intero vuol dire che una strada dentro
+                    // c'e', e finche' nessuno se ne accorge si allarga.
+                    if ($livello === 'integrale' && $nm !== null) {
+                        $nm->cyberDifesa = max(0.0, $nm->cyberDifesa
+                            - $c->calibrazione->numero('intelligence.costo_violazione', 0.9));
+                    }
+
                     // Letto per intero: e' l'unico istante in cui si puo' anche
                     // riscrivere. Il messaggio e' in transito e non e' ancora
                     // arrivato a nessuno.
@@ -432,6 +439,38 @@ final class Fase08Intelligence implements Fase
             }
         }
         return $quanti;
+    }
+
+    /**
+     * Le difese informatiche, che prima non si muovevano mai.
+     *
+     * Erano il valore del seme, per sempre — e sono il numero che decide se i
+     * messaggi di un paese si possono leggere e riscrivere. Adesso seguono un
+     * obiettivo: chi ha istituzioni solide e soldi ci arriva, chi non li ha no.
+     *
+     * (L'offesa cibernetica non sta qui: e' gia' una delle sei discipline di
+     * Intelligence, e un secondo numero che dicesse la stessa cosa sarebbe
+     * solo un'altra manopola da tenere allineata.)
+     *
+     * E chi viene letto paga. Un'intercettazione riuscita non e' un evento
+     * neutro: vuol dire che qualcuno ha trovato una strada dentro, e finche'
+     * non se ne accorge quella strada resta aperta e si allarga. Chi invece
+     * si accorge di una manomissione tappa il buco, e ne esce piu' forte di
+     * prima: e' l'unica cosa buona che capita a chi scopre di essere stato
+     * violato.
+     */
+    private function manutieneLeDifese(ContestoTick $c): void
+    {
+        $cal     = $c->calibrazione;
+        $perTick = 1.0 / $cal->numero('tempo.tick_per_anno', 52.0);
+        $passo   = $cal->numero('intelligence.manutenzione_difese_anno', 0.35) * $perTick;
+
+        foreach ($c->mondo->nazioni as $n) {
+            $ricchezza = min(1.0, $n->pilProCapite / 45000.0);
+            $obiettivo = 18.0 + 52.0 * ($n->maturita / 255.0) + 22.0 * $ricchezza;
+            $n->cyberDifesa += ($obiettivo - $n->cyberDifesa) * $passo;
+            $n->cyberDifesa = max(0.0, min(100.0, $n->cyberDifesa));
+        }
     }
 
     /**
@@ -511,6 +550,10 @@ final class Fase08Intelligence implements Fase
         if ($c->caso->prova('08_manomissione', (int) $m['id'], $c->tick, min(0.9, $sospetto))) {
             $c->db->esegui('UPDATE sdb_messaggio SET manomissione_sospetta = 1 WHERE id = ?',
                 [(int) $m['id']]);
+            // Chi scopre di essere stato manomesso tappa il buco: e' l'unica
+            // cosa buona che capita a chi scopre di essere stato violato.
+            $vittima->cyberDifesa = min(100.0, $vittima->cyberDifesa
+                + $c->calibrazione->numero('intelligence.premio_scoperta', 2.5));
         }
     }
 

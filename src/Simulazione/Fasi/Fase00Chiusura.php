@@ -345,8 +345,12 @@ final class Fase00Chiusura implements Fase
             }
 
             $ostile  = $r->affinita < -35.0;
-            $amico   = $r->affinita > 55.0;
-            $fragile = $b->legittimita < 40.0 || $b->netPeace >= 4;
+            $amico   = $r->affinita > 45.0;
+            // «Fragile» comprende anche chi ha un'insurrezione in casa: e'
+            // esattamente il momento in cui si manda aiuto e si vendono armi a
+            // un amico, e senza quel segno la condizione restava quasi vuota —
+            // aiuto_economico e vendita_armi non uscivano mai in quindici anni.
+            $fragile = $b->legittimita < 45.0 || $b->netPeace >= 4 || $b->forzaInsorti > 0.0;
             // L'etica non vieta: prezza. Uno Stato scrupoloso ricorre al
             // lavoro sporco di rado e solo quando la posta e' alta; uno
             // spregiudicato lo tratta come uno strumento fra gli altri.
@@ -404,6 +408,19 @@ final class Fase00Chiusura implements Fase
                     $candidati['embargo'] = 0.8;
                     $candidati['dimostrazione_forza'] = $n->ambizione >= 5 ? 1.0 : 0.3;
                 }
+                // Il colpo mirato: era nel catalogo, aveva il suo effetto nella
+                // fase 02, e nessuna riga della dottrina lo proponeva — restava
+                // inarrivabile per l'apparato.
+                //
+                // Il primo tentativo lo legava all'ansia militare, e non
+                // usciva lo stesso: l'ansia alta ce l'hanno i paesi in guerra,
+                // che sono piccoli e deboli, non quelli con eserciti forti e
+                // nemici profondi. Il movente di un colpo mirato non e' la
+                // paura: e' l'ostilita' piu' la possibilita' di permetterselo.
+                if ($r->affinita < -55.0 && $n->ambizione >= 4
+                    && $n->equipaggiamento > $b->equipaggiamento * 1.5) {
+                    $candidati['strike'] = $n->ambizione >= 5 ? 0.9 : 0.35;
+                }
             }
             // Un amico nei guai si tiene in piedi: e' l'unico modo di salvare
             // un cliente, ed e' anche cio' che protegge la propria integrita'.
@@ -419,6 +436,16 @@ final class Fase00Chiusura implements Fase
             if ($b->netPeace >= 5 && abs($r->affinita) < 40.0 && $n->influenzaTotale > 2.0) {
                 $candidati['mediazione'] = 1.5;
             }
+            // Il programma d'arma si fa in casa propria, non «verso» qualcuno: si
+            // propone una volta sola, quando c'e' un vicino armato e ostile e i mezzi
+            // per provarci. E' l'unica azione coperta del dominio nucleare, e l'unica
+            // ragione per cui le immagini dall'alto servono a qualcosa.
+            if ($n->posturaNucleare < 3 && $r->affinita < -45.0
+                && ($r->confinanti || $b->posturaNucleare >= 3)
+                && $n->maturita > 120 && $n->pilProCapite > 9000.0) {
+                $candidati['programma_nucleare'] = 0.6;
+            }
+
             // Terreno neutro: si coltiva.
             if (!$ostile && !$amico) {
                 $candidati['emissario'] = 0.8;
@@ -438,6 +465,18 @@ final class Fase00Chiusura implements Fase
             // Il bersaglio piu' interessante e' quello che conta di piu' e con
             // cui il rapporto e' piu' intenso, in un senso o nell'altro.
             $peso = (abs($r->affinita) / 127.0 + 0.2) * (0.5 + $b->valorePrestigio / 600.0);
+
+            // La mediazione chiede indifferenza — |affinita| sotto quaranta —
+            // e il peso qui sopra premia l'intensita' del rapporto: due regole
+            // scritte in momenti diversi che si combattevano. Su 483 occasioni
+            // la mediazione ne sopravviveva 6, e in quindici anni non e' mai
+            // uscita. Ma una guerra altrui che si puo' mediare E' interessante,
+            // a prescindere da come guardiamo i belligeranti: e' prestigio da
+            // fare. Il peso deve dirlo.
+            if ($verbo === 'mediazione') {
+                $peso = max($peso, 0.55 + $b->valorePrestigio / 400.0);
+            }
+
             $scelte[] = [$verbo, $verso, $peso];
         }
 

@@ -25,10 +25,22 @@ final class Calendario
     /** Il primo giorno del mondo: un lunedi', perche' le settimane cominchino bene. */
     public const ORIGINE = '2026-01-05';
 
+    /**
+     * Quanti giorni dura un tick.
+     *
+     * Non e' una manopola di taratura ed e' giusto che stia qui: e' legato a
+     * `tempo.tick_per_anno = 52`, perche' cinquantadue settimane fanno un anno.
+     * In calibrazione c'era una chiave `tempo.giorni_per_tick` che diceva la
+     * stessa cosa e che nessuno leggeva — due numeri per un vincolo solo, con
+     * la possibilita' di scordarsi di allinearli.
+     */
+    public const GIORNI_PER_TICK = 7;
+
     /** Che giorno e', nel mondo, al tick dato. */
     public static function dataDiTick(int $tick): DateTimeImmutable
     {
-        return (new DateTimeImmutable(self::ORIGINE))->modify('+' . ($tick * 7) . ' days');
+        return (new DateTimeImmutable(self::ORIGINE))
+            ->modify('+' . ($tick * self::GIORNI_PER_TICK) . ' days');
     }
 
     /** La data del mondo al tick dato, in italiano. */

@@ -281,7 +281,11 @@ final class Fase10Gabinetto implements Fase
                 * 0.4 * $perTick;
 
             // Chi e' ambizioso e conta niente se ne va sbattendo la porta.
-            if ($p->potere < 18.0 && $p->titolare->ambizione >= 5
+            // La soglia e' RELATIVA al capo, non assoluta. Era «potere < 18»,
+            // ma il potere di una poltrona non scende mai sotto il trentanove:
+            // la condizione non esisteva nell'intervallo che la variabile
+            // occupa davvero, e nessuno si e' mai dimesso in quindici anni.
+            if ($p->potere < $capo->potere * 0.62 && $p->titolare->ambizione >= 5
                 && $c->caso->prova('gab_dimissioni', crc32($n->iso3 . $ruolo), $c->tick, 0.9 * $perTick)) {
                 $c->annota('dimissioni', [
                     'nazione' => $n->nome,

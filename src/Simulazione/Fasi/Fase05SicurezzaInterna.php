@@ -54,8 +54,54 @@ final class Fase05SicurezzaInterna implements Fase
         $rivoluzioni = 0;
         $inConflitto = 0;
 
+        $rispostaPolizia = $cal->numero('sicurezza.risposta_polizia_anno', 0.55) * $perTick;
+        $sogliaRepressione = $cal->numero('sicurezza.soglia_repressione', 28.0);
+
         foreach ($mondo->elenco() as $n) {
             $seme = crc32($n->iso3);
+
+            // --- lo stato di polizia ---------------------------------------
+            //
+            // Era un numero fermo: valeva 2 in tutti e centottantanove i paesi,
+            // per sempre, e le tre fasi che lo leggono — liberta' di stampa,
+            // malcontento, ammissibilita' delle elezioni — calcolavano tutte
+            // una costante. La Corea del Nord e la Norvegia avevano la stessa
+            // polizia.
+            //
+            // Ora si muove, e segue due forze contrarie. Un governo che si
+            // sente minacciato stringe, e stringe tanto piu' quanto meno ha
+            // istituzioni che facciano il lavoro al posto della forza. Un
+            // governo che sta bene e ha istituzioni solide allenta, perche' la
+            // repressione costa e non serve.
+            $minaccia = $n->clamoreSociale
+                + max(0.0, 45.0 - $n->legittimita)
+                + ($n->forzaInsorti > 0.0 ? 25.0 : 0.0);
+            $freno = $n->maturita / 255.0;   // istituzioni: chi ne ha, reprime meno
+
+            // Si converge verso un livello, non si deriva: senza un obiettivo
+            // il valore scivolava fino al pavimento e centosettanta paesi su
+            // centottantanove finivano esattamente a 1.
+            $obiettivo = 1.0 + 3.6 * min(1.0, $minaccia / (2.2 * $sogliaRepressione))
+                * (1.0 - 0.55 * $freno);
+            $obiettivo = max(1.0, min(5.0, $obiettivo));
+
+            // Stringere e' rapido, allentare e' lento: una polizia costruita
+            // non si smonta alla prima stagione tranquilla.
+            $velocita = $obiettivo > $n->statoPolizia
+                ? $rispostaPolizia
+                : $rispostaPolizia * 0.35;
+            $n->statoPolizia = max(1.0, min(5.0,
+                $n->statoPolizia + ($obiettivo - $n->statoPolizia) * $velocita));
+
+            // Chi stringe la presa sulla piazza la stringe anche sul racconto.
+            // Prima il controllo dell'informazione poteva solo SCENDERE — lo
+            // abbassava la disinformazione altrui e non lo alzava niente — e
+            // dopo quindici anni centosettantacinque paesi su centottantanove
+            // erano ancora esattamente al valore di partenza.
+            $obiettivoInfo = 18.0 + 17.0 * $n->statoPolizia
+                - 22.0 * ($n->maturita / 255.0);
+            $n->controlloInfo = max(0.0, min(100.0, $n->controlloInfo
+                + (max(0.0, $obiettivoInfo) - $n->controlloInfo) * $rispostaPolizia * 0.7));
 
             // --- reclutamento ---------------------------------------------
             // Tre fattori: quanta gente c'è, quanto è debole lo stato di

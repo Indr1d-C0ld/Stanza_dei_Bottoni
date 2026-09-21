@@ -124,8 +124,7 @@ final class Deposito
             'net_peace', 'legittimita', 'aspettativa', 'clamore_sociale', 'orientamento',
             'ansia_militare', 'controllo_info', 'cyber_difesa',
             'soldati', 'equipaggiamento', 'potenza_militare', 'postura_nucleare',
-            'forza_insorti', 'dip_energia', 'dip_cibo', 'dip_finanza', 'dip_tecnologia',
-            // La memoria: senza queste, a ogni tick il mondo dimentica chi e'.
+            'forza_insorti',             // La memoria: senza queste, a ogni tick il mondo dimentica chi e'.
             'deriva_politica', 'integrita', 'crescita_strutturale', 'pressione_esterna',
             'reputazione_sporca', 'consumo_pro_capite_prec', 'azioni_in_volo',
             'cambi_esecutivo', 'cambi_irregolari', 'vittorie_insorti', 'scandali_subiti',
@@ -147,7 +146,7 @@ final class Deposito
                 $n->netPeace, $n->legittimita, $n->aspettativa, $n->clamoreSociale, $n->orientamento,
                 $n->ansiaMilitare, $n->controlloInfo, $n->cyberDifesa,
                 (int) $n->soldati, $n->equipaggiamento, $n->potenzaGoverno(), $n->posturaNucleare,
-                $n->forzaInsorti, $n->dipEnergia, $n->dipCibo, $n->dipFinanza, $n->dipTecnologia,
+                $n->forzaInsorti,
                 $n->derivaPolitica, $n->integrita, $n->crescitaStrutturale, $n->pressioneEsterna,
                 $n->reputazioneSporca, $n->consumoProCapitePrec, $n->azioniInVolo,
                 $n->cambiEsecutivo, $n->cambiIrregolari, $n->vittorieInsorti, $n->scandaliSubiti,
@@ -465,15 +464,15 @@ final class Deposito
             $n->etica             = (int) $r['etica'];
             $n->ambizione         = (int) $r['ambizione'];
             $n->qualitaVita       = (int) $r['qualita_vita'];
-            $n->statoPolizia      = (int) $r['stato_polizia'];
+            $n->statoPolizia      = (float) $r['stato_polizia'];
             $n->netPeace          = (int) $r['net_peace'];
             $n->legittimita       = (float) $r['legittimita'];
             $n->aspettativa       = (float) $r['aspettativa'];
             $n->clamoreSociale    = (float) $r['clamore_sociale'];
             $n->orientamento      = (int) $r['orientamento'];
-            $n->ansiaMilitare     = (int) $r['ansia_militare'];
-            $n->controlloInfo     = (int) $r['controllo_info'];
-            $n->cyberDifesa       = (int) $r['cyber_difesa'];
+            $n->ansiaMilitare     = (float) $r['ansia_militare'];
+            $n->controlloInfo     = (float) $r['controllo_info'];
+            $n->cyberDifesa       = (float) $r['cyber_difesa'];
             $n->soldati           = (float) $r['soldati'];
             $n->equipaggiamento   = (float) $r['equipaggiamento'];
             $n->posturaNucleare   = (int) $r['postura_nucleare'];

@@ -97,7 +97,19 @@ final class Fase01ControAzioni implements Fase
             // un'altra: conta quanto e' ancora reversibile e quanto si e'
             // attrezzati. Avere anche l'attribuzione aiuta a colpire giusto.
             $capacita = 0.20 + $bersaglio->maturita / 400.0 + $bersaglio->cyberDifesaNormalizzata();
-            $probabilita = 0.55 * $reversibilita * $capacita * ($livello >= 4 ? 1.35 : 1.0);
+
+            // La prova si ripete a ogni tick finche' l'operazione e' in volo:
+            // senza normalizzare sulla durata, un'azione lenta e' condannata
+            // in partenza. Un sabotaggio matura in tre-sei tick e ne fa
+            // altrettante prove; un programma d'arma ne matura in ventisei-
+            // cinquantadue e ne faceva dieci volte tante — risultato, nove
+            // programmi nucleari su nove fermati, sempre. Quel che va tarato e'
+            // la probabilita' COMPLESSIVA di fermare l'operazione, non quella
+            // del singolo giro.
+            $durata = max(1, $e->maturazioneTick - $e->creatoTick);
+            $normale = $c->calibrazione->numero('dottrina.durata_di_riferimento', 4.5);
+            $probabilita = 0.55 * $reversibilita * $capacita * ($livello >= 4 ? 1.35 : 1.0)
+                * min(1.0, $normale / $durata);
 
             if ($c->caso->prova('01_intercettazione', $e->id, $c->tick, $probabilita)) {
                 $e->stato = Evento::FERMATO;
@@ -365,7 +377,7 @@ final class Fase01ControAzioni implements Fase
             }
             $n = $c->mondo->nazioni[$da] ?? null;
             if ($n !== null) {
-                $n->ansiaMilitare = (int) min(100, $n->ansiaMilitare + 35);
+                $n->ansiaMilitare = min(100.0, $n->ansiaMilitare + 35.0);
                 $n->netPeace = max($n->netPeace, 4);
             }
         }

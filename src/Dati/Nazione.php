@@ -46,10 +46,36 @@ final class Nazione
         public float $aspettativa,
         public float $clamoreSociale,
         public int   $qualitaVita,
-        public int   $statoPolizia,
-        public int   $ansiaMilitare,
-        public int   $controlloInfo,
-        public int   $cyberDifesa,
+        /**
+         * Quanto e' stretta la presa del governo: 1 libero, 5 terrore.
+         *
+         * E' un numero CON I DECIMALI, e non per pedanteria. Da intero
+         * restava fermo per sempre: il movimento di un tick e' una frazione,
+         * l'arrotondamento se la mangiava, e il valore tornava identico.
+         * Centottantanove paesi hanno avuto la stessa polizia per quindici
+         * anni di gioco senza che niente segnalasse il problema.
+         */
+        public float $statoPolizia,
+        /**
+         * Quanta paura militare c'e' in giro, 0-100.
+         *
+         * Con i decimali: il decadimento vale una frazione di punto per tick,
+         * e da intero l'arrotondamento la cancellava. E' il terzo campo di
+         * questo modello a essere stato trovato fermo per la stessa ragione.
+         */
+        public float $ansiaMilitare,
+        /** Quanto il governo tiene in mano il racconto pubblico, 0-100. */
+        public float $controlloInfo,
+        /**
+         * Quanto e' difeso il traffico di un paese, 0-100.
+         *
+         * Con i decimali, per la stessa ragione di statoPolizia: il movimento
+         * di un tick e' una frazione, e da intero l'arrotondamento la
+         * cancellava. Restava al valore del seme per sempre — e questo e' il
+         * numero da cui dipende se i messaggi di un paese si possono leggere
+         * e riscrivere, cioe' meta' del gioco fra giocatori.
+         */
+        public float $cyberDifesa,
         public int   $etica,
         public int   $ambizione,
         public int   $orientamento,
@@ -79,10 +105,6 @@ final class Nazione
         // Le quattro dipendenze contemporanee. Restano a zero finche' non
         // importeremo la matrice commerciale: le colonne esistono perche' il
         // modello le prevede, non perche' siano gia' popolate.
-        public int   $dipEnergia = 0,
-        public int   $dipCibo = 0,
-        public int   $dipFinanza = 0,
-        public int   $dipTecnologia = 0,
         /** Quanti eventi questa nazione ha in volo: limita quanto puo' fare insieme. */
         public int   $azioniInVolo = 0,
         /** Quante operazioni sporche attribuibili si porta sulle spalle. */

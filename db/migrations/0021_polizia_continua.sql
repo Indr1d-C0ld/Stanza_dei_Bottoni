@@ -1,0 +1,11 @@
+-- 0021 — Lo stato di polizia diventa un numero con i decimali.
+--
+-- Era un intero, e il motore lo muoveva di frazioni a ogni tick: l'arrotondamento
+-- se le mangiava e il valore tornava sempre identico. Risultato: 2 in tutti e
+-- centottantanove i paesi per quindici anni di gioco, e le tre fasi che lo
+-- leggono — liberta' di stampa, malcontento, ammissibilita' delle elezioni —
+-- che calcolavano tutte una costante.
+--
+-- Non bastava scrivere la formula: finche' la colonna e il campo sono interi,
+-- una forza che agisce per frazioni non esiste.
+ALTER TABLE sdb_nazione_stato MODIFY COLUMN stato_polizia DECIMAL(4,2) NOT NULL DEFAULT 2.00;

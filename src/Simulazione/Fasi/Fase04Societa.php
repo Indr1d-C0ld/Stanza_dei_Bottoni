@@ -110,11 +110,35 @@ final class Fase04Societa implements Fase
             };
             // Uno stato di polizia e una guerra civile tolgono qualità della
             // vita anche a reddito invariato.
-            $livello -= max(0, $n->statoPolizia - 2);
+            // Lo stato di polizia e' continuo: qui serve un gradino intero,
+            // e si prende quello raggiunto.
+            $livello -= (int) max(0, floor($n->statoPolizia - 2.0));
             if ($n->netPeace >= 4) {
                 $livello -= 1;
             }
-            $n->qualitaVita = max(1, min(10, $livello));
+            $n->qualitaVita = (int) max(1, min(10, $livello));
+
+
+            // --- le ansie che passano ---------------------------------------
+            //
+            // L'ansia militare saliva e non scendeva mai: una dimostrazione di
+            // forza subita nel 2027 pesava identica quindici anni dopo.
+            //
+            // Ma non scende a zero: torna al livello di riposo che l'ambiente
+            // di sicurezza impone. Chi vive in un mondo in guerra fredda ha una
+            // sua ansia di fondo anche quando non gli sta succedendo niente, e
+            // chi e' in guerra ce l'ha alta per definizione. Alla prima
+            // stesura la facevo decadere verso lo zero e l'ansia militare
+            // diventava zero per tutti, guerre comprese: l'errore opposto.
+            $riposo = 5.0 + 5.0 * ($mondo->livelloPace - 1)
+                + match (true) {
+                    $n->netPeace >= 5 => 40.0,
+                    $n->netPeace >= 4 => 20.0,
+                    default           => 0.0,
+                };
+            $n->ansiaMilitare = max(0.0, min(100.0, $n->ansiaMilitare
+                + ($riposo - $n->ansiaMilitare)
+                  * $cal->numero('societa.sfogo_ansia_anno', 14.0) / 100.0 * $perTick * 4.0));
 
             // --- clamore sociale ------------------------------------------
             // Più la legittimità è bassa, più il governo è esposto: dal
