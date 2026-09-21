@@ -35,4 +35,4 @@ CREATE TABLE IF NOT EXISTS sdb_assenza_fatto (
   dettaglio   VARCHAR(255) NOT NULL DEFAULT '',
   visto       TINYINT(1) NOT NULL DEFAULT 0,
   KEY k_poltrona (poltrona_id, visto)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

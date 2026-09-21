@@ -24,4 +24,4 @@ CREATE TABLE IF NOT EXISTS sdb_strozzatura (
   al_tick      INT UNSIGNED NOT NULL,
   KEY k_cliente (cliente_id, al_tick),
   KEY k_fornitore (fornitore_id, al_tick)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

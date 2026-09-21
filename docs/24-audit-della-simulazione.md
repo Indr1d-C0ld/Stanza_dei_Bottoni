@@ -217,7 +217,33 @@ Nessun raddoppio è applicato, e la chiave che lo esprimerebbe
 (`insurrezione.moltiplicatore_armi_insorti = 2.0`) è morta. O il 2 è già dentro
 lo 0,11 — e allora il commento va riscritto — o il comportamento manca.
 
-### 14. Un campo identitario mai usato
+### 14. Dodici tabelle nate con una collazione diversa *(corretto)*
+
+Le migrazioni dalla 0009 in poi dichiaravano `DEFAULT CHARSET=utf8mb4` senza
+dire anche `COLLATE`. Sembra innocuo e non lo è: MariaDB 11.8 non eredita la
+collazione del database, ci mette la propria per quel charset
+(`utf8mb4_uca1400_ai_ci`). Dodici tabelle nuove sono nate diverse dalle trenta
+vecchie.
+
+L'errore non si vede scrivendo il codice: si vede solo quando una query
+confronta una stringa di una tabella nuova con una di una vecchia.
+
+```
+Illegal mix of collations (utf8mb4_uca1400_ai_ci,IMPLICIT)
+and (utf8mb4_unicode_ci,IMPLICIT) for operation '='
+```
+
+È emerso cancellando un account: la cancellazione confronta
+`sdb_posta.destinatario` con `sdb_giocatore.email`, e si è fermata lì. La
+transazione ha annullato tutto, quindi non è stato perso niente — ma qualunque
+altra query fra vecchio e nuovo sarebbe caduta allo stesso modo, e nessuna
+prova lo avrebbe intercettato prima.
+
+Corretto con la migrazione `0020`, che riporta tutte e quarantadue le tabelle
+alla collazione del database, e correggendo le otto migrazioni perché chi
+installa da zero non erediti il problema.
+
+### 15. Un campo identitario mai usato
 
 `ideologiaFormale` non è letta da nessuna fase. Compare solo nella scheda di un
 paese, e per un'altra via (una giunzione SQL su `sdb_ideologia`). Il campo
@@ -236,7 +262,10 @@ interna, difesa cibernetica, armamento nucleare — sono costanti che il motore
 legge e nessuno scrive. Una quarta, il controllo dell'informazione, può solo
 peggiorare. Quattro verbi su diciotto non escono mai dalle mani dell'apparato, e
 per la mediazione la causa è un conflitto fra due regole scritte in momenti
-diversi. Quindici manopole di taratura non sono collegate a niente.
+diversi. Quindici manopole di taratura non sono collegate a niente. E dodici tabelle su
+quarantadue erano nate con una collazione diversa dalle altre — un difetto
+invisibile a chi legge il codice, che si manifesta solo quando due tabelle di
+epoche diverse si incontrano in un confronto.
 
 Nessuno di questi è un errore che si vede giocando: sono tutti casi in cui il
 modello promette una cosa e ne fa un'altra, in silenzio. È esattamente il tipo

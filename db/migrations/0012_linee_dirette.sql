@@ -27,4 +27,4 @@ CREATE TABLE IF NOT EXISTS sdb_linea (
   chiusa_tick    INT UNSIGNED DEFAULT NULL,
   UNIQUE KEY k_coppia (a_nazione_id, b_nazione_id),
   KEY k_stato (stato)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

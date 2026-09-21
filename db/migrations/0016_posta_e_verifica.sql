@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS sdb_posta (
   creato_il     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   KEY k_da_fare (inviato_il, rinunciato_il, prossimo_il, priorita),
   KEY k_inviato (inviato_il)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 ALTER TABLE sdb_giocatore
   ADD COLUMN IF NOT EXISTS email_verificata TINYINT(1) NOT NULL DEFAULT 0,

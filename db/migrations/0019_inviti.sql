@@ -23,4 +23,4 @@ CREATE TABLE IF NOT EXISTS sdb_invito (
   usato_da   INT UNSIGNED DEFAULT NULL,
   usato_il   DATETIME DEFAULT NULL,
   KEY k_liberi (usato_da, scade_il)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

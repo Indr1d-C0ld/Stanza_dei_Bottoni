@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS sdb_epoca (
   fine_tick   INT UNSIGNED DEFAULT NULL,
   stato       ENUM('in_corso','chiusa') NOT NULL DEFAULT 'in_corso',
   UNIQUE KEY k_numero (numero)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS sdb_punteggio (
   id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS sdb_punteggio (
   voci         TEXT NOT NULL,          -- JSON: la scomposizione, voce per voce
   totale       DECIMAL(8,2) NOT NULL,
   UNIQUE KEY k_epoca_giocatore (epoca_id, giocatore_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Quel che si scopre solo alla fine.
 CREATE TABLE IF NOT EXISTS sdb_rivelazione (
@@ -45,4 +45,4 @@ CREATE TABLE IF NOT EXISTS sdb_rivelazione (
   titolo    VARCHAR(190) NOT NULL,
   dettaglio TEXT NOT NULL,
   KEY k_epoca (epoca_id, genere)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

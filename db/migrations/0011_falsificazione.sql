@@ -33,4 +33,4 @@ CREATE TABLE IF NOT EXISTS sdb_manipolazione (
   stato         ENUM('attiva','esaurita','scaduta','scoperta') NOT NULL DEFAULT 'attiva',
   KEY k_nazione (nazione_id, stato),
   KEY k_bersaglio (da_nazione_id, a_nazione_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
