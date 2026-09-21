@@ -1,0 +1,3 @@
+Qui va il World Factbook, che questo repository non ridistribuisce.
+Si scarica e si converte con: php bin/importa_factbook.php
+Il seme già derivato sta in db/seed/nazioni.csv e basta a far girare il gioco.

@@ -1,0 +1,165 @@
+/* Stanza dei Bottoni — foglio di stile unico.
+   Registro: terminale di una sala operativa. Scuro, denso, niente ornamenti. */
+
+:root {
+  --fondo:      #0e1116;
+  --pannello:   #161b22;
+  --bordo:      #2a323d;
+  --testo:      #d7dde5;
+  --tenue:      #7d8896;
+  --acceso:     #e8b339;
+  --ostile:     #d9635a;
+  --amico:      #5fa46a;
+  --collegamento: #7fb3d5;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--testo);
+  font: 15px/1.55 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+a { color: var(--collegamento); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.barra {
+  display: flex; align-items: baseline; gap: 1.5rem; flex-wrap: wrap;
+  padding: .9rem 1.5rem;
+  background: var(--pannello);
+  border-bottom: 1px solid var(--bordo);
+}
+.marchio { color: var(--acceso); font-weight: 700; letter-spacing: .04em; }
+.barra nav { display: flex; gap: 1.1rem; }
+.orologio { margin-left: auto; color: var(--tenue); display: flex; gap: 1rem; }
+.orologio .data { color: var(--testo); }
+
+main { max-width: 1080px; margin: 0 auto; padding: 1.5rem; }
+h1 { font-size: 1.5rem; margin: .4rem 0 1rem; }
+h2 { font-size: 1.05rem; margin: 2rem 0 .6rem; color: var(--acceso); font-weight: 600; }
+h3 { font-size: .9rem; margin: 1.2rem 0 .4rem; color: var(--tenue); text-transform: uppercase; letter-spacing: .06em; }
+
+table { width: 100%; border-collapse: collapse; margin: .5rem 0 1rem; }
+th, td { padding: .38rem .6rem; text-align: left; border-bottom: 1px solid var(--bordo); }
+th { color: var(--tenue); font-weight: 500; font-size: .82rem; text-transform: uppercase; letter-spacing: .05em; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr.in-crisi td { background: rgba(217, 99, 90, .07); }
+
+.tenue { color: var(--tenue); }
+.ostile { color: var(--ostile); }
+.amico  { color: var(--amico); }
+.attivo { color: var(--acceso); }
+
+.pastiglia {
+  font-size: .7rem; padding: .1rem .45rem; border-radius: 3px;
+  background: rgba(232, 179, 57, .15); color: var(--acceso); vertical-align: middle;
+}
+.rango { font-size: .78rem; color: var(--acceso); }
+
+.quadranti { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+.quadrante { background: var(--pannello); border: 1px solid var(--bordo); border-radius: 4px; padding: .8rem 1rem; }
+.quadrante h3 { margin-top: 0; }
+.quadrante dl { display: grid; grid-template-columns: 1fr auto; gap: .2rem .8rem; margin: 0; }
+.quadrante dt { color: var(--tenue); font-size: .85rem; }
+.quadrante dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+
+.cronaca { list-style: none; padding: 0; margin: .4rem 0; }
+.cronaca .voce { display: flex; gap: .8rem; padding: .3rem 0; border-bottom: 1px solid var(--bordo); }
+.cronaca .quando { color: var(--tenue); min-width: 3.5rem; }
+.cronaca .etichetta { color: var(--acceso); min-width: 11rem; }
+.cronaca .g-colpo_di_stato .etichetta,
+.cronaca .g-rivoluzione .etichetta,
+.cronaca .g-guerra .etichetta,
+.cronaca .g-scandalo .etichetta { color: var(--ostile); }
+
+.allarme { border-left: 3px solid var(--ostile); padding-left: 1rem; }
+.allarme ul { list-style: none; padding: 0; }
+
+.fazioni { list-style: none; padding: 0; }
+.fazioni li { padding: .25rem 0; display: flex; gap: .9rem; flex-wrap: wrap; }
+
+pre { background: var(--pannello); border: 1px solid var(--bordo); padding: .8rem 1rem; border-radius: 4px; overflow-x: auto; }
+code { color: var(--acceso); }
+
+footer {
+  max-width: 1080px; margin: 2rem auto; padding: 1rem 1.5rem;
+  border-top: 1px solid var(--bordo); color: var(--tenue); font-size: .82rem;
+}
+
+/* ───────────────────────────── il gioco ───────────────────────────── */
+
+.uscita { margin-left: 1rem; display: flex; gap: .6rem; align-items: baseline; }
+.uscita button, .modulo button, .in-linea button {
+  background: var(--bordo); color: var(--testo); border: 1px solid #3a4450;
+  border-radius: 3px; padding: .25rem .7rem; cursor: pointer; font: inherit; font-size: .85rem;
+}
+.uscita button:hover, .modulo button:hover, .in-linea button:hover { background: #33404f; }
+button.pericolo { border-color: #6b3a36; color: var(--ostile); }
+
+.avviso { padding: .5rem .9rem; border-radius: 3px; border-left: 3px solid; }
+.avviso.buono   { border-color: var(--amico); background: rgba(95,164,106,.09); }
+.avviso.cattivo { border-color: var(--ostile); background: rgba(217,99,90,.09); }
+
+.modulo { display: flex; flex-direction: column; gap: .7rem; max-width: 420px; margin: 1rem 0; }
+.modulo.largo { max-width: 640px; }
+.modulo label { display: flex; flex-direction: column; gap: .25rem; font-size: .88rem; color: var(--tenue); }
+.modulo input, .modulo select {
+  background: var(--fondo); color: var(--testo); border: 1px solid var(--bordo);
+  border-radius: 3px; padding: .4rem .5rem; font: inherit;
+}
+.modulo button { align-self: flex-start; padding: .45rem 1.2rem; }
+.in-linea { display: inline; }
+
+.cartella { border: 1px solid var(--bordo); border-radius: 4px; padding: .3rem 1rem 1rem; background: var(--pannello); }
+.voce-cartella { border-bottom: 1px solid var(--bordo); padding: .7rem 0; }
+.voce-cartella:last-child { border-bottom: 0; }
+.voce-cartella p { margin: .15rem 0; }
+.voce-cartella .riga-uno { color: var(--testo); }
+.voce-cartella .riga-due { color: var(--acceso); font-size: .9rem; }
+.voce-cartella .riga-tre { font-size: .85rem; }
+.voce-cartella.in-sospeso { border-left: 3px solid var(--acceso); padding-left: .8rem; }
+tr.sono-io td { background: rgba(232,179,57,.08); }
+
+.messaggio { border-bottom: 1px solid var(--bordo); padding: .5rem 0; }
+.messaggio:last-child { border-bottom: 0; }
+.messaggio p { margin: .15rem 0; }
+.messaggio.intercetto { border-left: 3px solid var(--acceso); padding-left: .8rem; }
+.frammento { font-style: italic; color: var(--tenue); }
+.modulo textarea {
+  background: var(--fondo); color: var(--testo); border: 1px solid var(--bordo);
+  border-radius: 3px; padding: .4rem .5rem; font: inherit; resize: vertical;
+}
+
+.agende { margin: 1.5rem 0; }
+.agenda { border-left: 3px solid var(--acceso); padding: .3rem 0 .3rem .8rem; margin: .5rem 0; }
+.agenda.chiusa { border-color: var(--bordo); opacity: .65; }
+.agenda p { margin: .1rem 0; }
+.esito { font-size: .75rem; padding: .08rem .4rem; border-radius: 3px; }
+.esito.buono { background: rgba(95,164,106,.18); color: var(--amico); }
+.esito.cattivo { background: rgba(217,99,90,.18); color: var(--ostile); }
+.riservato { border: 1px dashed #4a3b2a; border-radius: 4px; padding: .3rem 1rem 1rem; margin: 1.5rem 0; }
+.citazione { font-style: italic; color: var(--testo); border-left: 2px solid var(--bordo);
+             padding-left: .7rem; margin: .4rem 0; }
+.piatto { border: 1px solid var(--bordo); border-radius: 3px; padding: .4rem .8rem; }
+.piatto .riga { flex-direction: row; align-items: center; gap: .4rem; color: var(--testo); }
+
+/* --- il bilancio d'epoca, la delega, le linee ------------------------------ */
+.positivo { color: var(--amico); text-align: right; }
+.negativo { color: var(--ostile); text-align: right; }
+.elenco-piano { list-style: none; padding: 0; margin: .4rem 0; }
+.elenco-piano li { padding: .15rem 0; }
+button.minuto { font-size: .82rem; padding: .18rem .5rem; }
+.banco { color: var(--ostile); }
+
+/* --- il planisfero --------------------------------------------------------- */
+.planisfero { margin: 1rem 0; background: #11161c; border: 1px solid #222a33; border-radius: 4px; }
+.planisfero svg { display: block; width: 100%; height: auto; }
+.planisfero .mare { fill: #11161c; }
+.planisfero .paese { stroke: #11161c; stroke-width: .6; transition: filter .12s; }
+.planisfero a:hover .paese { filter: brightness(1.45); stroke: #e8eef5; stroke-width: 1; }
+.letture { display: flex; flex-wrap: wrap; gap: .8rem; margin: .6rem 0; }
+.letture a { color: var(--tenue); text-decoration: none; border-bottom: 2px solid transparent; }
+.letture a.attivo, .letture a:hover { color: var(--testo); border-bottom-color: var(--amico); }
+.pastiglia { display: inline-block; width: 1rem; height: 1rem; border-radius: 2px; }

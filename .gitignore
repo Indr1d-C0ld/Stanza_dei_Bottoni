@@ -1,0 +1,14 @@
+# La configurazione con le credenziali non sta mai in git: vive fuori dal
+# docroot, in /etc/stanzadeibottoni/config.php.
+config/config.php
+
+# Registri, lucchetti, e quel che il mondo scrive mentre gira.
+storage/logs/*
+!storage/logs/.gitkeep
+storage/cronache/*
+!storage/cronache/.gitkeep
+*.lock
+
+# Il World Factbook è materiale di terzi: si scarica, non si ridistribuisce.
+storage/factbook/*
+!storage/factbook/.gitkeep
