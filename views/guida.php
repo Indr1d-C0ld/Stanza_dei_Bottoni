@@ -27,7 +27,7 @@ $ruoli = App\Dati\Gabinetto::RUOLI;
   <h2>La tua poltrona</h2>
   <p>Non comandi un paese: occupi <em>un posto</em> in un gabinetto di otto.
      Gli altri sette li tiene l'apparato — o altri giocatori.</p>
-  <table class="tabella">
+  <table class="tabella prosa">
     <?php foreach ($ruoli as $k => $n): ?>
       <tr><td><strong><?= htmlspecialchars($n) ?></strong></td>
           <td class="tenue"><?= htmlspecialchars(match ($k) {
@@ -60,7 +60,7 @@ $ruoli = App\Dati\Gabinetto::RUOLI;
 <section>
   <h2>Sapere non basta: bisogna poter dimostrare</h2>
   <p>Di ogni cosa che succede nel mondo si può sapere a quattro livelli:</p>
-  <table class="tabella">
+  <table class="tabella prosa">
     <tr><td><strong>1</strong></td><td>che è successo qualcosa</td></tr>
     <tr><td><strong>2</strong></td><td>di che genere, e più o meno dove</td></tr>
     <tr><td><strong>3</strong></td><td>chi l'ha subìto</td></tr>
@@ -79,7 +79,7 @@ $ruoli = App\Dati\Gabinetto::RUOLI;
   <h2>I tuoi messaggi non sono sicuri</h2>
   <p>Puoi scrivere alle poltrone degli altri paesi. Il canale che scegli decide
      quanta gente ti legge:</p>
-  <table class="tabella">
+  <table class="tabella prosa">
     <?php foreach (App\Gioco\Canale::LIVELLI as $n => $d): ?>
       <tr><td><strong><?= htmlspecialchars($d['nome']) ?></strong></td>
           <td class="tenue"><?= htmlspecialchars($d['nota']) ?></td></tr>

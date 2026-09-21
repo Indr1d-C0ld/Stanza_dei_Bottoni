@@ -21,7 +21,7 @@ $pct = fn(float $x): string => number_format(100 * $x, 2, ',', '.') . '%';
      annua, se chiudessero. La sostituibilità dice quanto in fretta si trova un
      altro fornitore: bassa vuol dire che non si trova.</p>
   <?php if ($fornitori === []): ?><p class="tenue">Non dipendiamo da nessuno in modo rilevante.</p><?php endif; ?>
-  <table class="tabella">
+  <table class="tabella prosa">
     <tr><th>paese</th><th>che cosa ci vende</th><th>se chiudono</th></tr>
     <?php foreach ($fornitori as $f): ?>
       <tr>
@@ -46,7 +46,7 @@ $pct = fn(float $x): string => number_format(100 * $x, 2, ',', '.') . '%';
      costerebbe a noi. Quando la seconda è più grande della prima, l'embargo è
      un'arma puntata contro di noi.</p>
   <?php if ($clienti === []): ?><p class="tenue">Nessuno dipende da noi: non abbiamo questa leva.</p><?php endif; ?>
-  <table class="tabella">
+  <table class="tabella prosa">
     <tr><th>paese</th><th>che cosa gli vendiamo</th><th>costa a loro</th><th>costa a noi</th></tr>
     <?php foreach ($clienti as $k): ?>
       <tr>

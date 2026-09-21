@@ -163,3 +163,137 @@ button.minuto { font-size: .82rem; padding: .18rem .5rem; }
 .letture a { color: var(--tenue); text-decoration: none; border-bottom: 2px solid transparent; }
 .letture a.attivo, .letture a:hover { color: var(--testo); border-bottom-color: var(--amico); }
 .pastiglia { display: inline-block; width: 1rem; height: 1rem; border-radius: 2px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCHERMI STRETTI — telefoni e tavolette
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Tutto quel che segue sta dentro delle media query e NON tocca il desktop:
+   sopra i 900px non cambia una riga di quel che c'era prima.
+
+   Il problema principale di questo progetto su un telefono sono le tabelle.
+   Sono tante e larghe — il banco dell'arbitro ne ha una da nove colonne, le
+   nazioni una da quattordici — e su 375 pixel facevano scorrere di lato
+   l'INTERA pagina: il modo classico in cui un sito diventa inusabile. La
+   soluzione qui e' far scorrere la tabella dentro sé stessa, lasciando ferma
+   la pagina.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* --- tavolette e schermi stretti (fino a 900px) ---------------------------- */
+@media (max-width: 900px) {
+  main { padding: 1rem; }
+
+  /* La barra si dispone su due righe invece di stiracchiarsi: il marchio e
+     l'orologio sopra, la navigazione sotto, che puo' scorrere di lato senza
+     trascinarsi dietro la pagina. */
+  .barra { gap: .7rem 1rem; padding: .7rem 1rem; }
+  .barra nav {
+    order: 3; width: 100%; gap: 1rem;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; padding-bottom: .15rem;
+  }
+  .barra nav::-webkit-scrollbar { display: none; }
+  .barra nav a { white-space: nowrap; }
+  .orologio { margin-left: auto; gap: .7rem; font-size: .82rem; }
+
+  .quadranti { gap: .8rem; }
+  .modulo, .modulo.largo { max-width: none; }
+}
+
+/* --- telefoni (fino a 600px) ---------------------------------------------- */
+@media (max-width: 600px) {
+  /* Un centimetro di margine in meno sono venti pixel di testo in piu': su uno
+     schermo da 375 non e' poco. */
+  main { padding: .85rem .7rem 2rem; }
+
+  h1 { font-size: 1.3rem; }
+  h2 { margin-top: 1.5rem; }
+
+  /* LE TABELLE. Scorrono dentro il proprio riquadro e la pagina resta ferma.
+     `display: block` su una tabella e' il modo consolidato di ottenerlo senza
+     toccare l'HTML di venti viste. Il bordo a destra dice che c'e' altro da
+     vedere, che altrimenti non si indovina. */
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    border-right: 1px solid var(--bordo);
+  }
+  table td, table th { padding: .45rem .5rem; }
+
+  /* Le celle che contengono testo lungo o moduli non devono restare su una
+     riga sola: la' il nowrap fa piu' danno che bene. */
+  table td form, table td .modulo { white-space: normal; }
+  table td:has(form) { white-space: normal; min-width: 8rem; }
+
+  /* Le tabelle che contengono PROSA non scorrono: il testo va a capo. Il
+     nowrap e' giusto per una griglia di numeri — quattordici colonne di
+     indici si leggono scorrendo — ed e' sbagliato per una descrizione, che
+     diventerebbe una riga larga seicento pixel. */
+  table.prosa { display: table; white-space: normal; border-right: 0; }
+  table.prosa td, table.prosa th { white-space: normal; }
+  table.prosa td:first-child { min-width: 7rem; }
+
+  /* La cronaca aveva colonne a larghezza minima fissa: undici rem di etichetta
+     su uno schermo da ventitre non lasciavano spazio al fatto. */
+  .cronaca .voce { flex-direction: column; gap: .15rem; padding: .5rem 0; }
+  .cronaca .quando, .cronaca .etichetta { min-width: 0; }
+  .cronaca .etichetta { font-size: .8rem; }
+
+  /* I campi di modulo a sedici pixel: sotto quella soglia iOS ingrandisce la
+     pagina da solo quando ci si tocca dentro, e poi non la rimpicciolisce. */
+  .modulo input, .modulo select, .modulo textarea,
+  input[type="text"], input[type="email"], input[type="password"],
+  input[type="number"], select, textarea {
+    font-size: 16px;
+    padding: .5rem .6rem;
+  }
+
+  /* Un dito non e' un puntatore: quarantaquattro pixel e' la misura che Apple
+     e Google raccomandano da anni, e i bottoni «minuti» del banco dell'arbitro
+     ne avevano la meta'. */
+  button, .uscita a, .modulo button {
+    min-height: 2.6rem;
+    padding: .55rem 1rem;
+  }
+  button.minuto {
+    min-height: 2.3rem; padding: .4rem .8rem; font-size: .85rem;
+  }
+  .in-linea { display: inline-block; margin: .15rem .2rem .15rem 0; }
+
+  /* I codici d'invito e le chiavi di calibrazione sono stringhe che non si
+     spezzano da sole e sfondano il riquadro. */
+  code, .messaggio p { overflow-wrap: anywhere; }
+
+  /* Il planisfero: su uno schermo stretto un mondo alto 190 pixel non si
+     legge. Gli si da' aria, e le letture diventano una fila che scorre. */
+  .planisfero { margin: .8rem -.7rem; border-radius: 0; border-left: 0; border-right: 0; }
+  .letture {
+    gap: 1rem; overflow-x: auto; flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    padding-bottom: .3rem;
+  }
+  .letture::-webkit-scrollbar { display: none; }
+  .letture a { white-space: nowrap; }
+
+  .fazioni li { gap: .5rem; }
+  .messaggio { padding: .6rem .7rem; }
+}
+
+/* --- schermi molto stretti (fino a 380px) ---------------------------------- */
+@media (max-width: 380px) {
+  main { padding: .7rem .55rem 2rem; }
+  .barra { padding: .6rem .7rem; }
+  .barra .marchio { font-size: .95rem; }
+  .orologio { font-size: .75rem; }
+}
+
+/* --- dove si tocca invece di puntare --------------------------------------- */
+@media (hover: none) {
+  /* Il planisfero cambia colore al passaggio del mouse, che su un telefono non
+     esiste: al tocco si va alla scheda del paese, ed e' giusto cosi'. Ma
+     l'effetto di passaggio, senza mouse, resta appiccicato al paese toccato
+     per sempre — meglio spegnerlo. */
+  .planisfero a:hover .paese { filter: none; stroke: #11161c; stroke-width: .6; }
+}

@@ -10,7 +10,19 @@ $livelli = [1 => 'pace globale', 2 => 'pace stabile', 3 => 'pace fredda',
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title><?= htmlspecialchars($titolo) ?> — Stanza dei Bottoni</title>
-<link rel="stylesheet" href="<?= u('/assets/css/stanza.css') ?>">
+<?php
+/**
+ * Il foglio di stile porta in coda la data dell'ultima modifica.
+ *
+ * Senza, il browser tiene la propria copia e una correzione allo stile non
+ * arriva mai a chi e' gia' stato sul sito. Con la data in coda l'indirizzo
+ * cambia quando cambia il file, e solo allora: la cache continua a funzionare
+ * per tutto il resto del tempo, che e' quel che deve fare.
+ */
+$foglio = dirname(__DIR__, 2) . '/assets/css/stanza.css';
+$versione = is_file($foglio) ? (int) filemtime($foglio) : 0;
+?>
+<link rel="stylesheet" href="<?= u('/assets/css/stanza.css') ?>?v=<?= $versione ?>">
 </head>
 <body>
 <header class="barra">

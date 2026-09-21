@@ -182,7 +182,7 @@ $adesso = time();
 
   <?php foreach (App\Gioco\Arbitrio::LEVE as $gruppo => $voci): ?>
     <h3><?= htmlspecialchars($gruppo) ?></h3>
-    <table class="tabella">
+    <table class="tabella prosa">
       <?php foreach ($voci as $chiave => $spiega): ?>
         <?php
           $mossa   = $leve[$chiave] ?? null;
@@ -247,7 +247,7 @@ $adesso = time();
 <section>
   <h2>Il registro degli atti</h2>
   <?php if ($atti === []): ?><p class="tenue">Nessun atto, per ora.</p><?php endif; ?>
-  <table class="tabella">
+  <table class="tabella prosa">
     <?php foreach ($atti as $a): ?>
       <tr>
         <td class="tenue"><?= App\Nucleo\Calendario::dataOra((string) $a['quando']) ?></td>
