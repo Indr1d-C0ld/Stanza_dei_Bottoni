@@ -233,7 +233,7 @@ partire giusto e andare alla deriva — che è esattamente quel che faceva.
 | crescita popolazione | — | **0,90%** | 0,6-1,2 | ONU: 0,9%/anno |
 | crescita PIL | — | **2,35-2,46%** | 2-4 | Banca Mondiale: 2,9% nel 2024 |
 | onere militare | 2,30% | **2,45-2,91%** | 1,8-3,2 | SIPRI: 2,5% |
-| cambi irregolari | — | **12,6-13,7**/anno | 5-16 | Crawford: ~10 |
+| cambi irregolari | — | **5,9-7,2**/anno | 3-9 | Cline Center: 2,2-3,8 colpi + rivoluzioni |
 | morti di guerra | — | **0,01-0,02** mln/anno | 0-1,5 | UCDP/PRIO |
 
 Undici su undici in fascia, su tutti e cinque i semi provati.
@@ -247,14 +247,94 @@ maturità la incorporano di suo: c'è un doppio conteggio. Il risultato resta
 dentro la fascia storica (il mondo ha fatto 2,4-2,7% in parecchi anni recenti) e
 tirare oltre significherebbe tarare su un anno solo. Resta come cosa nota.
 
-**I cambi irregolari sono saliti**, da 11,5 a circa 13 l'anno, contro i ~10 di
-Crawford. È una conseguenza della spesa militare che adesso cresce davvero con
-la paura: comprime i consumi, e da lì la legittimità. La catena causale è
-sensata e il valore resta in fascia, ma è un numero da tenere d'occhio.
+**I cambi irregolari erano saliti** da 11,5 a circa 13 l'anno, conseguenza della
+spesa militare che adesso cresce davvero con la paura: comprime i consumi, e da
+lì la legittimità. Sono poi stati ritarati sul tasso contemporaneo — vedi la
+sezione 6, che è la parte più istruttiva di tutto il lavoro.
 
 ---
 
-## 6. Quel che questo episodio insegna
+## 6. Una fonte autorevole e dell'epoca sbagliata
+
+I cambi irregolari erano finiti a ~13 l'anno, e la domanda naturale era
+riportarli «verso i 10 storici» di Crawford. Guardando i dati, la domanda aveva
+il bersaglio sbagliato.
+
+| periodo | colpi di Stato riusciti nel mondo |
+|---|---:|
+| anni '60 | 103 nel decennio = **10,3/anno** |
+| anni '70 | 95 = **9,5/anno** |
+| 2000-2019 | ~22 per decennio = **2,2/anno** |
+| anni '20 (estrapolato) | ~38 = **3,8/anno** |
+
+*Fonti: Cline Center Coup d'État Project, dataset Powell & Thyne.*
+
+I ~10 l'anno di Crawford **coincidono con gli anni Sessanta e Settanta quasi
+alla cifra**, e non è un caso: li ricava dal *World Handbook of Political and
+Social Indicators*, che copre il 1948-77, e scriveva nel 1985. Il numero è
+giusto. È giusto per il suo mondo.
+
+Il nostro seme è del 2024-25 e il calendario comincia il 5 gennaio 2026. Un
+mondo del 2026 che fa dodici colpi di Stato l'anno non è il 2026: è il 1968.
+
+> Una fonte non basta che sia seria: deve parlare del **mondo che si sta
+> simulando**. È il terzo tranello di questa tabella di riferimenti, dopo i
+> livelli confrontati con l'anno sbagliato e i tassi confrontati col seme.
+
+### Il difetto sotto il difetto
+
+Cercando la leva è emerso che **nessuno dei due profili toccava
+`colpo_di_stato`**. Entrambi ereditavano `rischio_massimo_anno = 1.6` da
+`base.php` e facevano quasi lo stesso numero di colpi — 13,2 contro 11,8, una
+differenza che veniva di rimbalzo dalle aspettative. Il profilo `osservazione`,
+che si dichiara «tarato contro i tassi storici», su questa dimensione non era
+mai stato tarato su nessun tasso.
+
+E lo strumento `bin/realismo.php` misura `osservazione`, mentre il mondo vivo
+gira su `gioco`: si stava auditando il profilo che nessuno gioca. Adesso una
+prova misura anche l'altro.
+
+### La sostituzione fra colpi e rivoluzioni
+
+Abbassando il rischio di colpo di Stato, **le rivoluzioni salgono**: da 1,27 a
+2,56 l'anno lungo la curva. I due sono sostituti — un governo che non cade per
+un colpo resta marcio più a lungo e alla fine lo rovesciano gli insorti — quindi
+il totale scende molto più lentamente dei soli colpi. È una proprietà del
+modello, non un difetto, e le rivoluzioni restano dentro il riferimento di
+Crawford (~1% di ~10.000 rivolte in quarant'anni, cioè 2,5 l'anno).
+
+| rischio | colpi | rivoluzioni | irregolari |
+|---:|---:|---:|---:|
+| 1,60 | 11,80 | 1,27 | 13,07 |
+| 0,50 | 6,22 | 1,71 | 7,93 |
+| **0,25** | **3,98** | **2,09** | **6,07** |
+| 0,12 | 2,02 | 2,42 | 4,44 |
+
+### Il premio di vivacità che non abbiamo preso
+
+Il profilo `gioco` esiste per far succedere le cose, e la tentazione era
+tenersi i colpi più frequenti del mondo vero. Il conto dice di no.
+
+Un tick è due ore vere e una settimana di gioco: **un anno di gioco dura 103,8
+ore reali**. Su centottantanove paesi:
+
+| rischio | irregolari/anno | uno ogni (tempo reale) |
+|---:|---:|---:|
+| 1,60 | ~14,6 | ~7 ore |
+| 0,50 | ~8,5 | ~12 ore |
+| 0,25 | ~6,6 | ~16 ore |
+
+Fra il mondo più turbolento e quello realistico ballano **nove ore** nel ritmo
+con cui il giocatore vede cadere un governo da qualche parte. La verosimiglianza
+costa quasi niente in movimento, perché il mondo è grande e il tempo è compresso
+ottantaquattro volte: il compromesso che giustificava i tredici colpi l'anno, in
+pratica, non esisteva. Entrambi i profili stanno a 0,25, il valore vive in
+`base.php` in una copia sola, e `gioco.php` porta il conto qui sopra scritto
+per esteso, così la domanda non si rifà ogni sei mesi.
+
+---
+
+## 7. Quel che questo episodio insegna
 
 Le duecentonove prove esistenti verificavano **meccaniche**: che le cose
 succedessero, nell'ordine giusto, con le cause giuste. Nessuna verificava
@@ -262,7 +342,11 @@ succedessero, nell'ordine giusto, con le cause giuste. Nessuna verificava
 dichiarare numeri da fantascienza, e chi lo guarda se ne accorge prima di
 qualunque prova — che è esattamente come è andata.
 
-Le quindici prove di `tests/11-realismo.php` aggiungono l'invariante che
+Le diciannove prove di `tests/11-realismo.php` aggiungono l'invariante che
 mancava, e che in retrospettiva è ovvia:
 
 > **I morti non possono essere più degli uomini che il fronte ha tolto dai ruoli.**
+
+E una seconda lezione, che è arrivata dopo e vale quanto la prima: un
+riferimento può essere **autorevole e insieme dell'epoca sbagliata**. Crawford
+non aveva torto sui dieci cambi irregolari l'anno. Aveva ragione sul 1968.

@@ -102,3 +102,29 @@ Prove::che('nessuna vista stampa numeri all\'anglosassone',
 
 Prove::che('il formattatore n() esiste in index.php',
     str_contains((string) file_get_contents($radice . '/index.php'), 'function n(float $x'));
+
+Prove::gruppo('Anche il profilo che si gioca davvero sta nei tassi del mondo vero');
+
+// Lo strumento bin/realismo.php misura «osservazione», che e' il profilo di
+// validazione. Ma il mondo vivo gira su «gioco», e per anni nessuno dei due ha
+// toccato il rischio di colpo di Stato: entrambi ereditavano 1,6 da base.php e
+// facevano tredici colpi l'anno, cioe' il tasso degli anni Sessanta in un mondo
+// seminato con dati del 2024. Auditare solo il profilo che nessuno gioca e' un
+// audit a meta'.
+$calGioco = Calibrazione::carica($radice, 'gioco');
+$mGioco   = Mondo::daSeme($radice . '/db/seed/nazioni.csv');
+$rGioco   = Realismo::misura(
+    $mGioco, new EsecutoreTick($calGioco, null, true, $mGioco), $anni, $tickAnno, 1);
+
+[$minIrr, $maxIrr] = Realismo::FASCE['cambi_irregolari'];
+Prove::fra("anche in «gioco» i cambi irregolari stanno fra $minIrr e $maxIrr l'anno",
+    (float) $minIrr, (float) $maxIrr, $rGioco['misure']['cambi_irregolari']);
+
+// E il tetto al rischio vive in base.php, non duplicato nei profili: due copie
+// dello stesso numero divergono, e il modo in cui divergono e' che una si
+// dimentica.
+foreach (['gioco', 'osservazione'] as $p) {
+    Prove::che("il profilo $p non duplica il rischio di colpo di Stato",
+        !str_contains((string) file_get_contents($radice . "/calibrazione/$p.php"),
+            "'rischio_massimo_anno'"));
+}

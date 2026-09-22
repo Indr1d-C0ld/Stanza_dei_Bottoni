@@ -229,9 +229,29 @@ diventava un premio permanente. Il prodotto mondiale cresceva del 4,0% l'anno
 contro il 3% storico; l'onere militare si dimezzava, dal 2,3% all'1,0%, mentre
 il riferimento SIPRI è il 2,5%.
 
-L'invariante che mancava, e che in retrospettiva è ovvia:
+Poi è arrivata una seconda lezione, che vale quanto la prima. I cambi irregolari
+di governo erano a ~13 l'anno, e il bersaglio naturale sembravano i «~10
+storici» di Crawford. Ma quei dieci coincidono con gli anni Sessanta e Settanta
+quasi alla cifra — 103 colpi di Stato riusciti negli anni '60, 95 negli anni '70
+— perché Crawford li ricava dal *World Handbook of Political and Social
+Indicators*, che copre il 1948-77. Dal 2000 il mondo ne fa 2,2 l'anno, negli
+anni Venti circa 3,8.
+
+Il nostro seme è del 2024-25 e il calendario comincia il 5 gennaio 2026: un
+mondo del 2026 con dodici colpi di Stato l'anno non è il 2026, è il 1968. Una
+fonte non basta che sia seria — deve parlare del mondo che si sta simulando.
+
+Sotto c'era un difetto strutturale: **nessuno dei due profili di taratura
+toccava il rischio di colpo di Stato**. Entrambi ereditavano lo stesso valore, e
+il profilo che si dichiara «tarato contro i tassi storici» non era mai stato
+tarato su nessun tasso.
+
+Le due invarianti che mancavano, e che in retrospettiva sono ovvie:
 
 > I morti non possono essere più degli uomini che il fronte ha tolto dai ruoli.
+>
+> Un riferimento deve parlare del mondo che si sta simulando, non solo essere
+> autorevole.
 
 Il racconto completo, con le misure e i due tentativi sbagliati prima di quello
 giusto, è in `docs/26-i-numeri-realistici.md`.

@@ -26,6 +26,13 @@ use App\Dati\Mondo;
  * Un TASSO o un RAPPORTO — la crescita, l'onere militare, i cambi irregolari
  * per anno — si giudica SULLA CORSA, perche' e' li' che vive il comportamento
  * del motore, e un motore puo' partire giusto e andare alla deriva.
+ *
+ * E UN TERZO TRANELLO, che e' costato la seconda revisione di questa tabella:
+ * un riferimento puo' essere autorevole e insieme DELL'EPOCA SBAGLIATA. I ~10
+ * cambi irregolari l'anno di Crawford sono giusti — per il 1948-77, che e' il
+ * periodo del World Handbook da cui li ricava. Il nostro seme e' del 2024-25.
+ * Una fonte non basta che sia seria: deve parlare del mondo che si sta
+ * simulando.
  */
 final class Realismo
 {
@@ -54,8 +61,11 @@ final class Realismo
             'Banca Mondiale: 2,9% nel 2024, ~3,4% medio dal 2000 in PPA'],
         'onere_militare'       => [1.8,  3.2,  '% del PIL',   'corsa',
             'SIPRI 2024: 2,5% del prodotto mondiale'],
-        'cambi_irregolari'     => [5,    16,   '/anno',       'corsa',
-            'Crawford, Balance of Power: circa dieci cambi di governo irregolari l\'anno'],
+        'cambi_irregolari'     => [3,    9,    '/anno',       'corsa',
+            'Cline Center / Powell & Thyne: 2,2 colpi di Stato riusciti l\'anno nel 2000-2019, '
+            . '~3,8 negli anni Venti, piu\' le rivoluzioni. Il ~10 di Crawford NON vale qui: '
+            . 'descrive il 1948-77 (103 colpi negli anni \'60, 95 negli anni \'70) e il nostro '
+            . 'seme e\' del 2024-25'],
         'guerre_aperte'        => [0,    8,    'in corso',    'corsa',
             'UCDP: i conflitti interstatali attivi sono pochi, ogni anno'],
         'morti_guerra_anno'    => [0,    1.5,  'milioni/anno','corsa',

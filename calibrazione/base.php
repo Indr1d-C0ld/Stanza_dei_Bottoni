@@ -162,7 +162,18 @@ return [
         // un cancello: massimo annuo quando la legittimita' e' a zero, e
         // pendenza della curva. A legittimita' pari al "centro" il rischio e'
         // meta' del massimo. [FABBRICATO]
-        'rischio_massimo_anno'   => 1.6,
+        // Tetto moltiplicativo al rischio annuo di colpo di Stato. Era 1,6 e
+        // produceva 13,2 colpi riusciti l'anno su centottantanove paesi: il
+        // tasso degli anni Sessanta-Settanta (103 riusciti negli anni '60, 95
+        // negli anni '70 — Cline Center Coup d'Etat Project, dataset Powell &
+        // Thyne), non quello del mondo che stiamo seminando. Dal 2000 il mondo
+        // ne fa 2,2 l'anno, negli anni Venti circa 3,8.
+        //
+        // 0,25 misurati danno 4,0 colpi l'anno. Le rivoluzioni salgono per
+        // sostituzione a ~2,3 — un governo che non cade per un colpo resta
+        // marcio e alla fine lo rovesciano gli insorti — e restano dentro il
+        // riferimento di Crawford (~1% di ~10.000 rivolte in quarant'anni).
+        'rischio_massimo_anno'   => 0.25,
         'pendenza'               => 7.0,
     ],
 
