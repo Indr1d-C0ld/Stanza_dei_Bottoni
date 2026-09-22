@@ -437,7 +437,106 @@ di tornare attive.
 
 ---
 
-## 8. Quel che questo episodio insegna
+## 8. Guardare il mondo vivo, e Fearon & Laitin
+
+Fatte le correzioni, mezzo anno di tick sul mondo vivo per vederle muoversi.
+Le grandezze andavano dove dovevano — onere militare 1,914 → 1,980%,
+investimenti 24,34 → 23,88%, crescita 1,62 → 2,48%, paesi in recessione 46 →
+41 — e la cronaca reggeva: due colpi di Stato (Haiti, Sud Sudan) e una
+rivoluzione (Comore) in sei mesi, tutti e tre paesi storicamente golpisti.
+
+Poi due righe che stonavano:
+
+> **Dominica**, conflitto livello 6 · **Micronesia**, livello 5
+
+Isole da settantamila e centomila abitanti, in guerra civile. La Dominica aveva
+**zero soldati**.
+
+### Tre difetti, uno dentro l'altro
+
+**Il primo: gli eserciti non si rigeneravano.** L'attrito li toglieva — la fase
+05 per le insurrezioni, la 07 per le guerre — e *nessuna fase li rimpiazzava
+mai*. L'equipaggiamento invece sì, dal bilancio militare, nella fase 03. Il
+modello comprava carri armati e non arruolava nessuno. Un esercito logorato
+rimpiccioliva per sempre, e con `potenzaGoverno() = √(soldati × equipaggiamento)`
+uno Stato a zero soldati ha potenza zero: qualunque banda armata gli dichiarava
+guerra civile.
+
+È la stessa forma del difetto degli interi arrotondati trovato nell'audit
+precedente — **una grandezza che il motore muove in una direzione sola**.
+
+**Il secondo: il gradiente demografico era rovesciato.** Il reclutamento
+insurrezionale cresceva con la *radice* della popolazione, mentre la potenza del
+governo cresce linearmente con essa. Il rapporto scalava come 1/√P, e il
+risultato era monotono e assurdo:
+
+| taglia | in conflitto (prima) | (dopo) |
+|---|---:|---:|
+| sotto 1 mln | **29%** | 3-13% |
+| 1-10 mln | 9% | 11% |
+| 10-50 mln | 11% | 42% |
+| 50-200 mln | 4% | 27% |
+| oltre 200 mln | **0%** | 14% |
+
+Fearon e Laitin misurano l'opposto: la popolazione grande è fra i predittori più
+forti dell'insorgenza. E il loro predittore **più** forte — che qui non c'era
+affatto — è la **povertà**: segna uno Stato finanziariamente e burocraticamente
+debole e insieme rende conveniente arruolarsi. Non l'etnia: a parità di reddito,
+i paesi più divisi non hanno più guerre civili degli altri.
+
+Adesso il reclutamento moltiplica la popolazione e un fattore di povertà
+ancorato al reddito pro capite.
+
+**Il terzo: la vittoria dei ribelli era automatica.** Appena il rapporto di
+forze si ribaltava, il governo cadeva quel tick stesso. Il Myanmar, il Congo, la
+Somalia hanno guerriglie più forti dell'esercito in mezzo paese da decenni e la
+capitale non cade: prevalere sul campo non è prendere il potere, e fra i
+conflitti armati che finiscono la vittoria dei ribelli è l'esito più raro.
+Adesso è una probabilità annua, e la guerra civile può durare.
+
+### Il controllo che conta: i nomi, non i conteggi
+
+**UCDP 2024: 61 conflitti statali attivi in 36 paesi, di cui 11 arrivati al
+livello di guerra.** Il modello, tarato su questo, ne fa 20-34 e 13-21.
+
+Ma il controllo vero è *quali* paesi nomina:
+
+> Congo, Sudan, Somalia, Sud Sudan, Mozambico, Burkina Faso, Niger, Nigeria,
+> Afghanistan, Yemen, Centrafrica, Haiti
+
+Dodici paesi che stanno davvero nell'elenco UCDP. Il modello non ha né etnie né
+storia né geografia: ci arriva con reddito, popolazione, legittimità e maturità
+istituzionale — che è esattamente quel che Fearon e Laitin dicono basti.
+
+Sbaglia anche, e va detto: mette in guerra la Tanzania, il Malawi, il Lesotho,
+che sono poveri e pacifici; e non trova il Myanmar, la Siria, il Mali,
+l'Etiopia, la Colombia, che hanno storie che il modello non conosce.
+
+### Due errori di metodo, miei
+
+**Avevo tarato prima dell'equilibrio.** Quindici anni dal seme non bastavano:
+misurato su quaranta, il sistema oscilla fra 20 e 34 conflitti senza divergere,
+ma il valore a quindici anni non era il suo punto di riposo. Il mondo vivo, che
+porta gli stock insurrezionali del modello vecchio, è passato per un transitorio
+a 48 conflitti prima di cominciare a rientrare.
+
+**E avevo scelto una misura instabile.** Il gradiente demografico era un
+rapporto fra proporzioni: con pochi paesi piccoli in conflitto esplodeva —
+16 su un seme, 2 su un altro, a modello immutato. Adesso è una *differenza in
+punti*, che non divide per zero e si legge da sola.
+
+### Una prova fragile, smascherata
+
+La ritaratura ha fatto fallire una prova che pretendeva che **ogni** verbo del
+catalogo uscisse in **una** corsa con **un** seme. Misurati su quattro semi,
+`invasione`, `armare_insorti` e `vendita_armi` escono in tre. Un verbo che esce
+nel 75% dei mondi non è inarrivabile: è raro, che è quel che deve essere. La
+prova adesso distingue i verbi comuni dai rari, e sui rari chiede solo che non
+spariscano tutti insieme.
+
+---
+
+## 9. Quel che questo episodio insegna
 
 Le duecentonove prove esistenti verificavano **meccaniche**: che le cose
 succedessero, nell'ordine giusto, con le cause giuste. Nessuna verificava

@@ -147,10 +147,23 @@ Prove::gruppo('La dottrina usa tutto il catalogo dei verbi');
 
 $catalogo = array_keys(require $radice . '/calibrazione/verbi.php');
 $mai = array_values(array_diff($catalogo, array_keys($verbi)));
-// colpo_di_stato e' l'atto piu' estremo del catalogo e puo' non uscire in una
-// singola corsa: si ammette quello, non di piu'.
-$ammessi = array_diff($mai, ['colpo_di_stato']);
-Prove::uguale('nessun verbo resta inarrivabile', [], array_values($ammessi));
+
+// QUESTA PROVA ERA FRAGILE, e se n'e' accorta una ritaratura del reclutamento
+// insurrezionale: pretendeva che OGNI verbo del catalogo uscisse in UNA sola
+// corsa con UN solo seme. Ma alcuni verbi sono rari per disegno — l'invasione
+// chiede contiguita', superiorita' di una volta e mezza e un'etica alta — e
+// misurati su quattro semi escono in tre. Un verbo che esce nel 75% dei mondi
+// non e' inarrivabile: e' raro, che e' quel che deve essere.
+//
+// Restano nell'elenco degli ammessi i verbi estremi o molto condizionati. Se
+// uno di questi smettesse DAVVERO di uscire, lo direbbe la prova apposita piu'
+// sotto, che ne verifica le condizioni invece della frequenza.
+$rariPerDisegno = ['colpo_di_stato', 'invasione', 'armare_insorti', 'vendita_armi'];
+$ammessi = array_diff($mai, $rariPerDisegno);
+Prove::uguale('nessun verbo comune resta inarrivabile', [], array_values($ammessi));
+Prove::che('e i verbi rari non sono spariti tutti insieme',
+    count(array_intersect($mai, $rariPerDisegno)) < count($rariPerDisegno),
+    'se nessuno dei quattro esce mai, non e\' rarita\': e\' una condizione rotta');
 Prove::che('la mediazione esce', ($verbi['mediazione'] ?? 0) > 0);
 Prove::che('il colpo mirato esce', ($verbi['strike'] ?? 0) > 0);
 

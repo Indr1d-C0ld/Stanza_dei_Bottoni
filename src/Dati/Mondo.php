@@ -85,6 +85,7 @@ final class Mondo
                 crescitaBase:        max(-0.04, min(0.09, (float) $d['crescita_pil'])),
                 quotaInvestimentiIniziale: $quotaInv,
                 quotaMilitareIniziale: $quotaMil,
+                soldatiIniziali:      (float) $d['soldati'],
                 pilProCapite:        (float) $d['pil_pro_capite'],
                 consumoProCapite:    (float) $d['pil_pro_capite'] * $quotaCons,
                 quotaConsumi:        $quotaCons,

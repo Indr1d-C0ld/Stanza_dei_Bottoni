@@ -72,6 +72,11 @@ return [
         // tendenza di un paese di piu' di due punti: oltre, non e' politica
         // economica, e' fantasia.
         'margine_strutturale'        => 0.02,
+        // Quanto in fretta un esercito logorato torna alla propria taglia.
+        // Un terzo dello scarto all'anno: un paese che ha perso meta' degli
+        // effettivi ne recupera la maggior parte in tre-quattro anni, che e'
+        // il ritmo con cui si addestra e si inquadra della gente vera.
+        'recupero_uomini_anno'       => 0.35,
         // NOTA: qui c'erano 'peso_commercio' e 'peso_dipendenza'. Sono state
         // tolte, non dimenticate. Esprimevano un modello — il saldo
         // commerciale che muove la crescita — che e' stato provato e scartato:
@@ -117,10 +122,44 @@ return [
         // Le armi consegnate agli insorti valgono il doppio: le usano meglio.
         'moltiplicatore_armi_insorti' => 2.0,
         'effetto_carrozzone' => 0.20,
+        // Probabilita' annua che gli insorti, una volta piu' forti
+        // dell'esercito, prendano DAVVERO il potere. Non e' uno: prevalere sul
+        // campo non e' prendere la capitale, e fra i conflitti armati che
+        // finiscono la vittoria dei ribelli e' l'esito piu' raro. Prima era
+        // implicitamente 1 — il governo cadeva lo stesso tick in cui il
+        // rapporto di forze si ribaltava — e le guerre civili non duravano.
+        'vittoria_insorti_anno' => 0.22,
         // Quanta potenza insurrezionale genera il malcontento, per radice di
-        // popolazione e per anno. [FABBRICATO] — e' il parametro che decide se
-        // il mondo ha guerre civili o se non ne ha mai: da ritarare per primo.
-        'reclutamento_k'     => 1.6,
+        // Quanta potenza insurrezionale genera il malcontento, PER ABITANTE e
+        // per anno. E' il parametro che decide se il mondo ha guerre civili o
+        // se non ne ha mai.
+        //
+        // Era 1,6 e moltiplicava la RADICE della popolazione, mentre la potenza
+        // del governo cresce linearmente con essa: il rapporto fra le due
+        // scalava come 1/radice(P) e i paesi piccoli risultavano
+        // sistematicamente piu' insorti dei grandi. Misurato sul mondo vivo:
+        // 29% dei paesi sotto il milione di abitanti in conflitto armato,
+        // contro 0% di quelli sopra i duecento milioni. Monotono e rovesciato.
+        //
+        // Adesso moltiplica la popolazione e il moltiplicatore di poverta' di
+        // Fearon & Laitin, e 3,0e-4 e' il valore che fa cadere il mondo sui
+        // riferimenti UCDP del 2024: 61 conflitti statali attivi in 36 paesi,
+        // di cui 11 arrivati al livello di guerra.
+        //
+        // A 1,0e-3 il profilo osservazione ne fa 26 a livello >= 4 e 9 a >= 5,
+        // il profilo gioco 27 e 11: le guerre cadono sul riferimento, i paesi
+        // in conflitto restano sotto perche' la nostra soglia di «guerriglia»
+        // e' piu' alta dei venticinque morti l'anno con cui UCDP apre un
+        // conflitto minore.
+        //
+        // E soprattutto i paesi che nomina sono quelli giusti: Congo, Sudan,
+        // Somalia, Sud Sudan, Mozambico, Burkina Faso, Niger, Nigeria,
+        // Afghanistan, Yemen, Centrafrica, Haiti stanno davvero nell'elenco
+        // UCDP. Il modello non ha ne' etnie ne' storia ne' geografia: ci
+        // arriva con reddito, popolazione, legittimita' e maturita'
+        // istituzionale, che e' esattamente quel che Fearon e Laitin dicono
+        // basti.
+        'reclutamento_k'     => 1.0e-3,
     ],
 
     // ------------------------------------------------------- guerre fra Stati
@@ -169,11 +208,17 @@ return [
         // Thyne), non quello del mondo che stiamo seminando. Dal 2000 il mondo
         // ne fa 2,2 l'anno, negli anni Venti circa 3,8.
         //
-        // 0,25 misurati danno 4,0 colpi l'anno. Le rivoluzioni salgono per
-        // sostituzione a ~2,3 — un governo che non cade per un colpo resta
-        // marcio e alla fine lo rovesciano gli insorti — e restano dentro il
-        // riferimento di Crawford (~1% di ~10.000 rivolte in quarant'anni).
-        'rischio_massimo_anno'   => 0.25,
+        // Era 0,25 finche' il reclutamento insurrezionale seguiva la radice
+        // della popolazione. Rifatto quello secondo Fearon & Laitin, i colpi
+        // sono risaliti da soli a 5-7 l'anno: piu' insurrezione significa meno
+        // legittimita', e la logistica qui sotto la legge. E' la stessa
+        // sostituzione di sempre, e va ritarata ogni volta che si tocca un
+        // pezzo a monte.
+        //
+        // A 0,14: colpi 3,8-3,9 l'anno (riferimento anni Venti: 3,8) e
+        // rivoluzioni 2,5-2,6, dentro il riferimento di Crawford (~1% di
+        // ~10.000 rivolte in quarant'anni, cioe' 2,5 l'anno).
+        'rischio_massimo_anno'   => 0.14,
         'pendenza'               => 7.0,
     ],
 

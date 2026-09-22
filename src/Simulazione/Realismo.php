@@ -77,6 +77,18 @@ final class Realismo
         'quota_irregolare'     => [8,    28,   '% dei cambi', 'corsa',
             'Archigos (Goemans, Gleditsch, Chiozza), 188 paesi dal 1875: circa un quinto '
             . 'delle uscite dal potere avviene per via irregolare'],
+        'paesi_in_conflitto'   => [15,   45,   'paesi',       'corsa',
+            'UCDP 2024: 61 conflitti statali attivi in 36 paesi, il massimo dal 1946'],
+        'paesi_in_guerra'      => [3,    32,   'paesi',       'corsa',
+            'UCDP 2024: 11 conflitti hanno raggiunto il livello di guerra (oltre mille '
+            . 'morti in battaglia nell\'anno). La fascia e\' larga per due ragioni oneste: '
+            . 'la nostra soglia e\' un rapporto di forze, non un conto di morti; e misurata '
+            . 'su quarant\'anni dal seme questa grandezza oscilla fra 13 e 29 senza divergere'],
+        'gradiente_taglia'     => [5,    45,   'punti',       'corsa',
+            'Fearon & Laitin (2003), APSR 97(1): la popolazione grande e\' fra i predittori '
+            . 'piu\' forti dell\'insorgenza, non fra i protettivi. Quota di paesi in conflitto '
+            . 'sopra i 10 milioni MENO quella sotto: nel mondo vero (UCDP 2024) vale circa '
+            . '+25 punti. Il modello faceva MENO 21, cioe\' il mondo alla rovescia'],
     ];
 
     /**
@@ -140,10 +152,24 @@ final class Realismo
 
         $irregolari = 0;
         $cambi      = 0;
+        $conflitto  = 0;
+        $guerra     = 0;
+        // Il gradiente demografico di Fearon & Laitin: quota di paesi in
+        // conflitto fra i grandi contro quella fra i piccoli.
+        $grandi = [0, 0];
+        $piccoli = [0, 0];
         foreach ($mondo->elenco() as $n) {
             $irregolari += $n->cambiIrregolari;
             $cambi      += $n->cambiEsecutivo;
+            $inGuerra    = $n->netPeace >= 4 ? 1 : 0;
+            $conflitto  += $inGuerra;
+            $guerra     += $n->netPeace >= 5 ? 1 : 0;
+            $dove = $n->popolazione >= 1e7 ? 'grandi' : 'piccoli';
+            if ($dove === 'grandi') { $grandi[0]++;  $grandi[1]  += $inGuerra; }
+            else                    { $piccoli[0]++; $piccoli[1] += $inGuerra; }
         }
+        $quotaGrandi  = $grandi[0]  > 0 ? $grandi[1]  / $grandi[0]  : 0.0;
+        $quotaPiccoli = $piccoli[0] > 0 ? $piccoli[1] / $piccoli[0] : 0.0;
         $cambiAnno = $cambi / $anni;
 
         $misure = $alSeme + [
@@ -157,6 +183,14 @@ final class Realismo
             // ed era l'unica del modello fuori da OGNI forchetta reale.
             'durata_governo'    => $cambiAnno > 0 ? count($mondo->nazioni) / $cambiAnno : 0.0,
             'quota_irregolare'  => $cambi > 0 ? $irregolari / $cambi * 100 : 0.0,
+            'paesi_in_conflitto' => (float) $conflitto,
+            'paesi_in_guerra'    => (float) $guerra,
+            // Differenza in PUNTI, non rapporto. Il rapporto fra due
+            // proporzioni esplode quando il denominatore e' piccolo: con pochi
+            // paesi sotto i dieci milioni in conflitto dava 16 su un seme e 2
+            // su un altro, senza che il modello fosse cambiato. La differenza
+            // e' stabile e si legge da sola.
+            'gradiente_taglia'  => ($quotaGrandi - $quotaPiccoli) * 100.0,
             'guerre_aperte'     => (float) count($mondo->guerre),
             'morti_guerra_anno' => array_sum($guerreViste) / 1e6 / max(1, $anni),
         ];

@@ -76,6 +76,7 @@ final class Fase03Economia implements Fase
         $ampiezzaMil     = $cal->numero('economia.ampiezza_militare', 0.09);
         $rientro         = $cal->numero('economia.rientro_strutturale', 0.60);
         $margine         = $cal->numero('economia.margine_strutturale', 0.02);
+        $recuperoUomini  = $cal->numero('economia.recupero_uomini_anno', 0.35);
         // Quanto le quote possono spostarsi in un anno: le economie non
         // cambiano struttura in una settimana.
         $velocita     = 0.25 * $perTick;
@@ -195,6 +196,26 @@ final class Fase03Economia implements Fase
                 0.5,
                 $n->equipaggiamento * (1.0 - 0.08 * $perTick) + $n->pil * $n->quotaMilitare * $perTick,
             );
+
+            // E GLI UOMINI ANCHE. Prima no: l'attrito li toglieva — la fase 05
+            // per le insurrezioni, la 07 per le guerre — e nessuna fase li
+            // rimpiazzava mai. Un esercito logorato rimpiccioliva PER SEMPRE,
+            // mentre l'equipaggiamento qui sopra si ricostruiva dal bilancio:
+            // il modello comprava carri armati e non arruolava nessuno.
+            //
+            // Non e' un dettaglio contabile. La Dominica e' arrivata a ZERO
+            // soldati, e con potenzaGoverno() = 0 qualunque banda armata le
+            // dichiarava guerra civile: il 29% dei paesi sotto il milione di
+            // abitanti risultava in conflitto, contro lo 0% di quelli sopra i
+            // duecento milioni.
+            //
+            // Il bersaglio sono gli uomini che il paese teneva al principio,
+            // riscalati su quanto spende adesso rispetto ad allora: chi alza il
+            // bilancio arruola, chi lo taglia congeda.
+            $obiettivoUomini = $n->soldatiIniziali
+                * ($n->quotaMilitare / max(1e-6, $n->quotaMilitareIniziale));
+            $n->soldati = max(50.0,
+                $n->soldati + ($obiettivoUomini - $n->soldati) * $recuperoUomini * $perTick);
 
             if ($crescita < 0) {
                 $inRecessione++;

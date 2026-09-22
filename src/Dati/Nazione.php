@@ -39,6 +39,10 @@ final class Nazione
         // Senza, il bersaglio del motore e' una costante universale e il mondo
         // converge a un onere militare che non e' quello di nessuno.
         public float $quotaMilitareIniziale,
+        // Gli uomini di partenza: e' il bersaglio verso cui l'esercito si
+        // ricostruisce. Senza, l'attrito li toglieva e nessuna fase li
+        // rimpiazzava — un esercito logorato rimpiccioliva PER SEMPRE.
+        public float $soldatiIniziali,
         public float $pilProCapite,
         public float $consumoProCapite,
         public float $quotaConsumi,

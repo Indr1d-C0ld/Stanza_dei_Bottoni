@@ -22,6 +22,15 @@ use App\Simulazione\Fase;
  */
 final class Fase05SicurezzaInterna implements Fase
 {
+    /**
+     * Reddito pro capite (PPA) a cui il moltiplicatore di poverta' vale 1.
+     * E' all'incirca la mediana mondiale: sopra, arruolarsi conviene meno.
+     */
+    private const REDDITO_RIFERIMENTO = 8000.0;
+
+    /** Tetto al moltiplicatore: la miseria aggrava, non spiega tutto. */
+    private const POVERTA_MAX = 4.0;
+
     public function codice(): string { return '05'; }
     public function nome(): string   { return 'Insurrezioni e cambi di esecutivo'; }
 
@@ -42,6 +51,7 @@ final class Fase05SicurezzaInterna implements Fase
         $rischioMax  = $cal->numero('colpo_di_stato.rischio_massimo_anno', 0.9);
         $pendenza    = $cal->numero('colpo_di_stato.pendenza', 6.0);
         $resistenzaEstremi = $cal->numero('colpo_di_stato.resistenza_estremisti', 2.0);
+        $vittoriaInsorti   = $cal->numero('insurrezione.vittoria_insorti_anno', 0.22);
 
         $soglie = [
             'pace'         => $cal->numero('insurrezione.soglia_pace', 512.0),
@@ -127,7 +137,29 @@ final class Fase05SicurezzaInterna implements Fase
                 $successo = $n->forzaInsorti > 0.0
                     ? min(1.0, $n->forzaInsorti / max(1.0, $n->potenzaGoverno()))
                     : 0.0;
-                $reclute = $kReclutamento * sqrt($n->popolazione) * $spinta * ($debolezza ** 1.6)
+                // FEARON & LAITIN (2003), «Ethnicity, Insurgency, and Civil
+                // War», American Political Science Review 97(1).
+                //
+                // Il reclutamento cresceva con la RADICE della popolazione,
+                // mentre la potenza del governo cresce linearmente con essa
+                // (i soldati sono una quota degli abitanti). Il rapporto fra
+                // le due scalava quindi come 1/radice(P): i paesi piccoli
+                // risultavano sistematicamente piu' insorti dei grandi, ed
+                // era misurabile — il 29% dei paesi sotto il milione di
+                // abitanti in conflitto armato, contro lo 0% di quelli sopra
+                // i duecento milioni. Il gradiente era monotono e rovesciato.
+                //
+                // Fearon e Laitin misurano l'opposto: la popolazione grande e'
+                // fra i predittori piu' forti dell'insorgenza. E il loro
+                // predittore PIU' forte — che qui non c'era affatto — e' la
+                // poverta': segna uno Stato finanziariamente e
+                // burocraticamente debole e insieme rende conveniente
+                // arruolarsi. Non l'etnia: a parita' di reddito, i paesi piu'
+                // divisi non hanno piu' guerre civili degli altri.
+                $poverta = min(self::POVERTA_MAX,
+                    self::REDDITO_RIFERIMENTO / max(300.0, $n->pilProCapite));
+                $reclute = $kReclutamento * $n->popolazione * $poverta
+                    * $spinta * ($debolezza ** 1.6)
                     * (1.0 + $carrozzone * $successo) * $perTick;
                 $n->forzaInsorti += $reclute;
             } else {
@@ -175,7 +207,16 @@ final class Fase05SicurezzaInterna implements Fase
 
             // --- vittoria degli insorti ------------------------------------
             $tregua = ($c->tick - $n->annoUltimoCambio) < (int) ($tickAnno * 2);
-            if ($rapporto < $soglie['guerraCivile'] && $n->forzaInsorti > 1.0 && !$tregua) {
+            // La vittoria degli insorti era AUTOMATICA: appena il rapporto di
+            // forze si ribaltava, il governo cadeva quel tick stesso. Nel mondo
+            // vero non funziona cosi'. Il Myanmar, il Congo, la Somalia hanno
+            // guerriglie piu' forti dell'esercito in mezzo paese da decenni e
+            // la capitale non cade: prevalere sul campo non e' prendere il
+            // potere, e fra i conflitti che finiscono la vittoria dei ribelli
+            // e' l'esito piu' raro. Adesso e' una probabilita' annua, e la
+            // guerra civile puo' durare.
+            if ($rapporto < $soglie['guerraCivile'] && $n->forzaInsorti > 1.0 && !$tregua
+                && $c->caso->prova('05_rivoluzione', $seme, $c->tick, $vittoriaInsorti * $perTick)) {
                 $this->rivoluzione($n, $c);
                 $rivoluzioni++;
                 continue;   // l'invariante: un solo cambio per nazione per tick

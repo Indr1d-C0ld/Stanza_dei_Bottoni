@@ -283,6 +283,41 @@ giusto, è in `docs/26-i-numeri-realistici.md`.
 
 ---
 
+## Guardare il mondo, e i modelli moderni
+
+Il motore nasce da Crawford (1985), ma non finisce li'. Mezzo anno di tick
+guardati passare ha trovato quel che nessuna delle prove trovava:
+
+> **Dominica**, 74.000 abitanti e **zero soldati**, in guerra civile.
+
+Sotto c'erano tre difetti uno dentro l'altro. Gli eserciti **non si
+rigeneravano mai** — l'attrito li toglieva, nessuna fase li rimpiazzava, mentre
+l'equipaggiamento si ricostruiva gia' dal bilancio: il modello comprava carri
+armati e non arruolava nessuno. Il reclutamento insurrezionale cresceva con la
+*radice* della popolazione mentre la potenza del governo cresce linearmente con
+essa, e il risultato era il mondo alla rovescia: 29% dei paesi sotto il milione
+di abitanti in conflitto, 0% di quelli sopra i duecento milioni. E la vittoria
+dei ribelli era **automatica** appena il rapporto di forze si ribaltava.
+
+**Fearon & Laitin (2003)**, *Ethnicity, Insurgency, and Civil War*, misurano
+l'opposto: la popolazione grande e' fra i predittori piu' forti dell'insorgenza,
+e il piu' forte di tutti — che qui non c'era affatto — e' la **poverta'**. Non
+l'etnia: a parita' di reddito i paesi piu' divisi non hanno piu' guerre civili
+degli altri.
+
+Rifatto secondo loro, e tarato sui riferimenti **UCDP 2024** (61 conflitti
+statali attivi in 36 paesi, 11 al livello di guerra), il modello nomina Congo,
+Sudan, Somalia, Sud Sudan, Mozambico, Burkina Faso, Niger, Nigeria, Afghanistan,
+Yemen, Centrafrica, Haiti — **dodici paesi che stanno davvero nell'elenco**. Non
+ha ne' etnie ne' storia ne' geografia: ci arriva con reddito, popolazione,
+legittimita' e maturita' istituzionale. Sbaglia anche: mette in guerra la
+Tanzania e il Malawi, e non trova il Myanmar ne' la Siria.
+
+Il cruscotto misura adesso **sedici grandezze**, e fra queste il gradiente
+demografico di Fearon & Laitin — la differenza fra la quota di paesi grandi in
+conflitto e quella dei piccoli, che nel mondo vero vale circa +25 punti e nel
+modello ne valeva MENO 21.
+
 ## Che cosa non è
 
 **Non è una previsione.** Nessuna delle cifre che il modello produce dice
