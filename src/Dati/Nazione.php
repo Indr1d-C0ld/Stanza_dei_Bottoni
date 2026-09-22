@@ -70,6 +70,16 @@ final class Nazione
          * descrizione giuridica che ogni Stato da' di se stesso.
          */
         public float $democrazia,
+        /**
+         * Indice di Gini, 0 (uguaglianza perfetta) .. 1. Dalla Banca Mondiale,
+         * via db/seed/disuguaglianza.php.
+         *
+         * E' la disuguaglianza VERTICALE, fra individui. Non tocca le guerre:
+         * per l'insorgenza di guerra civile la letteratura la trova non
+         * significativa, ed e' quella ORIZZONTALE fra gruppi a contare
+         * (Cederman, Weidmann, Gleditsch 2011). Tocca il malcontento.
+         */
+        public float $disuguaglianza,
         public float $pilProCapite,
         public float $consumoProCapite,
         public float $quotaConsumi,
@@ -198,6 +208,77 @@ final class Nazione
 
     /** Sopra questa apertura il regime incanala il dissenso invece di subirlo. */
     private const DEMOCRAZIA_PIENA = 0.55;
+
+    /**
+     * Quel che consuma il cittadino MEDIANO, non quello medio.
+     *
+     * L'equazione della legittimita' di Crawford guarda il consumo pro capite,
+     * cioe' la media. Ma la media non e' quel che la gente sente: in Sudafrica
+     * meta' della popolazione vive con poco piu' della meta' di quel che la
+     * media promette, e un governo che festeggia la crescita mentre nessuno la
+     * vede e' una delle storie piu' comuni del mondo vero.
+     *
+     * IL RAPPORTO NON E' INVENTATO, SI DERIVA. Se i redditi si distribuiscono
+     * in modo lognormale — l'approssimazione standard — allora
+     *
+     *     mediana / media = exp(-sigma^2 / 2)      con  G = 2*Phi(sigma/sqrt2) - 1
+     *
+     * cioe' sigma = sqrt(2) * Phi^-1((1 + G) / 2). Il conto si verifica da se':
+     * per gli Stati Uniti (G = 0,418) da' 0,739, e il rapporto vero fra reddito
+     * familiare mediano (~75 mila) e medio (~106 mila) e' 0,71.
+     *
+     *   Slovacchia G 0,238 -> 0,91     Stati Uniti G 0,418 -> 0,74
+     *   Norvegia   G 0,265 -> 0,89     Brasile     G 0,503 -> 0,63
+     *   Italia     G 0,343 -> 0,82     Sudafrica   G 0,541 -> 0,58
+     */
+    public function consumoMediano(): float
+    {
+        return $this->consumoProCapite * $this->quotaMediana();
+    }
+
+    /** Il rapporto fra mediana e media implicato dal Gini. */
+    public function quotaMediana(): float
+    {
+        $g = max(0.0, min(0.85, $this->disuguaglianza));
+        $sigma = M_SQRT2 * self::phiInversa((1.0 + $g) / 2.0);
+
+        return exp(-$sigma * $sigma / 2.0);
+    }
+
+    /**
+     * Inversa della normale standard cumulata, algoritmo di Acklam.
+     *
+     * Serve per ricavare sigma dal Gini. Verificabile: phiInversa(0,975) deve
+     * dare 1,9600, che e' il numero che ogni tavola statistica riporta.
+     */
+    private static function phiInversa(float $p): float
+    {
+        $a = [-3.969683028665376e+01, 2.209460984245205e+02, -2.759285104469687e+02,
+              1.383577518672690e+02, -3.066479806614716e+01, 2.506628277459239e+00];
+        $b = [-5.447609879822406e+01, 1.615858368580409e+02, -1.556989798598866e+02,
+              6.680131188771972e+01, -1.328068155288572e+01];
+        $c = [-7.784894002430293e-03, -3.223964580411365e-01, -2.400758277161838e+00,
+              -2.549732539343734e+00, 4.374664141464968e+00, 2.938163982698783e+00];
+        $d = [7.784695709041462e-03, 3.224671290700398e-01, 2.445134137142996e+00,
+              3.754408661907416e+00];
+
+        $p = max(1e-9, min(1.0 - 1e-9, $p));
+        $limite = 0.02425;
+
+        if ($p < $limite || $p > 1.0 - $limite) {
+            $q = sqrt(-2.0 * log($p < $limite ? $p : 1.0 - $p));
+            $v = ((((($c[0] * $q + $c[1]) * $q + $c[2]) * $q + $c[3]) * $q + $c[4]) * $q + $c[5])
+               / (((($d[0] * $q + $d[1]) * $q + $d[2]) * $q + $d[3]) * $q + 1.0);
+
+            return $p < $limite ? $v : -$v;
+        }
+
+        $q = $p - 0.5;
+        $r = $q * $q;
+
+        return ((((($a[0] * $r + $a[1]) * $r + $a[2]) * $r + $a[3]) * $r + $a[4]) * $r + $a[5]) * $q
+             / ((((($b[0] * $r + $b[1]) * $r + $b[2]) * $r + $b[3]) * $r + $b[4]) * $r + 1.0);
+    }
 
     public function aperturaIstituzionale(): float
     {

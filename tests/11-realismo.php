@@ -217,3 +217,49 @@ foreach ($mG->elenco() as $x) {
 }
 Prove::che('un membro della NATO ha molti garanti a cui rispondere',
     $garanti > 10, sprintf('l\'Estonia ne ha %d', $garanti));
+
+Prove::gruppo('La disuguaglianza: quel che sente il cittadino mediano');
+
+$mondoD = Mondo::daSeme($radice . '/db/seed/nazioni.csv');
+
+// Il rapporto fra mediana e media NON e' un coefficiente scelto: si deriva dal
+// Gini assumendo redditi lognormali, e si verifica contro un dato reale.
+// Per gli Stati Uniti il conto da' 0,74; il rapporto vero fra reddito familiare
+// mediano (~75 mila) e medio (~106 mila) e' 0,71.
+Prove::vicino('il conto sugli Stati Uniti torna col dato vero',
+    0.74, $mondoD->nazioni['USA']->quotaMediana(), 0.03);
+
+// E l'inversa della normale, su cui poggia tutto, deve dare il numero che sta
+// su ogni tavola statistica.
+$riflessa = new ReflectionMethod(App\Dati\Nazione::class, 'phiInversa');
+$riflessa->setAccessible(true);
+Prove::vicino('l\'inversa della normale e\' quella giusta',
+    1.9600, $riflessa->invoke(null, 0.975), 0.0005);
+
+// L'ordinamento deve essere quello del mondo vero.
+$q = static fn (string $i): float => $mondoD->nazioni[$i]->quotaMediana();
+Prove::che('il cittadino mediano sudafricano sta molto sotto la media',
+    $q('ZAF') < 0.65, sprintf('%.2f', $q('ZAF')));
+Prove::che('quello norvegese quasi in pari',
+    $q('NOR') > 0.85, sprintf('%.2f', $q('NOR')));
+
+// Il caso che spiega perche' serve: due paesi con media simile e vite diverse.
+$bra = $mondoD->nazioni['BRA'];
+$tha = $mondoD->nazioni['THA'];
+Prove::che('a medie vicine, il thailandese mediano sta meglio del brasiliano',
+    $tha->pilProCapite * $tha->quotaMediana() > $bra->pilProCapite * $bra->quotaMediana() * 1.3,
+    sprintf('THA %s contro BRA %s, con medie %s e %s',
+        number_format($tha->pilProCapite * $tha->quotaMediana()),
+        number_format($bra->pilProCapite * $bra->quotaMediana()),
+        number_format($tha->pilProCapite), number_format($bra->pilProCapite)));
+
+// E deve CONTARE: la qualita' della vita era una variabile scritta, salvata,
+// mostrata in pagina e non letta da nessun meccanismo. Adesso e' il quarto
+// predittore di PITF, ed e' la via per cui la disuguaglianza entra nel modello.
+$fase05 = (string) file_get_contents($radice . '/src/Simulazione/Fasi/Fase05SicurezzaInterna.php');
+Prove::che('la qualita\' della vita pesa sull\'instabilita\'',
+    str_contains($fase05, 'pesoQualitaVita'),
+    'senza, la disuguaglianza cambierebbe solo un numero mostrato');
+$fase04 = (string) file_get_contents($radice . '/src/Simulazione/Fasi/Fase04Societa.php');
+Prove::che('e si calcola sul consumo mediano, non su quello medio',
+    str_contains($fase04, 'consumoMediano()'));

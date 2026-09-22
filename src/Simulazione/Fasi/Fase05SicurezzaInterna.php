@@ -54,6 +54,7 @@ final class Fase05SicurezzaInterna implements Fase
         $vittoriaInsorti   = $cal->numero('insurrezione.vittoria_insorti_anno', 0.22);
         $spostamentoRegime = $cal->numero('instabilita.spostamento_regime', 12.0);
         $protezioneChiusura = $cal->numero('instabilita.protezione_chiusura', 10.0);
+        $pesoQualitaVita = $cal->numero('instabilita.peso_qualita_vita', 2.7);
         $pesoVicinato  = $cal->numero('instabilita.peso_vicinato', 1.2);
 
         $soglie = [
@@ -305,6 +306,23 @@ final class Fase05SicurezzaInterna implements Fase
             // cui i regimi parziali finivano SOTTO le autocrazie invece che
             // sopra.
             $centro -= $protezioneChiusura * (1.0 - $n->aperturaIstituzionale());
+
+            // E IL QUARTO PREDITTORE DI PITF, che finora mancava: la qualita'
+            // della vita. Goldstone et al. usano la mortalita' infantile —
+            // «i paesi al 75esimo percentile hanno SETTE VOLTE le probabilita'
+            // di quelli al 25esimo» — come misura insieme di benessere e di
+            // capacita' dello Stato di provvedere ai propri cittadini.
+            //
+            // Da noi e' `qualitaVita`, che era una variabile SCRITTA, salvata,
+            // mostrata in pagina — e non letta da nessun meccanismo. Adesso
+            // pesa, ed e' anche la via per cui entra la disuguaglianza: quel
+            // livello si calcola sul consumo MEDIANO, non su quello medio.
+            //
+            // La taratura viene dal numero di Goldstone, non dal gusto: i
+            // quartili di qualitaVita stanno a 3 e a 8, cinque livelli di
+            // scarto, e con la pendenza a 7 servono 7*ln(7) = 13,6 punti per
+            // fare sette volte le probabilita'. Cioe' 2,7 punti per livello.
+            $centro += $pesoQualitaVita * (6.0 - $n->qualitaVita);
 
             $rischioAnnuo = $rischioMax / (1.0 + exp(($n->legittimita - $centro) / $pendenza));
             // Il clamore accelera, senza essere lui a decidere.

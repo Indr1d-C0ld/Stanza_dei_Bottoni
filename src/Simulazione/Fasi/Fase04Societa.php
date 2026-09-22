@@ -100,7 +100,14 @@ final class Fase04Societa implements Fase
             // --- qualità della vita --------------------------------------
             // Dieci livelli, come il "parco" del quadrante frontale della città
             // di Shadow President: non solo reddito, anche libertà e paura.
-            $reddito = $n->consumoProCapite;
+            // Il consumo MEDIANO, non quello medio: la qualita' della vita e'
+            // quel che sente la maggior parte della gente, e la media non lo
+            // dice. In Sudafrica il cittadino mediano vive con il 58% di quel
+            // che la media promette, negli Stati Uniti col 74%, in Norvegia
+            // con l'89% — e il rapporto non e' inventato, si deriva dal Gini
+            // della Banca Mondiale assumendo redditi lognormali (vedi
+            // Nazione::consumoMediano()).
+            $reddito = $n->consumoMediano();
             $livello = match (true) {
                 $reddito >= 40000 => 10, $reddito >= 28000 => 9,
                 $reddito >= 18000 => 8,  $reddito >= 11000 => 7,

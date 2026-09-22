@@ -845,7 +845,85 @@ nella prova:
 
 ---
 
-## 12. Quel che questo episodio insegna
+## 12. La disuguaglianza, e una variabile che nessuno leggeva
+
+Il modello non aveva nessuna misura della disuguaglianza, e l'equazione della
+legittimità di Crawford guarda il consumo **pro capite** — cioè la media. Ma la
+media non è quel che la gente sente.
+
+`bin/importa_gini.php` prende l'**indice di Gini della Banca Mondiale**
+(PIP/WDI, via Our World in Data): 167 paesi con rilevazione vera, gli altri 22
+con la mediana della propria regione — che è meno sbagliata di quella mondiale,
+perché la disuguaglianza è un fatto regionale prima che nazionale.
+
+### Che cosa può fare, e che cosa no
+
+La letteratura è netta e va rispettata. Questo è il Gini **verticale**, fra
+individui: per l'insorgenza di guerra civile **non è un buon predittore** —
+Fearon & Laitin e Collier & Hoeffler lo trovano non significativo, ed è la
+disuguaglianza **orizzontale** fra gruppi etnici a contare (Cederman, Weidmann,
+Gleditsch 2011, APSR 105(3)).
+
+Il nostro seme non ha gruppi etnici. Quindi la disuguaglianza **non tocca le
+guerre**: tocca il malcontento, che è il canale per cui l'evidenza c'è.
+
+### Il rapporto non è inventato: si deriva
+
+Se i redditi si distribuiscono in modo lognormale — l'approssimazione standard —
+allora
+
+```
+mediana / media = exp(-σ²/2)        con   G = 2·Φ(σ/√2) − 1
+```
+
+cioè `σ = √2 · Φ⁻¹((1+G)/2)`. Nessun coefficiente scelto a gusto, e il conto **si
+verifica da sé**: per gli Stati Uniti (G = 0,418) dà 0,739, e il rapporto vero
+fra reddito familiare mediano (~75 mila) e medio (~106 mila) è 0,71.
+
+| paese | media | Gini | mediano | scarto |
+|---|---:|---:|---:|---:|
+| Norvegia | 91.100 | 0,265 | 81.238 | −11% |
+| Polonia | 45.100 | 0,285 | 39.470 | −12% |
+| Stati Uniti | 75.500 | 0,418 | 55.764 | −26% |
+| Brasile | 19.600 | 0,503 | 12.357 | −37% |
+| Sudafrica | 13.600 | 0,541 | 7.860 | **−42%** |
+| Colombia | 18.500 | 0,544 | 10.613 | **−43%** |
+
+Il caso che spiega perché serve: **Brasile e Thailandia** hanno medie vicine
+(19.600 e 21.700), ma il cittadino tipico thailandese sta il 46% meglio del
+brasiliano. Un governo che festeggia la crescita mentre la gente non la vede è
+una delle storie più comuni del mondo vero, e prima questo modello non poteva
+raccontarla.
+
+### La variabile che nessuno leggeva
+
+Per far *contare* la disuguaglianza serviva un canale, e cercandolo è saltato
+fuori un reperto: **`qualitaVita` era scritta, salvata, mostrata in pagina — e
+non letta da nessun meccanismo.** Dieci livelli calcolati a ogni tick per
+centottantanove paesi, e nessuna conseguenza.
+
+È la stessa famiglia dei quattro campi interi mossi per frazioni e della
+`democrazia` che cambiava senza essere salvata: *una grandezza calcolata e mai
+letta è una grandezza che non esiste.*
+
+Adesso è il **quarto predittore di PITF**, quello che avevo dichiarato non
+implementato due sezioni fa. Goldstone et al. usano la mortalità infantile —
+«i paesi al 75° percentile hanno **sette volte** le probabilità di quelli al
+25°» — come misura insieme di benessere e di capacità dello Stato di provvedere.
+Da noi è `qualitaVita`, calcolata sul consumo **mediano**.
+
+E la taratura viene dal numero, non dal gusto: i quartili di `qualitaVita`
+stanno a 3 e a 8, cinque livelli di scarto, e con la pendenza a 7 servono
+7·ln(7) = 13,6 punti per fare sette volte le probabilità. Cioè **2,7 punti per
+livello**.
+
+Così la disuguaglianza entra nel modello per una via sorgentata, invece che per
+un coefficiente inventato: Gini → consumo mediano → qualità della vita →
+instabilità.
+
+---
+
+## 13. Quel che questo episodio insegna
 
 Le duecentonove prove esistenti verificavano **meccaniche**: che le cose
 succedessero, nell'ordine giusto, con le cause giuste. Nessuna verificava

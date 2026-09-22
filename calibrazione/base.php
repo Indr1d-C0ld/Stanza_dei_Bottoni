@@ -212,6 +212,17 @@ return [
         // termine la repressione costava legittimita' e non comprava niente, e
         // le dittature risultavano piu' fragili delle democrazie.
         'protezione_chiusura'  => 10.0,
+        // Il quarto predittore di PITF: la qualita' della vita, che Goldstone
+        // et al. misurano con la mortalita' infantile — 75esimo percentile
+        // contro 25esimo, SETTE VOLTE le probabilita'.
+        //
+        // 2,7 punti per livello non e' una scelta di gusto: i quartili della
+        // nostra qualitaVita stanno a 3 e a 8, e con la pendenza a 7 servono
+        // 7*ln(7) = 13,6 punti su quei cinque livelli di scarto.
+        //
+        // E' anche la via per cui entra la DISUGUAGLIANZA: quel livello si
+        // calcola sul consumo mediano, non su quello medio.
+        'peso_qualita_vita'    => 2.7,
         // Il contagio: quattro o piu' confinanti in conflitto armato e
         // l'instabilita' passa il confine.
         'peso_vicinato'        => 1.2,

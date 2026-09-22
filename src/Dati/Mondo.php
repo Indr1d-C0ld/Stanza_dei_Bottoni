@@ -61,6 +61,10 @@ final class Mondo
         // modello di Goldstone non distinguerebbe piu' niente, quindi vale la
         // pena accorgersene.
         $democrazia = @include dirname($percorsoCsv) . '/democrazia.php';
+        $gini = @include dirname($percorsoCsv) . '/disuguaglianza.php';
+        if (!is_array($gini)) {
+            $gini = [];
+        }
         if (!is_array($democrazia)) {
             $democrazia = [];
         }
@@ -98,6 +102,7 @@ final class Mondo
                 quotaMilitareIniziale: $quotaMil,
                 soldatiIniziali:      (float) $d['soldati'],
                 democrazia:           $democrazia[$d['iso3']] ?? 0.355,
+                disuguaglianza:       $gini[$d['iso3']] ?? 0.352,
                 pilProCapite:        (float) $d['pil_pro_capite'],
                 consumoProCapite:    (float) $d['pil_pro_capite'] * $quotaCons,
                 quotaConsumi:        $quotaCons,

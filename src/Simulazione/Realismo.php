@@ -51,6 +51,13 @@ final class Realismo
             'SIPRI, Trends in World Military Expenditure 2024: 2.718 miliardi di dollari'],
         'soldati_mondo'        => [18,   35,   'milioni',     'seme',
             'IISS, The Military Balance: ~27 milioni di effettivi in servizio'],
+        'disuguaglianza'       => [0.30, 0.42, 'Gini mediano','seme',
+            'Banca Mondiale (PIP/WDI): il Gini mediano del mondo sta intorno a 0,35. '
+            . 'Gli estremi veri sono il Sudafrica a 0,54 e la Slovacchia a 0,24'],
+        'quota_mediana'        => [0.68, 0.86, 'mediana/media','seme',
+            'Rapporto medio fra consumo mediano e medio, derivato dal Gini assumendo '
+            . 'redditi lognormali. Verificabile: per gli Stati Uniti il conto da\' 0,74 e il '
+            . 'rapporto vero fra reddito familiare mediano (~75 mila) e medio (~106 mila) e\' 0,71'],
         'nucleari'             => [8,    12,   'Stati',       'seme',
             'SIPRI Yearbook: nove Stati dotati di armi nucleari (postura >= 4, «ordigno provato»)'],
 
@@ -125,6 +132,16 @@ final class Realismo
 
         $pil = $mondo->pilTotale();
 
+        // La disuguaglianza: mediana del Gini, e quanto in media il cittadino
+        // mediano sta sotto la media.
+        $gini = [];
+        $quote = [];
+        foreach ($mondo->elenco() as $n) {
+            $gini[]  = $n->disuguaglianza;
+            $quote[] = $n->quotaMediana();
+        }
+        sort($gini);
+
         return [
             'popolazione_mondo' => $popolazione / 1e9,
             'pil_mondo'         => $pil / 1e6,          // il PIL e' in milioni
@@ -132,6 +149,8 @@ final class Realismo
             'soldati_mondo'     => $soldati / 1e6,
             'nucleari'          => (float) $nucleari,
             'onere_militare'    => $spesa / max(1.0, $pil) * 100,
+            'disuguaglianza'    => $gini === [] ? 0.35 : $gini[intdiv(count($gini), 2)],
+            'quota_mediana'     => $quote === [] ? 0.8 : array_sum($quote) / count($quote),
         ];
     }
 

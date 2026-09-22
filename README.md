@@ -416,6 +416,39 @@ E `democrazia` adesso si muove — un colpo di Stato la erode, un'alternanza
 pacifica la consolida — quindi va registrata: una grandezza che cambia e non
 viene salvata e' una grandezza che non cambia.
 
+## La disuguaglianza, e quel che sente il cittadino mediano
+
+L'equazione della legittimita' di Crawford guarda il consumo PRO CAPITE, cioe'
+la media. Ma la media non e' quel che la gente sente: in Sudafrica il cittadino
+mediano vive col 58% di quel che la media promette, in Norvegia con l'89%.
+
+L'indice di Gini arriva dalla **Banca Mondiale** (PIP/WDI). E il rapporto fra
+mediana e media non e' un coefficiente scelto: si deriva assumendo redditi
+lognormali — mediana/media = exp(-sigma^2/2), con sigma ricavato dal Gini — e
+**si verifica da se'**: per gli Stati Uniti il conto da' 0,74, e il rapporto
+vero fra reddito familiare mediano (~75 mila) e medio (~106 mila) e' 0,71.
+
+Il caso che spiega perche' serve: Brasile e Thailandia hanno medie vicine
+(19.600 e 21.700 dollari), ma il cittadino tipico thailandese sta il 46% meglio
+del brasiliano. Un governo che festeggia la crescita mentre la gente non la vede
+e' una delle storie piu' comuni del mondo, e prima questo modello non poteva
+raccontarla.
+
+**Che cosa puo' fare e che cosa no.** Questo e' il Gini VERTICALE, fra
+individui: per l'insorgenza di guerra civile la letteratura lo trova non
+significativo — e' quella ORIZZONTALE fra gruppi a contare (Cederman, Weidmann,
+Gleditsch 2011). Il nostro seme non ha gruppi etnici, quindi la disuguaglianza
+non tocca le guerre: tocca il malcontento, dove l'evidenza c'e'.
+
+**E cercandole un canale e' saltato fuori un reperto.** `qualitaVita` era
+scritta, salvata, mostrata in pagina — e **non letta da nessun meccanismo**.
+Dieci livelli calcolati a ogni tick per centottantanove paesi, senza
+conseguenze. Adesso e' il quarto predittore del modello PITF, quello che restava
+fuori: Goldstone et al. usano la mortalita' infantile, «sette volte le
+probabilita' fra il 75esimo percentile e il 25esimo», come misura di benessere e
+di capacita' dello Stato. La catena e' Gini → consumo mediano → qualita' della
+vita → instabilita'.
+
 ## Che cosa non è
 
 **Non è una previsione.** Nessuna delle cifre che il modello produce dice
