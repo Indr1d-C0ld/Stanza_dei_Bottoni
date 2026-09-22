@@ -387,9 +387,23 @@ return [
 
     // ---------------------------------------------------------- elezioni
     'elezioni' => [
+        // Sopra quale indice V-Dem un paese tiene elezioni che contano.
+        // Sotto, il potere cambia solo per la via irregolare della fase 05.
+        // A 0,25 votano 119 paesi su 189, e il filtro sullo stato di polizia
+        // ne toglie altri: V-Dem ne classifica circa un centinaio come
+        // democrazie elettorali o liberali, quindi l'ordine di grandezza
+        // torna. Dentro l'India (0,26) e il Ghana (0,61), fuori la Turchia
+        // (0,11), la Russia (0,056) e la Cina (0,039) — che le elezioni le
+        // tengono, ma non decidono niente.
+        'democrazia_minima' => 0.25,
+
         // Sotto questa maturita' istituzionale non si vota davvero: resta solo
         // la via irregolare. [FABBRICATO]
-        'maturita_minima' => 130.0,
+        // NOTA: qui c'era 'maturita_minima' => 130. Tolta: decideva chi va alle
+        // urne in base a `maturita`, che e' un indice di ricchezza e
+        // alfabetizzazione marcato SEGNAPOSTO. Mandava a votare la Cina, Cuba,
+        // la Bielorussia e gli Emirati, e teneva a casa il Ghana, Capo Verde e
+        // la Giamaica. La sostituisce 'democrazia_minima', su dato V-Dem.
         // Curva del ricambio: a legittimita' pari al centro l'uscente ha una
         // probabilita' su due di perdere.
         'centro'          => 52.0,

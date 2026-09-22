@@ -41,7 +41,7 @@ final class Fase10Gabinetto implements Fase
         }
 
         $tickAnno = (int) $c->calibrazione->numero('tempo.tick_per_anno', 52.0);
-        $sogliaElettorale = (int) $c->calibrazione->numero('elezioni.maturita_minima', 130.0);
+        $sogliaElettorale = $c->calibrazione->numero('elezioni.democrazia_minima', 0.15);
         $pendenza = $c->calibrazione->numero('elezioni.pendenza', 9.0);
         $centro   = $c->calibrazione->numero('elezioni.centro', 52.0);
         $rischioCrisi = $c->calibrazione->numero('elezioni.rischio_crisi_anno', 0.9);
@@ -72,9 +72,19 @@ final class Fase10Gabinetto implements Fase
         }
 
         foreach ($mondo->elenco() as $n) {
-            // Chi ha istituzioni abbastanza solide vota; gli altri no, e per
+            // Chi ha istituzioni elettorali vere vota; gli altri no, e per
             // loro resta soltanto la via irregolare della fase 05.
-            $elettorale = $n->maturita >= $sogliaElettorale && $n->statoPolizia <= 3;
+            //
+            // QUI C'ERA `maturita`, che e' marcata SEGNAPOSTO e si ricava da
+            // reddito e alfabetizzazione. Il risultato era che in questo mondo
+            // andavano alle urne la Cina, Cuba, la Bielorussia, il Brunei e
+            // gli Emirati — ricchi e alfabetizzati — mentre non ci andavano il
+            // Ghana, Capo Verde, la Giamaica e lo Sri Lanka, che sono
+            // democrazie vere e meno ricche. Quaranta paesi sul lato sbagliato.
+            //
+            // Adesso decide l'indice di democrazia liberale di V-Dem, che e'
+            // la misura di questa cosa esatta.
+            $elettorale = $n->democrazia >= $sogliaElettorale && $n->statoPolizia <= 3;
 
             if (!$elettorale) {
                 $n->prossimaElezione = 0;
