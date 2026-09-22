@@ -1091,7 +1091,74 @@ resto. Le diciannove grandezze restano tutte in fascia.
 
 ---
 
-## 15. Quel che questo episodio insegna
+## 15. L'audit, e il mondo ripartito da zero
+
+Un audit completo della piattaforma, poi il mondo riavviato e osservato. Ha
+prodotto `bin/audit.php` — uno strumento che cerca la classe di difetti che le
+prove non vedono: non «funziona?» ma «esiste e viene usato?».
+
+Trova chiavi di calibrazione che nessuno legge, verbi che la dottrina non
+sceglie mai, campi numerici che non si muovono mai, tabelle nello schema che
+nessuna riga tocca, rimandi rotti nei documenti. È la forma di guasto che questo
+progetto ha trovato più spesso.
+
+### Quel che ha trovato
+
+**Cinque tabelle morte.** `sdb_flusso_commerciale`, `sdb_relazione_variazione`,
+`sdb_copertura_intel`, `sdb_evento_accesso`, `sdb_scenario`: create nello schema,
+zero righe, zero scritture, zero letture. Disegni superati che nessuno aveva
+tolto. Migrazione 0028.
+
+**Un documento che descriveva una meccanica inesistente.** `docs/03` raccontava
+la compartimentazione a poltrone — «decidi quante poltrone mettere al corrente»,
+con tanto di tabella dei compromessi. Non è mai stata costruita: al suo posto
+c'è il quadrante continuo `copertura` più `sdb_conoscenza` per osservatore. Il
+documento ora lo dice.
+
+**E il difetto più grosso: lo strumento di riavvio non aveva mai funzionato.**
+`bin/avvia_mondo.php --ricomincia` cancellava `sdb_evento` *prima* di
+`sdb_conoscenza`, che ha una chiave esterna su di esso. Falliva con una
+violazione di vincolo su **qualunque mondo che avesse prodotto anche un solo
+evento** — cioè su qualunque mondo vissuto. Se n'è accorto solo chi ha provato a
+riavviare il mondo vero, che è esattamente il punto di fare le cose invece di
+leggerle.
+
+### Il riavvio, e quel che si è visto
+
+Il mondo vecchio è stato salvato e azzerato. Il nuovo parte dal seme con tutte
+le fonti riversate, e la prima osservazione ha trovato un difetto che nessuna
+misura precedente aveva visto: **il mondo apriva con cinquantanove paesi in
+conflitto al primo anno**, contro i trentasei che UCDP conta, per poi scendere
+agli ottimi trentadue verso l'ottavo anno. Chi guardava si vedeva otto anni di
+mondo sbagliato prima che diventasse giusto.
+
+La causa non era il picco in sé: le insurrezioni nascevano tutte da **zero** e
+si formavano insieme. Il rimedio è `db/seed/conflitti-noti.php` — i conflitti
+armati in corso secondo UCDP, tradotti in rapporti di forze. Adesso il mondo
+**parte** con trentaquattro conflitti e venti guerre, cioè col mondo di oggi, e i
+nomi in cima sono Pakistan, Nigeria, Etiopia, Congo, Birmania, Sudan,
+Afghanistan, Yemen.
+
+Il picco degli anni di mezzo resta, ed è dichiarato: i primi due o tre anni di
+un mondo nuovo sono un periodo di assestamento.
+
+### E un altro numero fabbricato sostituito da uno vero
+
+Seminando i conflitti veri — che comprendono l'India, il Pakistan, la Nigeria —
+la crescita mondiale è scesa sotto il 2% e la fascia l'ha detto. La causa: nel
+modello **una guerra civile costava sette punti di crescita l'anno**.
+
+> **Collier et al. (2003)**, *Breaking the Conflict Trap*, Banca Mondiale: una
+> guerra civile costa circa **2,3 punti** percentuali di crescita l'anno.
+
+Tre volte meno. E c'è una ragione di modello oltre alla fonte: il nostro
+`netPeace` è uno stato **nazionale**, mentre quasi tutte le insurrezioni vere
+sono contenute in una regione. Il naxalismo non ferma l'India, e sette punti
+trattavano ogni guerriglia come se occupasse tutto il paese.
+
+---
+
+## 16. Quel che questo episodio insegna
 
 Le duecentonove prove esistenti verificavano **meccaniche**: che le cose
 succedessero, nell'ordine giusto, con le cause giuste. Nessuna verificava
