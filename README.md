@@ -189,293 +189,145 @@ verifica.
 
 ---
 
-## I numeri devono essere credibili
+## Il motore, fase per fase
 
-Un modello può avere tutte le meccaniche al posto giusto e dichiarare numeri da
-fantascienza. Questo li dichiarava: il planisfero annunciava **64.710.856 morti**
-per un anno di guerra fra Francia e Cina, quando la seconda guerra mondiale ne
-fece settanta milioni in sei anni e su tutti i fronti del pianeta. Il modello
-toglieva centocinquantamila uomini dai ruoli e poi ne dichiarava morti
-duecentoventidue volte tanto, perché i caduti si ottenevano moltiplicando
-l'attrito per un sessanta che non aveva nessuna unità di misura dietro.
+Un **tick** è una settimana di gioco e due ore vere. Dodici fasi in ordine
+fisso, ciascuna con un contratto dichiarato in testa al proprio file: che cosa
+legge, che cosa scrive, quale invariante rispetta.
 
-Duecentonove prove automatiche non se ne erano accorte, perché verificavano
-tutte delle **meccaniche** — che la guerra cominciasse, che finisse, che le
-garanzie scattassero — e nessuna verificava delle **grandezze**.
+| | fase | che cosa fa |
+|---|---|---|
+| **00** | Chiusura degli ordini | la dottrina delle nazioni non giocate sceglie le proprie azioni; gli ordini dei giocatori si chiudono |
+| **01** | Contro-azioni | chi ha scoperto un'operazione altrui può fermarla, sventarla o lasciarla correre |
+| **02** | Maturazione | gli eventi in volo arrivano a destinazione e producono le loro conseguenze |
+| **03** | Economia | crescita, quote di consumo, investimento e difesa; stock di equipaggiamento e di uomini |
+| **04** | Società | l'equazione della legittimità, il clamore sociale, la qualità della vita, le ansie |
+| **05** | Sicurezza interna | insurrezioni, stato di polizia, controllo dell'informazione, colpi di Stato, rivoluzioni |
+| **06** | Relazioni | affinità, obblighi di trattato, integrità dei garanti, proliferazione e disarmo nucleare |
+| **07** | Conflitti fra Stati | attrito, perdite, garanzie messe alla prova, esito delle guerre |
+| **08** | Intelligence | raccolta, scoperta, intercettazione, attribuzione, rapporti |
+| **09** | Stampa | che cosa diventa pubblico, e gli scandali |
+| **10** | Gabinetto | elezioni, sfiducie, rimpasti, dimissioni, fazioni |
+| **11** | Globali e scadenze | livello di pace mondiale, scadenze, chiusura d'epoca |
 
-```bash
-php bin/realismo.php --anni=15
-```
+### Le meccaniche, una per una
 
-Lo strumento fa girare il mondo a vuoto e confronta undici grandezze con la
-fascia in cui il mondo vero le tiene, ciascuna con la fonte accanto: ONU per la
-popolazione, Banca Mondiale per il prodotto, SIPRI per la spesa militare, IISS
-per gli effettivi, UCDP/PRIO per i morti di guerra, Crawford per i cambi di
-governo. Le fasce stanno in `App\Simulazione\Realismo::FASCE`, in un posto
-solo, e le legge anche la prova automatica: due tabelle che divergono sarebbero
-peggio di nessuna tabella.
+**L'evento in volo.** Ogni azione esiste nella base dati *prima* di maturare.
+Nel frattempo è scopribile e fermabile. È il cuore del gioco: non si agisce e si
+vede il risultato, si agisce e si aspetta sapendo che qualcuno potrebbe
+accorgersene.
 
-**Una distinzione che sembra pedanteria e non lo è.** Un *livello* — il prodotto
-mondiale, gli effettivi sotto le armi — si giudica al seme, perché dopo quindici
-anni di crescita non è più confrontabile col dato di oggi: rimproverare al 2040
-di non somigliare al 2024 non è una misura, è un errore di categoria. Un *tasso*
-o un *rapporto* si giudica invece sulla corsa, perché è lì che vive il
-comportamento del motore — e un motore può partire giusto e andare alla deriva.
+**I quattro livelli di conoscenza.** Su ogni evento, per ogni osservatore:
+*qualcosa si muove* → *di che genere* → *contro chi* → **chi l'ha ordinato**. Il
+quarto livello, l'attribuzione, è la soglia politica: sotto, non si può accusare
+nessuno. La conoscenza non regredisce mai.
 
-Andava alla deriva. Cercando altri numeri irreali sono emerse tre pompe
-nell'economia, tutte con lo stesso vizio: il motore puntava a un bersaglio
-uguale per tutti, diverso da dove il mondo parte davvero, e la differenza
-diventava un premio permanente. Il prodotto mondiale cresceva del 4,0% l'anno
-contro il 3% storico; l'onere militare si dimezzava, dal 2,3% all'1,0%, mentre
-il riferimento SIPRI è il 2,5%.
+**L'Oltraggio.** Quanto costa politicamente un'azione scoperta: danno fatto,
+rapporto preesistente, e l'attribuzione come **moltiplicatore**. Un'operazione
+attribuita costa molte volte una identica ma anonima.
 
-Poi è arrivata una seconda lezione, che vale quanto la prima. I cambi irregolari
-di governo erano a ~13 l'anno, e il bersaglio naturale sembravano i «~10
-storici» di Crawford. Ma quei dieci coincidono con gli anni Sessanta e Settanta
-quasi alla cifra — 103 colpi di Stato riusciti negli anni '60, 95 negli anni '70
-— perché Crawford li ricava dal *World Handbook of Political and Social
-Indicators*, che copre il 1948-77. Dal 2000 il mondo ne fa 2,2 l'anno, negli
-anni Venti circa 3,8.
+**Le sei discipline di intelligence** — umint, sigint, imint, osint, cyber,
+finint — ciascuna con una presenza per paese, e una tabella che dice quali
+servono per quale dominio. Una potenza cieca su una disciplina è cieca su
+un'intera classe di operazioni.
 
-Il nostro seme è del 2024-25 e il calendario comincia il 5 gennaio 2026: un
-mondo del 2026 con dodici colpi di Stato l'anno non è il 2026, è il 1968. Una
-fonte non basta che sia seria — deve parlare del mondo che si sta simulando.
+**Le crisi.** Una scala di escalation a nove gradini fra due potenze, dalla nota
+diplomatica alla guerra aperta. Chi cede perde faccia; chi non cede rischia il
+gradino successivo. In fondo alla scala c'è una guerra vera, e il motore la
+apre.
 
-Sotto c'era un difetto strutturale: **nessuno dei due profili di taratura
-toccava il rischio di colpo di Stato**. Entrambi ereditavano lo stesso valore, e
-il profilo che si dichiara «tarato contro i tassi storici» non era mai stato
-tarato su nessun tasso.
+**La falsa bandiera e i messaggi falsificati.** Si può far ricadere la colpa su
+un terzo, e si possono manomettere le comunicazioni altrui in transito.
 
-Le due invarianti che mancavano, e che in retrospettiva sono ovvie:
+**Il Canale e le linee dedicate.** Comunicazione fra giocatori, con canali
+sicuri fra potenze che si fidano abbastanza da aprirne uno.
 
-> I morti non possono essere più degli uomini che il fronte ha tolto dai ruoli.
->
-> Un riferimento deve parlare del mondo che si sta simulando, non solo essere
-> autorevole.
+**Il gabinetto.** Le poltrone hanno persone, con competenza, lealtà e agenda
+propria. Le fazioni che ti hanno messo lì possono smettere di volerti — è il
+Panel di *CyberJudas*, e pesa quanto la piazza.
 
-Il racconto completo, con le misure e i due tentativi sbagliati prima di quello
-**E gli altri riferimenti?** Trovato uno, la domanda giusta e' se ce ne sono
-altri. Il censimento ha richiesto prima un criterio: un rimando *strutturale*
-(la regola logistica, la tavola degli obblighi, «la storia pesa otto volte
-l'ideologia») descrive la forma di un modello e non ha un'epoca; un numero
-*[FABBRICATO]* e' dichiarato inventato; solo un rimando *empirico* — un tasso,
-una quota — puo' scadere. Ne sono emersi tre, piu' un errore nello strumento:
+**Le agende private e il Giuda.** Ogni personaggio ha obiettivi propri che non
+coincidono coi tuoi, e qualcuno può tradire.
 
-- il blocco `validazione` portava quattro tassi dello stesso World Handbook
-  1948-77 e **nessuna riga di codice li leggeva**: configurazione morta che si
-  presentava come la definizione di «corretto». Tolta;
-- la frequenza delle crisi di governo era ancorata alla Francia della Quarta
-  Repubblica e all'Italia della Prima — le due democrazie piu' instabili del
-  dopoguerra, prese come metro per tutti. I governi duravano 3,3 anni contro i
-  4-8 di oggi. Ora 4,5, e la quota di uscite irregolari sale al 16-18%, contro
-  il ~20% che Archigos misura: due riferimenti indipendenti sullo stesso punto;
-- lo strumento contava l'Iran fra le potenze nucleari, perche' leggeva
-  «programma avviato» come «ordigno provato». Il seme era corretto, sbagliava
-  il metro — che avevo scritto io due ore prima;
-- il seme non sapeva dire la propria eta'. Adesso `db/seed/PROVENIENZA.md`
-  porta data, fonte e revisione, e l'importatore lo riscrive da solo.
+**Il commercio.** Cinque settori, modello gravitazionale, concentrazione per
+settore. Una sanzione morde solo se il fornitore non è sostituibile — e chi
+chiude un rubinetto smette di essere pagato per l'acqua.
 
-Le decine di rimandi a Crawford e ai giochi degli anni Ottanta e Novanta sono
-quasi tutti strutturali, e un modello del 1985 non e' piu' scaduto di un
-teorema del 1850.
+**L'integrità e le garanzie.** Chi ha firmato un trattato di difesa col paese
+invaso deve scegliere: entrare in guerra o perdere credibilità. È il meccanismo
+con cui Crawford rende costose le promesse, e morde su **alleanze vere**.
 
-giusto, è in `docs/26-i-numeri-realistici.md`.
+**La delega e l'epoca.** Un giocatore assente lascia il posto all'apparato; a
+fine epoca si contano i punti.
+
+**Il banco dell'arbitro.** Leve di calibrazione imponibili a mondo acceso.
 
 ---
 
-## Guardare il mondo, e i modelli moderni
+## Le fonti: che cosa c'è dentro, e da dove viene
 
-Il motore nasce da Crawford (1985), ma non finisce li'. Mezzo anno di tick
-guardati passare ha trovato quel che nessuna delle prove trovava:
+Questo motore non inventa quasi niente. Le cose inventate sono marcate
+`[FABBRICATO]` nella taratura — ventidue voci, tutte in chiaro. Tutto il resto
+viene da qualche parte, e la regola è che **la fonte si data quando la si
+cita**: un riferimento che non si può datare non si può nemmeno dichiarare
+scaduto.
 
-> **Dominica**, 74.000 abitanti e **zero soldati**, in guerra civile.
+### I tre giochi, e il libro
 
-Sotto c'erano tre difetti uno dentro l'altro. Gli eserciti **non si
-rigeneravano mai** — l'attrito li toglieva, nessuna fase li rimpiazzava, mentre
-l'equipaggiamento si ricostruiva gia' dal bilancio: il modello comprava carri
-armati e non arruolava nessuno. Il reclutamento insurrezionale cresceva con la
-*radice* della popolazione mentre la potenza del governo cresce linearmente con
-essa, e il risultato era il mondo alla rovescia: 29% dei paesi sotto il milione
-di abitanti in conflitto, 0% di quelli sopra i duecento milioni. E la vittoria
-dei ribelli era **automatica** appena il rapporto di forze si ribaltava.
+| | |
+|---|---|
+| **Chris Crawford**, *Balance of Power* (1985) e *Balance of Power: the Book* | il modello dei processi: la regola logistica, l'equazione della legittimità, l'Oltraggio, l'integrità dei garanti, la scala 0-128 degli obblighi, «la storia pesa otto volte l'ideologia» |
+| **Shadow President** (1993) | il quadrante della città: qualità della vita, postura nucleare a sette livelli, il *rocker* dell'intensità, il tetto alla crescita |
+| **CyberJudas** (1996) | il Panel delle fazioni, i quattro livelli di conoscenza, il glossario delle ideologie |
 
-**Fearon & Laitin (2003)**, *Ethnicity, Insurgency, and Civil War*, misurano
-l'opposto: la popolazione grande e' fra i predittori piu' forti dell'insorgenza,
-e il piu' forte di tutti — che qui non c'era affatto — e' la **poverta'**. Non
-l'etnia: a parita' di reddito i paesi piu' divisi non hanno piu' guerre civili
-degli altri.
+### Le condizioni iniziali
 
-Rifatto secondo loro, e tarato sui riferimenti **UCDP 2024** (61 conflitti
-statali attivi in 36 paesi, 11 al livello di guerra), il modello nomina Congo,
-Sudan, Somalia, Sud Sudan, Mozambico, Burkina Faso, Niger, Nigeria, Afghanistan,
-Yemen, Centrafrica, Haiti — **dodici paesi che stanno davvero nell'elenco**. Non
-ha ne' etnie ne' storia ne' geografia: ci arriva con reddito, popolazione,
-legittimita' e maturita' istituzionale. Sbaglia anche: mette in guerra la
-Tanzania e il Malawi, e non trova il Myanmar ne' la Siria.
+| fonte | che cosa dà | vintage |
+|---|---|---|
+| **CIA World Factbook** (via `factbook.json`) | popolazione, prodotto, crescita, alfabetizzazione, effettivi, quota militare, area | clone dell'11/09/2026, voci «2024 est.» e «2025 est.» |
+| **V-Dem Institute**, Università di Göteborg — *Liberal Democracy Index* | l'asse democrazia-autocrazia: chi vota, quando un ricambio è irregolare, chi si disarma, quanto un regime stringe sull'informazione | 2025 |
+| **Banca Mondiale** (PIP/WDI) — *indice di Gini* | la disuguaglianza verticale, da cui il consumo mediano | anno mediano 2021 |
+| **Ethnic Power Relations (EPR) Core**, ETH Zurigo | la disuguaglianza orizzontale: quanta popolazione è esclusa dal potere esecutivo, e in quanti gruppi | 2021 |
+| **Correlates of War** — *Formal Alliances v4.1* | gli obblighi di trattato veri, per diade direzionata | 2012, con gli allargamenti NATO successivi aggiunti a mano e datati |
+| **UCDP/PRIO** — *Armed Conflict Dataset* | i conflitti armati in corso al momento della divergenza | 2024 |
+| **Freedom House** — *Freedom in the World* | i sedici micro-Stati che V-Dem non copre | stima dichiarata |
 
-Il cruscotto misura adesso **sedici grandezze**, e fra queste il gradiente
-demografico di Fearon & Laitin — la differenza fra la quota di paesi grandi in
-conflitto e quella dei piccoli, che nel mondo vero vale circa +25 punti e nel
-modello ne valeva MENO 21.
+### I modelli e le misure
 
-## Goldstone e il PITF: le istituzioni
+| fonte | che cosa dà al motore |
+|---|---|
+| **Fearon & Laitin (2003)**, *Ethnicity, Insurgency, and Civil War*, APSR 97(1) | i predittori dell'insorgenza: popolazione grande e povertà, non l'etnia. Il reclutamento insurrezionale scala con la popolazione e col reddito inverso |
+| **Cederman, Wimmer & Min (2010)**, *Why Do Ethnic Groups Rebel?*, World Politics 62(1)<br>**Cederman, Weidmann & Gleditsch (2011)**, APSR 105(3) | la disuguaglianza orizzontale: il **motivo** accanto all'occasione |
+| **Goldstone et al. (2010)**, *A Global Model for Forecasting Political Instability*, AJPS 54(1) — il **Political Instability Task Force** | la U rovesciata del tipo di regime, la faziosità, il contagio dal vicinato, la qualità della vita |
+| **Collier et al. (2003)**, *Breaking the Conflict Trap*, Banca Mondiale | quanto costa una guerra civile: 2,3 punti di crescita l'anno |
+| **Archigos** (Goemans, Gleditsch, Chiozza) | la quota di uscite irregolari dal potere: circa un quinto |
+| **Cline Center Coup d'État Project** e **Powell & Thyne** | i colpi di Stato riusciti per decennio — e la scoperta che i «~10 l'anno» di Crawford sono gli anni Sessanta, non il presente |
+| **SIPRI** — *Military Expenditure* e *Yearbook* | l'onere militare mondiale e gli Stati dotati di nucleare |
+| **IISS** — *The Military Balance* | gli effettivi sotto le armi |
+| **ONU** — *World Population Prospects* | la crescita della popolazione |
+| **Eckhardt**, ripreso dal **CICR** | la quota civile dei morti di guerra: circa metà, da tre secoli |
+| **Acklam** | l'inversa della normale, per ricavare dal Gini il rapporto fra consumo mediano e medio |
 
-Dopo Fearon & Laitin, il modello del **Political Instability Task Force**
-— Goldstone et al. (2010), *A Global Model for Forecasting Political
-Instability*: quattro predittori, 81,7% di accuratezza a due anni, e una
-conclusione contro l'intuito — sono le **istituzioni** a predire, non
-l'economia ne' la demografia ne' la geografia. Il piu' forte e' il tipo di
-regime, e in particolare la democrazia PARZIALE fazionalizzata, che ha oltre
-trenta volte le probabilita' d'instabilita' di un'autocrazia piena.
+### E il cruscotto che tiene tutto onesto
 
-Non si poteva implementare, perche' **il motore non aveva nessun asse
-democrazia-autocrazia**. `maturita` sembrava esserlo ed e' marcata SEGNAPOSTO:
-si ricava da reddito e alfabetizzazione, quindi mette Singapore accanto alla
-Norvegia. `ideologia_formale` e' la descrizione giuridica che ogni Stato da' di
-se stesso, e centoquarantasei paesi su centottantanove si dichiarano democrazie
-liberali. Il codice lo sapeva gia': «DA SOSTITUIRE con V-Dem».
+```bash
+php bin/realismo.php --anni=15      # diciannove grandezze contro la loro fascia
+php bin/audit.php                   # che cosa è dichiarato e mai usato
+php bin/prova.php                   # trecentodue prove
+```
 
-`bin/importa_vdem.php` fa quella sostituzione. L'indice di democrazia liberale
-del **V-Dem Institute** (Universita' di Goteborg), aggiornato al 2025, copre 173
-delle 189 nazioni; per i sedici micro-Stati scoperti il valore e' stimato dai
-punteggi Freedom House, con la relazione scritta in chiaro nell'importatore.
+`bin/realismo.php` confronta diciannove grandezze con la fascia in cui il mondo
+vero le tiene, **ciascuna con la fonte accanto**. La distinzione che ci sta
+dentro non è pedanteria: un *livello* si giudica al seme, perché dopo quindici
+anni di crescita non è più confrontabile col dato di oggi; un *tasso* si giudica
+sulla corsa, perché è lì che vive il comportamento del motore.
 
-Tre meccanismi nuovi: il tipo di regime sposta il **centro** della logistica
-d'instabilita' (moltiplicarla non funzionava — misurato: sestuplicare il peso
-muoveva il rapporto da 1,1 a 1,6, perche' un fattore lineare non tocca una
-logistica che spazia su ordini di grandezza); la **chiusura protegge**, che
-prima non faceva — la repressione costava legittimita' e non comprava niente, e
-le dittature risultavano piu' fragili delle democrazie; e il **contagio dal
-vicinato**, che funziona e si vede: un paese in conflitto ha in media 1,60
-confinanti in guerra, uno in pace 0,31.
+`bin/audit.php` cerca l'altra classe di difetti — quella che le prove non
+vedono: una chiave di calibrazione che nessuno legge, un verbo che la dottrina
+non sceglie mai, una tabella nello schema che nessuna riga di codice tocca. È la
+forma di guasto che questo progetto ha trovato più spesso.
 
-**Quel che non funziona e' scritto accanto a quel che funziona.** La U
-rovesciata non raggiunge la magnitudine di PITF: le democrazie piene stanno
-correttamente a 0,2 volte le autocrazie, ma i regimi parziali restano intorno a
-1, invece di 5-30. La ragione e' strutturale — **Crawford e Goldstone sono in
-tensione**. Crawford fa dell'instabilita' una funzione della popolarita';
-Goldstone misura che la popolarita' predice *peggio* delle istituzioni. Far
-vincere Goldstone significherebbe riscrivere l'equazione della legittimita',
-cioe' il cuore del motore.
-
-## I trattati veri
-
-Gli obblighi di trattato erano [FABBRICATO]: si deducevano dall'affinita', cioe'
-chi si piaceva abbastanza risultava alleato. Adesso vengono dal **Correlates of
-War, Formal Alliances v4.1** — patti di difesa, neutralita', non aggressione e
-intese, per diade direzionata.
-
-COW arriva al **2012** e il seme e' del 2024-25: gli allargamenti successivi
-(Montenegro 2017, Macedonia del Nord 2020, Finlandia 2023, Svezia 2024) stanno
-nell'importatore con la data accanto. Non si applica un dataset autorevole a un
-mondo di un'altra epoca — e' l'errore che questo progetto ha gia' fatto una
-volta.
-
-**Il controllo sono le assenze.** Gli Stati Uniti e Israele **non hanno** un
-patto di difesa reciproca, e la vecchia formula glielo dava; nessuno garantisce
-Taiwan, perche' quel trattato fu denunciato nel 1980. Mentre la Cina e la Corea
-del Nord ce l'hanno dal 1961, e la vecchia formula non glielo dava.
-
-E l'asimmetria: «A|B» e' l'obbligo di A verso B, quindi al gradino nucleare
-conta l'arsenale di A. Gli Stati Uniti garantiscono la Germania a 128, la
-Germania garantisce gli Stati Uniti a 96. E' la ragione per cui l'articolo 5
-pesa piu' di qualunque altra firma al mondo.
-
-**Collegando il dato sono emersi tre difetti.** La matrice delle relazioni era
-troppo rada e ne perdeva l'ottanta per cento in silenzio. La fase 06
-ricalcolava l'obbligo dall'affinita' a ogni tick e lo abbassava col due per
-cento di probabilita': su quindici anni i patti di difesa passavano da 2.907 a
-DICIASSETTE, e **nessuna garanzia veniva mai messa alla prova** — l'integrita',
-che e' il meccanismo con cui Crawford rende costose le promesse, non aveva su
-cosa mordere. E il gradino nucleare si concedeva per simpatia: risultavano
-garanti quattordici Stati, contro i nove che l'atomica ce l'hanno.
-
-Adesso un trattato regge al raffreddamento — la Grecia e la Turchia stanno nella
-NATO da settant'anni senza volersi bene — e cede solo alla rottura vera.
-
-## Sviluppo e istituzioni, che non sono la stessa cosa
-
-`maturita` nasce come «lo stato di diritto che Crawford confessa di aver
-inventato». Misurata, correla **0,989** col logaritmo del reddito pro capite e
-0,520 con l'indice di democrazia di V-Dem: non e' una misura istituzionale, e'
-il reddito con un'altra faccia.
-
-Sostituirla in blocco con V-Dem avrebbe reso deboli i servizi segreti cinesi e
-forti quelli norvegesi. Il difetto vero era un altro: essendo `maturita` il
-reddito, moltiplicarla PER il reddito lo elevava al quadrato — e nella
-proliferazione nucleare al cubo.
-
-Adesso sono due variabili che dicono due cose. `maturita` e' lo **sviluppo**, e
-regge quel che e' capacita': l'industria che serve per l'atomica, la solidita' di
-un apparato, la competenza di un servizio. `democrazia` sono le **istituzioni**,
-e regge chi va alle urne, quando un ricambio e' irregolare, quanto un regime
-stringe sull'informazione, chi si disarma. Due di questi erano difetti visibili:
-un ricambio di governo in Cina risultava «regolare» perche' la Cina e' ricca.
-
-E `democrazia` adesso si muove — un colpo di Stato la erode, un'alternanza
-pacifica la consolida — quindi va registrata: una grandezza che cambia e non
-viene salvata e' una grandezza che non cambia.
-
-## La disuguaglianza, e quel che sente il cittadino mediano
-
-L'equazione della legittimita' di Crawford guarda il consumo PRO CAPITE, cioe'
-la media. Ma la media non e' quel che la gente sente: in Sudafrica il cittadino
-mediano vive col 58% di quel che la media promette, in Norvegia con l'89%.
-
-L'indice di Gini arriva dalla **Banca Mondiale** (PIP/WDI). E il rapporto fra
-mediana e media non e' un coefficiente scelto: si deriva assumendo redditi
-lognormali — mediana/media = exp(-sigma^2/2), con sigma ricavato dal Gini — e
-**si verifica da se'**: per gli Stati Uniti il conto da' 0,74, e il rapporto
-vero fra reddito familiare mediano (~75 mila) e medio (~106 mila) e' 0,71.
-
-Il caso che spiega perche' serve: Brasile e Thailandia hanno medie vicine
-(19.600 e 21.700 dollari), ma il cittadino tipico thailandese sta il 46% meglio
-del brasiliano. Un governo che festeggia la crescita mentre la gente non la vede
-e' una delle storie piu' comuni del mondo, e prima questo modello non poteva
-raccontarla.
-
-**Che cosa puo' fare e che cosa no.** Questo e' il Gini VERTICALE, fra
-individui: per l'insorgenza di guerra civile la letteratura lo trova non
-significativo — e' quella ORIZZONTALE fra gruppi a contare (Cederman, Weidmann,
-Gleditsch 2011). Il nostro seme non ha gruppi etnici, quindi la disuguaglianza
-non tocca le guerre: tocca il malcontento, dove l'evidenza c'e'.
-
-**E cercandole un canale e' saltato fuori un reperto.** `qualitaVita` era
-scritta, salvata, mostrata in pagina — e **non letta da nessun meccanismo**.
-Dieci livelli calcolati a ogni tick per centottantanove paesi, senza
-conseguenze. Adesso e' il quarto predittore del modello PITF, quello che restava
-fuori: Goldstone et al. usano la mortalita' infantile, «sette volte le
-probabilita' fra il 75esimo percentile e il 25esimo», come misura di benessere e
-di capacita' dello Stato. La catena e' Gini → consumo mediano → qualita' della
-vita → instabilita'.
-
-## La disuguaglianza orizzontale: i gruppi, non gli individui
-
-Il Gini misura la disuguaglianza fra INDIVIDUI, e per l'insorgenza di guerra
-civile la letteratura la trova non significativa. Quella che conta e'
-l'orizzontale, fra GRUPPI: **Ethnic Power Relations** (ETH Zurigo) codifica ogni
-gruppo etnico politicamente rilevante di ogni Stato sopra i 250.000 abitanti, con
-la sua quota di popolazione e il suo accesso al potere esecutivo.
-
-Il dato si valida da se'. La Siria: arabi sunniti **65% senza potere**, alawiti
-**13% dominanti**, curdi **8% auto-esclusi**. Una minoranza del tredici per cento
-sopra l'ottantasei per cento della popolazione — non serve altro per capire
-quella guerra. Il Myanmar mostra perche' la taglia non basta: un terzo degli
-esclusi della Siria, ma in **undici gruppi**.
-
-Il motore aveva solo le OPPORTUNITA' — poverta', popolazione, debolezza dello
-Stato — che e' il consenso di Fearon & Laitin e Collier & Hoeffler: i motivi non
-predicono le guerre civili. Cederman, Wimmer e Min (2010) mostrano che quel
-consenso reggeva perche' si era misurata la disuguaglianza sbagliata. Adesso
-accanto all'occasione c'e' il motivo.
-
-**E il risultato detto per intero: e' modesto.** Sui ventotto paesi con
-conflitto statale attivo secondo UCDP nel 2024, il modello ne trovava diciotto e
-adesso ne trova venti — dal 64% al 71% di richiamo, con tre falsi positivi in
-piu'. Vale la pena tenerlo non perche' sposti i conteggi, ma perche' aggiunge un
-canale causale che non c'era: un mondo in cui la Siria e il Ruanda hanno guerre
-civili per la stessa ragione per cui le hanno avute davvero racconta meglio,
-anche quando il numero non migliora.
+---
 
 ## Che cosa non è
 
@@ -512,6 +364,34 @@ salute numerica su quindici anni — e i quattordici punti in cui il modello
 promette una cosa e ne fa un'altra: tre dimensioni che il motore legge e nessuno
 scrive, un gradino della tavola di Crawford irraggiungibile, quattro verbi su
 diciotto che l'apparato non sceglie mai, quindici manopole di taratura scollegate.
+
+**`docs/26-i-numeri-realistici.md`** è il secondo, in quindici sezioni: il
+sessanta che non voleva dire niente e faceva sessantaquattro milioni di morti in
+una guerra bilaterale, le tre pompe nell'economia, la variabile che nessuno
+leggeva, la riscrittura che abbiamo **deciso di non fare** e perché.
+
+### Quel che oggi non funziona come dovrebbe
+
+- **Il mondo apre con un picco.** Parte coi conflitti veri di UCDP — trentaquattro
+  paesi — ma nei primi due anni sale a una sessantina prima di riscendere ai
+  trentadue di regime verso l'ottavo. Il reclutamento insurrezionale eccede
+  finché l'attrito non lo riordina: i primi anni di un mondo nuovo sono un
+  periodo di assestamento, non il mondo.
+- **Metà dei conflitti seminati si spegne in quindici anni**, e altrettanti ne
+  nascono altrove. In parte è giusto — i conflitti veri finiscono — ma il
+  modello non sa *quali* devono durare.
+- **La crescita sta sul lato basso**, fra l'1,9% e il 2,4% contro un riferimento
+  del 2,9%: il freno di maturazione agisce su tendenze che quella maturità la
+  incorporano già, e c'è un doppio conteggio dichiarato.
+- **La U rovesciata di Goldstone non raggiunge la sua magnitudine.** Le
+  democrazie piene stanno correttamente a 0,2 volte le autocrazie, ma i regimi
+  parziali restano intorno a 1 invece di 5-30. Crawford e Goldstone sono in
+  tensione strutturale, e la sezione 13 di `docs/26` spiega perché abbiamo
+  scelto di non riscrivere l'equazione della legittimità.
+- **La faziosità copre quattordici nazioni su centottantanove**, perché i
+  gabinetti esistono solo per le potenze giocabili.
+- **Il commercio ha un limite strutturale**: la taglia assoluta decide troppo, e
+  il Belgio esporta zero.
 
 Sono difetti noti e scritti, non nascosti.
 

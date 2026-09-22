@@ -69,8 +69,22 @@ ambizione a decidere.
 
 ## La compartimentazione: il trade-off centrale
 
-Ogni evento in volo porta la **lista di chi ne è a conoscenza**
-(`sdb_evento_accesso`). Quando pianifichi, decidi quante poltrone metterci:
+> **NOTA, settembre 2026 — questo paragrafo descriveva un disegno che è stato
+> superato.** La compartimentazione a poltrone non è mai stata costruita, e
+> `sdb_evento_accesso` è stata tolta dallo schema (migrazione 0028) perché
+> nessuna riga di codice la scriveva o la leggeva. L'ha trovata `bin/audit.php`
+> incrociando le tabelle col sorgente.
+>
+> Quel che esiste al suo posto fa lo stesso mestiere con due pezzi diversi: il
+> quadrante continuo **`copertura`** su ogni evento — quanto si investe in
+> OPSEC, da 0 a 1 — e la tabella **`sdb_conoscenza`**, che tiene per OGNI
+> osservatore a quale dei quattro livelli è arrivato su quell'evento. Il
+> compromesso c'è ancora, ma è una manopola invece che un numero di poltrone.
+>
+> La tabella qui sotto resta come testimonianza del disegno originale.
+
+Ogni evento in volo portava la **lista di chi ne è a conoscenza**. Quando
+pianificavi, decidevi quante poltrone metterci:
 
 | Compartimenti | Efficacia (LER) | Rischio di fuga | Sospetti se trapela |
 |---|---|---|---|

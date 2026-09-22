@@ -297,3 +297,38 @@ foreach ($mondoE->elenco() as $n) { $tutti[] = $n->esclusioneEtnica; }
 sort($tutti);
 Prove::fra('la mediana dell\'esclusione resta bassa', 0.0, 0.15, $tutti[intdiv(count($tutti), 2)]);
 Prove::che('ma la coda alta esiste', end($tutti) > 0.7);
+
+Prove::gruppo('Il riavvio del mondo cancella nell\'ordine giusto');
+
+// bin/avvia_mondo.php --ricomincia cancellava sdb_evento PRIMA di
+// sdb_conoscenza, che ha una chiave esterna su di esso: il riavvio falliva con
+// una violazione di vincolo su QUALUNQUE mondo che avesse prodotto anche un
+// solo evento — cioe' su qualunque mondo vissuto. Lo strumento di riavvio non
+// aveva mai funzionato, e se n'e' accorto solo chi ha provato a riavviare il
+// mondo vero.
+$sorgenteAvvio = (string) file_get_contents($radice . '/bin/avvia_mondo.php');
+$posConoscenza = strpos($sorgenteAvvio, "'sdb_conoscenza'");
+$posEvento     = strpos($sorgenteAvvio, "'sdb_evento'");
+Prove::che('sdb_conoscenza si cancella prima di sdb_evento',
+    $posConoscenza !== false && $posEvento !== false && $posConoscenza < $posEvento,
+    'la chiave esterna va dai figli ai padri');
+Prove::che('e l\'anagrafica non viene toccata',
+    !preg_match('/DELETE FROM sdb_nazione\b/', $sorgenteAvvio),
+    'la ricostruisce preparaAnagrafica(), e le poltrone vi si appoggiano');
+
+Prove::gruppo('Nessuna tabella dello schema resta senza nessuno che la usi');
+
+// Cinque tabelle erano state create e mai scritte ne' lette. Le ha trovate
+// bin/audit.php incrociando lo schema col sorgente, e la migrazione 0028 le ha
+// tolte. Qui si impedisce che tornino.
+$morte = ['sdb_flusso_commerciale', 'sdb_relazione_variazione', 'sdb_copertura_intel',
+          'sdb_evento_accesso', 'sdb_scenario'];
+$sorgenti = '';
+foreach (array_merge(glob($radice . '/src/*/*.php') ?: [], glob($radice . '/src/*/*/*.php') ?: [],
+                     glob($radice . '/bin/*.php') ?: [], [$radice . '/index.php']) as $f) {
+    $sorgenti .= (string) file_get_contents($f);
+}
+foreach ($morte as $t) {
+    Prove::che("$t non torna nel codice", !str_contains($sorgenti, $t),
+        'se serve davvero, va anche usata');
+}

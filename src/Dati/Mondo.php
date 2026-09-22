@@ -63,6 +63,10 @@ final class Mondo
         $democrazia = @include dirname($percorsoCsv) . '/democrazia.php';
         $gini = @include dirname($percorsoCsv) . '/disuguaglianza.php';
         $epr = @include dirname($percorsoCsv) . '/esclusione.php';
+        $conflitti = @include dirname($percorsoCsv) . '/conflitti-noti.php';
+        if (!is_array($conflitti)) {
+            $conflitti = [];
+        }
         if (!is_array($epr)) {
             $epr = [];
         }
@@ -160,6 +164,41 @@ final class Mondo
 
         $mondo->relazioni = new Relazioni();
         $mondo->relazioni->caricaConfini(dirname($percorsoCsv) . '/confini.csv');
+        // --- le insurrezioni in corso al momento della divergenza -------
+        //
+        // Le insurrezioni nascevano da ZERO per tutti, e siccome il
+        // reclutamento e' rapido si formavano tutte insieme: il mondo apriva
+        // con CINQUANTANOVE paesi in conflitto al primo anno — piu' che a
+        // regime — e ci metteva otto anni a scendere ai trentasei di
+        // equilibrio. Chi guardava si vedeva quasi un decennio di mondo
+        // sbagliato prima che diventasse giusto.
+        //
+        // Un mondo che comincia oggi deve cominciare coi conflitti di oggi.
+        // L'elenco viene da UCDP (db/seed/conflitti-noti.php); qui si traduce
+        // il livello nel RAPPORTO DI FORZE che lo produce, che e' la scala su
+        // cui la fase 05 ragiona:
+        //
+        //   livello 4  guerriglia     rapporto ~10  (fra le soglie 3 e 32)
+        //   livello 5  grave          rapporto ~1,5 (fra 1 e 2)
+        //   livello 6  guerra civile  rapporto ~0,7 (sotto 1)
+        //
+        // I rapporti scelti valgono per ENTRAMBI i profili di taratura, che
+        // hanno soglie diverse: e' il motivo per cui non si usa il valore di
+        // mezzo di ciascuna fascia ma uno che ci sta in tutte e due.
+        foreach ($conflitti as $iso => $livello) {
+            $n = $mondo->nazioni[(string) $iso] ?? null;
+            if ($n === null) {
+                continue;
+            }
+            $rapporto = match ((int) $livello) {
+                6       => 0.7,
+                5       => 1.5,
+                default => 10.0,
+            };
+            $n->forzaInsorti = max(1.5, $n->potenzaGoverno() / $rapporto);
+            $n->netPeace = (int) $livello;
+        }
+
         $mondo->preparaRelazioni($politica['rapporti'] ?? []);
 
         // L'influenza serve alle condizioni iniziali dell'intelligence e la

@@ -161,12 +161,28 @@ final class Fase03Economia implements Fase
                 + $resa * ($n->quotaInvestimenti - $n->quotaInvestimentiIniziale)
                 + $resa * min(0.0, $n->quotaInvestimenti - $soglia) * 2.0;
 
-            // Una guerra costa punti di crescita, e la guerra civile ne costa molti.
+            // Una guerra costa punti di crescita. QUANTI non e' piu' inventato:
+            //
+            //   COLLIER et al. (2003), «Breaking the Conflict Trap: Civil War
+            //   and Development Policy», Banca Mondiale — una guerra civile
+            //   costa circa 2,3 punti percentuali di crescita l'anno.
+            //
+            // Qui c'erano SETTE punti per la guerra civile, tre volte tanto.
+            // Finche' i conflitti nascevano solo in paesi piccoli non si
+            // vedeva; seminando i conflitti veri — che comprendono l'India, il
+            // Pakistan, la Nigeria — la crescita mondiale e' scesa sotto il 2%
+            // e la fascia l'ha detto.
+            //
+            // E c'e' una ragione di modello oltre alla fonte: il nostro
+            // netPeace e' uno stato NAZIONALE, mentre quasi tutte le
+            // insurrezioni vere sono contenute in una regione. Il naxalismo non
+            // ferma l'India. Sette punti trattavano ogni guerriglia come se
+            // occupasse tutto il paese.
             $crescita -= match (true) {
-                $n->netPeace >= 6 => 0.070,
-                $n->netPeace >= 5 => 0.045,
-                $n->netPeace >= 4 => 0.018,
-                $n->netPeace >= 3 => 0.006,
+                $n->netPeace >= 6 => 0.023,
+                $n->netPeace >= 5 => 0.014,
+                $n->netPeace >= 4 => 0.006,
+                $n->netPeace >= 3 => 0.002,
                 default           => 0.0,
             };
 

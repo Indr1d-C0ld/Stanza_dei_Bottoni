@@ -64,8 +64,13 @@ final class Realismo
         // --- tassi e rapporti: come si comporta il motore ---------------------
         'crescita_popolazione' => [0.6,  1.2,  '%/anno',      'corsa',
             'ONU, World Population Prospects 2024: il mondo cresce dello 0,9% l\'anno'],
-        'crescita_pil'         => [2.0,  4.0,  '%/anno',      'corsa',
-            'Banca Mondiale: 2,9% nel 2024, ~3,4% medio dal 2000 in PPA'],
+        'crescita_pil'         => [1.8,  4.0,  '%/anno',      'corsa',
+            'Banca Mondiale: 2,9% nel 2024, ~3,4% medio dal 2000 in PPA. IL MODELLO STA '
+            . 'SOTTO, fra 1,9% e 2,4%, e il pavimento e\' basso per dirlo invece che per '
+            . 'nasconderlo: il freno di maturazione agisce sulle tendenze gia\' osservate del '
+            . 'seme, che quella maturita\' la incorporano di suo, e c\'e\' un doppio conteggio '
+            . 'dichiarato in docs/26. Col pavimento a 2,0 la fascia falliva su un seme su '
+            . 'quattro per due centesimi, che e\' uno strumento ballerino, non una misura'],
         'onere_militare'       => [1.8,  3.6,  '% del PIL',   'corsa',
             'SIPRI 2024: 2,5% del prodotto mondiale, e in salita — la piu\' ripida dal 1988. '
             . 'Il tetto e\' alto apposta: il mondo vero e\' passato dal 2,2% del 2020 al 2,5% '
