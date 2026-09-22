@@ -47,6 +47,8 @@ final class Fase05SicurezzaInterna implements Fase
         $attrito  = $cal->numero('insurrezione.attrito_anno', 0.25) * $perTick;
         $carrozzone = $cal->numero('insurrezione.effetto_carrozzone', 0.20);
         $kReclutamento = $cal->numero('insurrezione.reclutamento_k', 2.5);
+        $pesoEsclusione     = $cal->numero('insurrezione.peso_esclusione', 3.0);
+        $pesoFrammentazione = $cal->numero('insurrezione.peso_frammentazione', 0.5);
         $sogliaColpo = $cal->numero('colpo_di_stato.soglia_legittimita', 22.0);
         $rischioMax  = $cal->numero('colpo_di_stato.rischio_massimo_anno', 0.9);
         $pendenza    = $cal->numero('colpo_di_stato.pendenza', 6.0);
@@ -202,7 +204,30 @@ final class Fase05SicurezzaInterna implements Fase
                 // divisi non hanno piu' guerre civili degli altri.
                 $poverta = min(self::POVERTA_MAX,
                     self::REDDITO_RIFERIMENTO / max(300.0, $n->pilProCapite));
-                $reclute = $kReclutamento * $n->popolazione * $poverta
+                // CEDERMAN, WIMMER, MIN (2010), «Why Do Ethnic Groups
+                // Rebel?», World Politics 62(1); CEDERMAN, WEIDMANN, GLEDITSCH
+                // (2011), APSR 105(3).
+                //
+                // Fin qui il modello aveva solo le OPPORTUNITA': poverta',
+                // popolazione, debolezza dello Stato. E' il consenso costruito
+                // da Fearon & Laitin e da Collier & Hoeffler, per cui i MOTIVI
+                // — le ingiustizie — non predicono le guerre civili.
+                //
+                // Cederman e colleghi mostrano che quel consenso reggeva
+                // perche' si era misurata la disuguaglianza sbagliata: fra
+                // individui (il Gini) invece che fra GRUPPI politicamente
+                // rilevanti. Misurata come si deve — quanta popolazione sta
+                // fuori dal potere esecutivo — la disuguaglianza orizzontale
+                // predice, e bene.
+                //
+                // La Siria basta a capire: 86% della popolazione senza accesso
+                // al potere, in quattro gruppi, con una minoranza del 13%
+                // dominante. Il Myanmar ha meno esclusi (29%) ma in UNDICI
+                // gruppi, e la frammentazione conta oltre alla taglia.
+                $motivo = 1.0 + $pesoEsclusione * $n->esclusioneEtnica
+                    * (1.0 + $pesoFrammentazione * min(1.0, $n->gruppiEsclusi / 6.0));
+
+                $reclute = $kReclutamento * $n->popolazione * $poverta * $motivo
                     * $spinta * ($debolezza ** 1.6)
                     * (1.0 + $carrozzone * $successo) * $perTick;
                 $n->forzaInsorti += $reclute;

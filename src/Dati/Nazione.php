@@ -80,6 +80,22 @@ final class Nazione
          * (Cederman, Weidmann, Gleditsch 2011). Tocca il malcontento.
          */
         public float $disuguaglianza,
+        /**
+         * Quota di popolazione in gruppi etnici ESCLUSI dal potere esecutivo,
+         * da Ethnic Power Relations (ETH Zurigo).
+         *
+         * E' la disuguaglianza ORIZZONTALE — fra gruppi — e serve a una cosa
+         * che quella verticale non sa fare: predire la guerra civile. Cederman,
+         * Wimmer e Min (2010) mostrano che il consenso per cui contano solo le
+         * opportunita' e non i motivi reggeva perche' si era misurata la
+         * disuguaglianza sbagliata.
+         *
+         * La Siria basta come esempio: 86% della popolazione senza accesso al
+         * potere, in quattro gruppi.
+         */
+        public float $esclusioneEtnica = 0.0,
+        /** Quanti sono quei gruppi: la frammentazione conta oltre alla taglia. */
+        public int $gruppiEsclusi = 0,
         public float $pilProCapite,
         public float $consumoProCapite,
         public float $quotaConsumi,

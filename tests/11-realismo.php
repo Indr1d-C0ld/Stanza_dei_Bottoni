@@ -263,3 +263,37 @@ Prove::che('la qualita\' della vita pesa sull\'instabilita\'',
 $fase04 = (string) file_get_contents($radice . '/src/Simulazione/Fasi/Fase04Societa.php');
 Prove::che('e si calcola sul consumo mediano, non su quello medio',
     str_contains($fase04, 'consumoMediano()'));
+
+Prove::gruppo('La disuguaglianza orizzontale: i gruppi, non gli individui');
+
+$mondoE = Mondo::daSeme($radice . '/db/seed/nazioni.csv');
+$esc = static fn (string $i): float => $mondoE->nazioni[$i]->esclusioneEtnica;
+
+// Il dato deve dire quel che il mondo vero dice. La Siria e' il caso di
+// scuola: una minoranza al potere sopra una maggioranza esclusa.
+Prove::che('in Siria la popolazione esclusa dal potere e\' la grande maggioranza',
+    $esc('SYR') > 0.8, sprintf('%.0f%%', $esc('SYR') * 100));
+Prove::che('in Ruanda pure', $esc('RWA') > 0.7, sprintf('%.0f%%', $esc('RWA') * 100));
+Prove::che('mentre in Giappone l\'esclusione etnica e\' trascurabile',
+    $esc('JPN') < 0.05, sprintf('%.1f%%', $esc('JPN') * 100));
+
+// E la frammentazione conta oltre alla taglia: il Myanmar ha meno esclusi
+// della Siria ma in molti piu' gruppi, e undici fronti sono peggio di quattro.
+Prove::che('il Myanmar ha molti gruppi esclusi',
+    $mondoE->nazioni['MMR']->gruppiEsclusi >= 8,
+    sprintf('%d gruppi', $mondoE->nazioni['MMR']->gruppiEsclusi));
+
+// L'esclusione deve CONTARE nel reclutamento, che e' il canale per cui
+// l'evidenza esiste — non nei colpi di Stato, dove non e' stata misurata.
+$f05 = (string) file_get_contents($radice . '/src/Simulazione/Fasi/Fase05SicurezzaInterna.php');
+Prove::che('l\'esclusione pesa sul reclutamento insurrezionale',
+    str_contains($f05, 'pesoEsclusione'));
+
+// E la distribuzione dev'essere CONCENTRATA: l'esclusione e' un fatto di
+// pochi paesi, non una proprieta' diffusa. Se la mediana fosse alta il dato
+// avrebbe perso il proprio potere discriminante.
+$tutti = [];
+foreach ($mondoE->elenco() as $n) { $tutti[] = $n->esclusioneEtnica; }
+sort($tutti);
+Prove::fra('la mediana dell\'esclusione resta bassa', 0.0, 0.15, $tutti[intdiv(count($tutti), 2)]);
+Prove::che('ma la coda alta esiste', end($tutti) > 0.7);

@@ -62,6 +62,10 @@ final class Mondo
         // pena accorgersene.
         $democrazia = @include dirname($percorsoCsv) . '/democrazia.php';
         $gini = @include dirname($percorsoCsv) . '/disuguaglianza.php';
+        $epr = @include dirname($percorsoCsv) . '/esclusione.php';
+        if (!is_array($epr)) {
+            $epr = [];
+        }
         if (!is_array($gini)) {
             $gini = [];
         }
@@ -103,6 +107,8 @@ final class Mondo
                 soldatiIniziali:      (float) $d['soldati'],
                 democrazia:           $democrazia[$d['iso3']] ?? 0.355,
                 disuguaglianza:       $gini[$d['iso3']] ?? 0.352,
+                esclusioneEtnica:     (float) ($epr[$d['iso3']]['esclusa'] ?? 0.0),
+                gruppiEsclusi:        (int) ($epr[$d['iso3']]['gruppi'] ?? 0),
                 pilProCapite:        (float) $d['pil_pro_capite'],
                 consumoProCapite:    (float) $d['pil_pro_capite'] * $quotaCons,
                 quotaConsumi:        $quotaCons,

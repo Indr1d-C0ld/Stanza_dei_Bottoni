@@ -449,6 +449,34 @@ probabilita' fra il 75esimo percentile e il 25esimo», come misura di benessere 
 di capacita' dello Stato. La catena e' Gini → consumo mediano → qualita' della
 vita → instabilita'.
 
+## La disuguaglianza orizzontale: i gruppi, non gli individui
+
+Il Gini misura la disuguaglianza fra INDIVIDUI, e per l'insorgenza di guerra
+civile la letteratura la trova non significativa. Quella che conta e'
+l'orizzontale, fra GRUPPI: **Ethnic Power Relations** (ETH Zurigo) codifica ogni
+gruppo etnico politicamente rilevante di ogni Stato sopra i 250.000 abitanti, con
+la sua quota di popolazione e il suo accesso al potere esecutivo.
+
+Il dato si valida da se'. La Siria: arabi sunniti **65% senza potere**, alawiti
+**13% dominanti**, curdi **8% auto-esclusi**. Una minoranza del tredici per cento
+sopra l'ottantasei per cento della popolazione — non serve altro per capire
+quella guerra. Il Myanmar mostra perche' la taglia non basta: un terzo degli
+esclusi della Siria, ma in **undici gruppi**.
+
+Il motore aveva solo le OPPORTUNITA' — poverta', popolazione, debolezza dello
+Stato — che e' il consenso di Fearon & Laitin e Collier & Hoeffler: i motivi non
+predicono le guerre civili. Cederman, Wimmer e Min (2010) mostrano che quel
+consenso reggeva perche' si era misurata la disuguaglianza sbagliata. Adesso
+accanto all'occasione c'e' il motivo.
+
+**E il risultato detto per intero: e' modesto.** Sui ventotto paesi con
+conflitto statale attivo secondo UCDP nel 2024, il modello ne trovava diciotto e
+adesso ne trova venti — dal 64% al 71% di richiamo, con tre falsi positivi in
+piu'. Vale la pena tenerlo non perche' sposti i conteggi, ma perche' aggiunge un
+canale causale che non c'era: un mondo in cui la Siria e il Ruanda hanno guerre
+civili per la stessa ragione per cui le hanno avute davvero racconta meglio,
+anche quando il numero non migliora.
+
 ## Che cosa non è
 
 **Non è una previsione.** Nessuna delle cifre che il modello produce dice

@@ -122,6 +122,15 @@ return [
         // Le armi consegnate agli insorti valgono il doppio: le usano meglio.
         'moltiplicatore_armi_insorti' => 2.0,
         'effetto_carrozzone' => 0.20,
+        // La disuguaglianza ORIZZONTALE di Cederman, Wimmer e Min: quanto
+        // pesa l'esclusione etnica dal potere sul reclutamento insurrezionale.
+        // E' il MOTIVO, che il modello non aveva: fin qui c'erano solo le
+        // opportunita' (poverta', popolazione, debolezza dello Stato).
+        'peso_esclusione'     => 3.0,
+        // E la frammentazione: il Myanmar ha meno esclusi della Siria (29%
+        // contro 86%) ma in undici gruppi invece che in quattro, e undici
+        // fronti sono peggio di uno.
+        'peso_frammentazione' => 0.5,
         // Probabilita' annua che gli insorti, una volta piu' forti
         // dell'esercito, prendano DAVVERO il potere. Non e' uno: prevalere sul
         // campo non e' prendere la capitale, e fra i conflitti armati che

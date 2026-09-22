@@ -1005,7 +1005,93 @@ rapporto aggregato in un mondo che già nomina i paesi giusti.
 
 ---
 
-## 14. Quel che questo episodio insegna
+## 14. La disuguaglianza orizzontale, e un risultato modesto detto per intero
+
+La sezione 13 chiudeva indicando la strada da preferire alla riscrittura della
+legittimità: la disuguaglianza **orizzontale**, fra gruppi. È stata fatta.
+
+`bin/importa_epr.php` prende **Ethnic Power Relations Core 2021** (Chair of
+International Conflict Research, ETH Zurigo): tutti i gruppi etnici
+politicamente rilevanti di ogni Stato sopra i 250.000 abitanti, con la loro
+quota di popolazione e il loro accesso al potere esecutivo — dal monopolio alla
+discriminazione aperta. 174 dei nostri 189 paesi; i restanti 15 sono micro-Stati
+che EPR non segue, dichiarati a zero perché omogenei.
+
+### Perché serviva
+
+Il modello aveva solo le **opportunità** — povertà, popolazione, debolezza dello
+Stato — che è il consenso costruito da Fearon & Laitin e da Collier & Hoeffler:
+i *motivi* non predicono le guerre civili. Cederman, Wimmer e Min (2010)
+mostrano che quel consenso reggeva perché si era misurata la disuguaglianza
+sbagliata — fra individui invece che fra gruppi politicamente rilevanti.
+
+Il Gini che avevamo aggiunto è quello verticale, e per le guerre civili **non
+può funzionare**: lo avevamo scritto nell'importatore quando lo abbiamo messo.
+
+Il dato si valida da sé. La Siria:
+
+> arabi sunniti **65% POWERLESS** · alawiti **13% DOMINANT** ·
+> cristiani 10% powerless · curdi **8% SELF-EXCLUSION** · drusi 3% powerless
+
+Una minoranza del 13% sopra l'86% della popolazione. Non serve altro per capire
+quella guerra. E la distribuzione è **concentrata** — mediana 5,8%, massimo 86% —
+che è la forma giusta per un predittore.
+
+| | esclusi | gruppi |
+|---|---:|---:|
+| Siria | 86% | 4 |
+| Ruanda | 84% | 1 |
+| Sudan | 75% | 8 |
+| Israele | 43% | 2 |
+| **Myanmar** | 29% | **11** |
+| Giappone | ~0% | 0 |
+
+Il Myanmar è il caso che mostra perché la taglia non basta: ha un terzo degli
+esclusi della Siria, ma in **undici gruppi**. Undici fronti sono peggio di
+quattro, ed è il termine di frammentazione.
+
+### E adesso il risultato, per intero
+
+La prova è sempre la stessa: **i nomi**. Ventotto paesi hanno un conflitto
+statale attivo secondo UCDP nel 2024; quanti ne trova il modello?
+
+| | paesi in conflitto | trovati su 28 |
+|---|---:|---:|
+| senza esclusione etnica | 44 | **18** |
+| con esclusione, peso 3 | 49 | **20** |
+| con esclusione, peso 8 | 54 | 21 |
+
+**È un guadagno modesto, e va detto così.** Il richiamo sale dal 64% al 71%, al
+prezzo di tre falsi positivi in più. Alzare il peso a 8 aggiunge un paese e
+cinque falsi positivi: non conviene.
+
+E una correzione a quel che avevo scritto strada facendo: **Siria, Myanmar ed
+Etiopia c'erano già** senza EPR. Il modello è cambiato molto da quando avevo
+detto che mancavano — quella misura era di tre sezioni fa e di un'altra
+calibrazione. Il dato nuovo aggiunge il Congo e il Sud Sudan, non i casi
+scolastici.
+
+I sette che restano fuori dicono dove finisce il modello: **Ucraina e Russia**
+sono una guerra fra Stati, non un'insurrezione; **Israele** è un conflitto su
+territorio occupato, che l'esclusione interna non cattura; **India, Filippine,
+Colombia, Messico e Turchia** sono insurrezioni in paesi grandi e di medio
+reddito, dove la povertà e la debolezza dello Stato — i due termini che
+dominano il nostro reclutamento — non bastano a portarli sopra soglia.
+
+### Vale la pena tenerlo?
+
+Sì, ma per la ragione giusta. Non perché sposti molto i nomi — sposta poco — ma
+perché aggiunge al motore un **canale causale che non c'era**: il motivo accanto
+all'occasione. Un mondo in cui la Siria e il Ruanda hanno guerre civili per la
+stessa ragione per cui le hanno avute davvero è un mondo che racconta meglio,
+anche quando il conteggio non migliora.
+
+E perché il costo è basso: due costanti, un file di seme, nessuna ritaratura del
+resto. Le diciannove grandezze restano tutte in fascia.
+
+---
+
+## 15. Quel che questo episodio insegna
 
 Le duecentonove prove esistenti verificavano **meccaniche**: che le cose
 succedessero, nell'ordine giusto, con le cause giuste. Nessuna verificava
