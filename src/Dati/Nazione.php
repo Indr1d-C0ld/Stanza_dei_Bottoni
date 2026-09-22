@@ -51,7 +51,7 @@ final class Nazione
          * Singapore accanto alla Norvegia; `ideologiaFormale` e' la
          * descrizione giuridica che ogni Stato da' di se stesso.
          */
-        public float $democrazia = 0.355,
+        public float $democrazia,
         public float $pilProCapite,
         public float $consumoProCapite,
         public float $quotaConsumi,
