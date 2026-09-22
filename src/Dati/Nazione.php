@@ -93,9 +93,9 @@ final class Nazione
          * La Siria basta come esempio: 86% della popolazione senza accesso al
          * potere, in quattro gruppi.
          */
-        public float $esclusioneEtnica = 0.0,
+        public float $esclusioneEtnica,
         /** Quanti sono quei gruppi: la frammentazione conta oltre alla taglia. */
-        public int $gruppiEsclusi = 0,
+        public int $gruppiEsclusi,
         public float $pilProCapite,
         public float $consumoProCapite,
         public float $quotaConsumi,
