@@ -334,7 +334,110 @@ per esteso, così la domanda non si rifà ogni sei mesi.
 
 ---
 
-## 7. Quel che questo episodio insegna
+## 7. Il censimento: altri riferimenti datati?
+
+Trovato uno, la domanda giusta è se ce ne sono altri. Il censimento di tutte le
+fonti citate nel motore e nella taratura ha richiesto prima di tutto un
+criterio, perché **non tutti i riferimenti invecchiano allo stesso modo**:
+
+- un rimando **strutturale** — la regola logistica, l'equazione dell'Oltraggio,
+  la tavola degli obblighi di trattato, «la storia pesa otto volte l'ideologia»
+  — descrive la *forma* di un modello. Non ha un'epoca;
+- un numero **[FABBRICATO]** è dichiarato inventato. Può essere sbagliato, ma
+  non è datato: non finge di venire da nessuna parte. Il progetto ne marca
+  ventidue, e la marcatura regge;
+- un rimando **empirico** — un tasso, una frequenza, una quota — dice come si
+  comporta il mondo. **Solo questo può scadere.**
+
+Dei rimandi empirici ne sono emersi tre, più un errore mio.
+
+### 7.1 Il blocco `validazione`: morto e datato
+
+`calibrazione/osservazione.php` conteneva quattro tassi presi dallo stesso
+*World Handbook* del 1948-77: successo delle insurrezioni 0,20, dei cambi
+irregolari 0,44, dei regolari 0,80, rivolte efficaci 0,01.
+
+**Nessuna riga di codice li leggeva.** Zero usi, cercati chiave per chiave. Era
+documentazione travestita da configurazione — e una configurazione morta è
+peggio di un commento, perché si presenta come se governasse qualcosa. In più
+un blocco che si chiama «validazione» dichiara che cos'è *corretto*: se è fermo
+a mezzo secolo fa, non valida — sanziona. Tolto, con la nota che spiega perché.
+
+### 7.2 La durata dei governi: la Quarta Repubblica come metro universale
+
+Questo era vivo, e sbagliato due volte. `Fase10Gabinetto` giustificava la
+frequenza delle crisi di governo così:
+
+> nei trent'anni del World Handbook la Francia ne registra 61 e l'Italia 41 di
+> soli tentativi falliti
+
+Datato, perché il World Handbook copre il 1948-77. E **non rappresentativo**,
+perché quella Francia è la Quarta Repubblica e quell'Italia è la Prima: le due
+democrazie più instabili del dopoguerra europeo, prese come metro per tutti e
+per sempre.
+
+Il mondo che ne usciva aveva **governi da 3,3 anni di media**, contro i 4-8
+delle democrazie competitive di oggi e i decenni dei sistemi autoritari — cioè
+sotto il minimo della forchetta democratica, in un mondo dove circa metà dei
+paesi non è una democrazia.
+
+Il numero dietro (`elezioni.rischio_crisi_anno`) era marcato **[FABBRICATO]**,
+quindi non mentiva sulla propria origine: mentiva la nota che lo motivava. Ed è
+la stessa sostituzione vista coi colpi di Stato — meno uscite ordinarie, più
+uscite irregolari — a dare la conferma indipendente:
+
+| rischio crisi | durata governo | quota irregolare |
+|---:|---:|---:|
+| 1,8 (prima) | 3,3 anni | 11% |
+| **0,8** | **4,5 anni** (gioco) · 5,4 (osservazione) | **16-18%** |
+
+Archigos misura circa **un quinto** delle uscite dal potere come irregolari, su
+188 paesi dal 1875. Due riferimenti indipendenti — durata dei mandati e quota
+irregolare — cadono insieme sullo stesso valore. Non capita spesso, e quando
+capita conviene fidarsi.
+
+Entrambe le grandezze sono entrate in `Realismo::FASCE`: adesso sono tredici.
+
+### 7.3 Un errore mio: l'Iran contato fra le potenze nucleari
+
+Lo strumento contava «Stati dotati» con `posturaNucleare >= 3`. Ma la scala del
+seme — sette livelli dal quadrante di *Shadow President* — mette a 3 il
+«programma militare avviato» e a 4 l'«ordigno provato». A `>= 3` l'Iran entrava
+nel conto, e il seme, che è **corretto** (nove Stati a livello ≥4), sembrava
+dichiararne dieci. La fascia 8-14 mascherava lo scarto. Corretto a `>= 4`.
+
+Vale la pena dirlo: il difetto non era nei dati, era nel metro. È il rischio di
+ogni strumento di misura — e questo l'avevo scritto io, due ore prima.
+
+### 7.4 Il seme non sapeva dire la propria età
+
+Il seme viene dal World Factbook (clone dell'11/09/2026, revisione `144d697`) e
+le sue cifre sono contemporanee: l'importatore legge voci datate «2024 est.» e
+«2025 est.». Ma **da nessuna parte era scritto**.
+
+Ora `db/seed/PROVENIENZA.md` porta data, fonte, revisione del clone e le
+verifiche a campione contro ONU, Banca Mondiale, SIPRI e IISS; e
+`bin/importa_factbook.php` lo riscrive da solo a ogni importazione. La ragione
+sta scritta nel file:
+
+> Un riferimento che non si può datare non si può nemmeno dichiarare scaduto.
+
+### 7.5 Quel che il censimento ha assolto
+
+Le decine di rimandi a Crawford, a *Balance of Power*, a *Shadow President* e a
+*CyberJudas* sparsi nel motore sono quasi tutti **strutturali**: la forma della
+logistica, la scala 0-128 dell'integrità, il Panel delle fazioni, i quattro
+livelli di conoscenza, la tavola degli obblighi, il rapporto otto a uno fra
+storia e ideologia. Sono scelte di modello, e un modello del 1985 non è più
+scaduto di un teorema del 1850.
+
+Il seme è contemporaneo. Le grandezze fabbricate sono marcate. Restano i tre
+casi qui sopra, ora chiusi, e una prova che impedisce alle quattro chiavi morte
+di tornare attive.
+
+---
+
+## 8. Quel che questo episodio insegna
 
 Le duecentonove prove esistenti verificavano **meccaniche**: che le cose
 succedessero, nell'ordine giusto, con le cause giuste. Nessuna verificava
@@ -350,3 +453,10 @@ mancava, e che in retrospettiva è ovvia:
 E una seconda lezione, che è arrivata dopo e vale quanto la prima: un
 riferimento può essere **autorevole e insieme dell'epoca sbagliata**. Crawford
 non aveva torto sui dieci cambi irregolari l'anno. Aveva ragione sul 1968.
+
+Da cui una terza, che è la forma pratica della seconda: **una fonte va datata
+quando la si cita, non quando la si sospetta.** Il censimento della sezione 7 è
+stato possibile solo perché quasi ogni numero del progetto porta scritto accanto
+da dove viene. I tre difetti trovati erano tutti in punti dove quella
+abitudine si era interrotta — un blocco senza usi, una nota senza data, uno
+strumento senza la scala che misurava.

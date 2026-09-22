@@ -53,11 +53,21 @@ return [
     // nessun tasso. Adesso base.php porta 0,25, cioe' il tasso contemporaneo,
     // e qui non serve deviare da niente.
 
-    'validazione' => [
-        'tasso_successo_insurrezioni'   => 0.20,
-        'tasso_successo_cambi_irreg'    => 0.44,
-        'tasso_successo_cambi_regolari' => 0.80,
-        'tasso_rivolte_efficaci'        => 0.01,
-        'tolleranza'                    => 0.40,   // fattore, non punto percentuale
-    ],
+    // NOTA: qui c'era un blocco 'validazione' con quattro tassi presi dal
+    // World Handbook — successo delle insurrezioni 0,20, dei cambi irregolari
+    // 0,44, dei cambi regolari 0,80, rivolte efficaci 0,01. Tolto, non
+    // dimenticato, per due ragioni che vale la pena separare.
+    //
+    // LA PRIMA: nessuna riga di codice li leggeva. Erano documentazione
+    // travestita da configurazione, e una configurazione morta e' peggio di un
+    // commento, perche' si presenta come se governasse qualcosa.
+    //
+    // LA SECONDA, piu' importante: erano DATATI. Stesso World Handbook,
+    // stesso 1948-77 dei ~10 cambi irregolari l'anno che abbiamo dovuto
+    // rifare. Un blocco che si chiama «validazione» dichiara che cos'e'
+    // corretto: se e' fermo a mezzo secolo fa, non valida — sanziona.
+    //
+    // I bersagli veri, con la fonte e l'epoca accanto, stanno adesso in
+    // App\Simulazione\Realismo::FASCE, dove li legge sia bin/realismo.php sia
+    // tests/11-realismo.php.
 ];

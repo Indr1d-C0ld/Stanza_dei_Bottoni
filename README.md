@@ -254,6 +254,31 @@ Le due invarianti che mancavano, e che in retrospettiva sono ovvie:
 > autorevole.
 
 Il racconto completo, con le misure e i due tentativi sbagliati prima di quello
+**E gli altri riferimenti?** Trovato uno, la domanda giusta e' se ce ne sono
+altri. Il censimento ha richiesto prima un criterio: un rimando *strutturale*
+(la regola logistica, la tavola degli obblighi, «la storia pesa otto volte
+l'ideologia») descrive la forma di un modello e non ha un'epoca; un numero
+*[FABBRICATO]* e' dichiarato inventato; solo un rimando *empirico* — un tasso,
+una quota — puo' scadere. Ne sono emersi tre, piu' un errore nello strumento:
+
+- il blocco `validazione` portava quattro tassi dello stesso World Handbook
+  1948-77 e **nessuna riga di codice li leggeva**: configurazione morta che si
+  presentava come la definizione di «corretto». Tolta;
+- la frequenza delle crisi di governo era ancorata alla Francia della Quarta
+  Repubblica e all'Italia della Prima — le due democrazie piu' instabili del
+  dopoguerra, prese come metro per tutti. I governi duravano 3,3 anni contro i
+  4-8 di oggi. Ora 4,5, e la quota di uscite irregolari sale al 16-18%, contro
+  il ~20% che Archigos misura: due riferimenti indipendenti sullo stesso punto;
+- lo strumento contava l'Iran fra le potenze nucleari, perche' leggeva
+  «programma avviato» come «ordigno provato». Il seme era corretto, sbagliava
+  il metro — che avevo scritto io due ore prima;
+- il seme non sapeva dire la propria eta'. Adesso `db/seed/PROVENIENZA.md`
+  porta data, fonte e revisione, e l'importatore lo riscrive da solo.
+
+Le decine di rimandi a Crawford e ai giochi degli anni Ottanta e Novanta sono
+quasi tutti strutturali, e un modello del 1985 non e' piu' scaduto di un
+teorema del 1850.
+
 giusto, è in `docs/26-i-numeri-realistici.md`.
 
 ---

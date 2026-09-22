@@ -128,3 +128,40 @@ foreach (['gioco', 'osservazione'] as $p) {
         !str_contains((string) file_get_contents($radice . "/calibrazione/$p.php"),
             "'rischio_massimo_anno'"));
 }
+
+Prove::gruppo('Nessun riferimento datato torna di soppiatto');
+
+// Il World Handbook of Political and Social Indicators copre il 1948-77. E' la
+// fonte da cui Crawford ricava i «~10 cambi irregolari l'anno» — giusti, per il
+// 1968 — e i quattro tassi del blocco 'validazione', che nessuno leggeva e che
+// pure si presentavano come la definizione di «corretto». Puo' essere CITATO
+// (la sua storia e' istruttiva) ma non puo' tornare a fissare un numero.
+$chiaviMorte = ['tasso_successo_insurrezioni', 'tasso_successo_cambi_irreg',
+                'tasso_successo_cambi_regolari', 'tasso_rivolte_efficaci'];
+foreach (['base', 'gioco', 'osservazione'] as $p) {
+    $testo = (string) file_get_contents($radice . "/calibrazione/$p.php");
+    foreach ($chiaviMorte as $k) {
+        // La chiave puo' comparire dentro un commento che ne racconta la
+        // rimozione; quel che non deve tornare e' la chiave ATTIVA.
+        Prove::che("in $p.php la chiave $k non e' attiva",
+            !preg_match("/^\s*'" . preg_quote($k, '/') . "'\s*=>/m", $testo));
+    }
+}
+
+// Ogni fascia dichiara la propria fonte, e le fonti empiriche devono dire di
+// quale mondo parlano: una fonte non basta che sia seria.
+foreach (Realismo::FASCE as $chiave => [$min, $max, $unita, $quando, $fonte]) {
+    Prove::che("la fascia $chiave cita una fonte", trim($fonte) !== '');
+}
+
+Prove::gruppo('Il seme dichiara la propria data');
+
+// Un riferimento che non si puo' datare non si puo' dichiarare scaduto: e' la
+// ragione per cui il seme porta la propria provenienza accanto.
+$prov = $radice . '/db/seed/PROVENIENZA.md';
+Prove::che('il seme ha un file di provenienza', is_file($prov));
+Prove::che('e la provenienza porta una data in formato italiano',
+    (bool) preg_match('#\b\d{2}/\d{2}/\d{4}\b#', (string) @file_get_contents($prov)));
+Prove::che('e l\'importatore la riscrive da solo',
+    str_contains((string) file_get_contents($radice . '/bin/importa_factbook.php'),
+        'PROVENIENZA.md'));

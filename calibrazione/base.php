@@ -313,7 +313,25 @@ return [
         'centro'          => 52.0,
         'pendenza'        => 9.0,
         // Crisi di governo fra un voto e l'altro, massimo annuo. [FABBRICATO]
-        'rischio_crisi_anno' => 1.8,
+        //
+        // Era 1,8 e produceva governi che duravano 3,3 anni in media su
+        // centottantanove paesi. Nel mondo di oggi un esecutivo dura 4-8 anni
+        // nelle democrazie competitive e decenni nei sistemi autoritari: 3,3
+        // sta sotto il minimo della forchetta democratica, in un mondo dove
+        // circa meta' dei paesi non e' una democrazia.
+        //
+        // Il numero non veniva da nessuna fonte — e' marcato FABBRICATO — ma
+        // la nota che lo giustificava in Fase10 si appoggiava alla Francia e
+        // all'Italia del World Handbook: la Quarta Repubblica e la Prima
+        // Repubblica, cioe' le due democrazie piu' instabili del dopoguerra,
+        // prese come metro per tutti e per sempre.
+        //
+        // A 0,8 due riferimenti indipendenti cadono insieme: i governi durano
+        // 4,5 anni (gioco) e 5,4 (osservazione), e la quota di uscite
+        // irregolari sale al 16-18%, contro il ~20% che Archigos misura sul
+        // 1946-2004. Non e' una coincidenza: meno crisi ordinarie significa
+        // che una fetta maggiore delle uscite avviene per la via irregolare.
+        'rischio_crisi_anno' => 0.8,
     ],
 
     // ---------------------------------------------------------- dottrina

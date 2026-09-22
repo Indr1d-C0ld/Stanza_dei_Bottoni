@@ -419,6 +419,34 @@ foreach ($nazioni as $n) {
 }
 fclose($out);
 
+// --- la provenienza, scritta accanto al seme --------------------------------
+// Un seme senza data non si puo' auditare: fra tre anni nessuno sapra' se le
+// cifre sono del 2026 o del 2031, e un riferimento che non si puo' datare non
+// si puo' nemmeno dichiarare scaduto. E' la lezione dei ~10 cambi irregolari
+// l'anno di Crawford, che erano giusti — per il 1968.
+$commit = @trim((string) shell_exec(
+    'git -C ' . escapeshellarg($sorgente) . ' rev-parse --short HEAD 2>/dev/null'));
+file_put_contents($radice . '/db/seed/PROVENIENZA.md', implode("\n", array_filter([
+    '# Da dove viene il seme',
+    '',
+    'Generato da `bin/importa_factbook.php` il **' . date('d/m/Y') . '**.',
+    '',
+    '- Fonte: CIA World Factbook, via <https://github.com/factbook/factbook.json>',
+    $commit !== '' ? '- Revisione del clone: `' . $commit . '`' : null,
+    '- Nazioni importate: ' . count($nazioni),
+    '',
+    'Il Factbook data le proprie voci una per una («2024 est.», «2025 est.») e le',
+    'vintage non coincidono fra campi: popolazione e prodotto possono essere di',
+    'anni diversi nello stesso paese. Le cifre sono quindi **contemporanee ma non',
+    'sincrone**, entro un paio d\'anni.',
+    '',
+    'Serve saperlo per una ragione precisa: un riferimento che non si puo\' datare',
+    'non si puo\' nemmeno dichiarare scaduto. Vedi `docs/26-i-numeri-realistici.md`.',
+    '',
+])) . "\n");
+
+printf("Provenienza scritta in db/seed/PROVENIENZA.md\n");
+
 printf("Importate %d nazioni in %s\n", count($nazioni), str_replace($radice . '/', '', $uscita));
 printf("Scartate %d entità senza popolazione o PIL%s\n", count($scartate), $verboso ? ':' : '.');
 if ($verboso) {

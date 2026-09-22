@@ -94,9 +94,19 @@ final class Fase10Gabinetto implements Fase
                 // Fra un voto e l'altro un esecutivo puo' cadere lo stesso, per
                 // via ordinaria: sfiducia, crisi di coalizione, dimissioni. E'
                 // questo che il riferimento storico conta come "cambio
-                // regolare", ed e' molto piu' frequente delle elezioni — nei
+                // regolare", ed e' piu' frequente delle elezioni stesse.
+                //
+                // QUI C'ERA UN ANCORAGGIO SBAGLIATO DUE VOLTE. Diceva: «nei
                 // trent'anni del World Handbook la Francia ne registra 61 e
-                // l'Italia 41 di soli tentativi falliti.
+                // l'Italia 41 di soli tentativi falliti». Datato, perche' il
+                // World Handbook copre il 1948-77; e non rappresentativo,
+                // perche' quella Francia e' la Quarta Repubblica e quell'Italia
+                // e' la Prima — le due democrazie piu' instabili del dopoguerra
+                // europeo, prese come metro per tutti e per sempre. Il mondo
+                // che ne usciva aveva governi da 3,3 anni di media.
+                //
+                // Il metro giusto e' la forchetta contemporanea: 4-8 anni nelle
+                // democrazie competitive, decenni nei sistemi autoritari.
                 $rischio = $rischioCrisi / (1.0 + exp(($n->legittimita - 42.0) / 7.0));
                 if (($c->tick - $n->annoUltimoCambio) > ($tickAnno / 2)
                     && $c->caso->prova('10_sfiducia', crc32($n->iso3), $c->tick, $rischio / $tickAnno)) {

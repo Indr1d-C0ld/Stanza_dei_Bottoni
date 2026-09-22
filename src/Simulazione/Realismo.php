@@ -51,8 +51,8 @@ final class Realismo
             'SIPRI, Trends in World Military Expenditure 2024: 2.718 miliardi di dollari'],
         'soldati_mondo'        => [18,   35,   'milioni',     'seme',
             'IISS, The Military Balance: ~27 milioni di effettivi in servizio'],
-        'nucleari'             => [8,    14,   'Stati',       'seme',
-            'SIPRI Yearbook: nove Stati dotati di armi nucleari'],
+        'nucleari'             => [8,    12,   'Stati',       'seme',
+            'SIPRI Yearbook: nove Stati dotati di armi nucleari (postura >= 4, «ordigno provato»)'],
 
         // --- tassi e rapporti: come si comporta il motore ---------------------
         'crescita_popolazione' => [0.6,  1.2,  '%/anno',      'corsa',
@@ -70,6 +70,13 @@ final class Realismo
             'UCDP: i conflitti interstatali attivi sono pochi, ogni anno'],
         'morti_guerra_anno'    => [0,    1.5,  'milioni/anno','corsa',
             'UCDP/PRIO: Corea ~0,4 milioni l\'anno, Iran-Iraq ~0,1, Russia-Ucraina ~0,1'],
+        'durata_governo'       => [4,    9,    'anni',        'corsa',
+            'Un esecutivo dura 4-8 anni nelle democrazie competitive e decenni nei sistemi '
+            . 'autoritari; con meta\' del mondo non democratico la media globale sta in alto '
+            . 'nella forchetta. Il modello faceva 3,3 anni, sotto il minimo democratico'],
+        'quota_irregolare'     => [8,    28,   '% dei cambi', 'corsa',
+            'Archigos (Goemans, Gleditsch, Chiozza), 188 paesi dal 1875: circa un quinto '
+            . 'delle uscite dal potere avviene per via irregolare'],
     ];
 
     /**
@@ -88,7 +95,11 @@ final class Realismo
             $popolazione += $n->popolazione;
             $soldati     += $n->soldati;
             $spesa       += $n->pil * $n->quotaMilitare;
-            $nucleari    += $n->posturaNucleare >= 3 ? 1 : 0;
+            // >= 4 e' «ordigno provato»: sono gli Stati DOTATI, che e' quel che
+            // dice il riferimento SIPRI. A >= 3 si conta anche chi ha solo un
+            // programma avviato — cioe' l'Iran — e il seme, che e' corretto,
+            // sembrava dichiarare dieci potenze nucleari invece di nove.
+            $nucleari    += $n->posturaNucleare >= 4 ? 1 : 0;
         }
 
         $pil = $mondo->pilTotale();
@@ -128,9 +139,12 @@ final class Realismo
         $allaFine = self::livelli($mondo);
 
         $irregolari = 0;
+        $cambi      = 0;
         foreach ($mondo->elenco() as $n) {
             $irregolari += $n->cambiIrregolari;
+            $cambi      += $n->cambiEsecutivo;
         }
+        $cambiAnno = $cambi / $anni;
 
         $misure = $alSeme + [
             'crescita_popolazione' =>
@@ -138,6 +152,11 @@ final class Realismo
             'crescita_pil' =>
                 ((($allaFine['pil_mondo'] / max(1e-9, $alSeme['pil_mondo'])) ** (1 / $anni)) - 1) * 100,
             'cambi_irregolari'  => $irregolari / $anni,
+            // Quanto dura un governo: i paesi diviso i ricambi annui. E' la
+            // grandezza che un giocatore percepisce senza doverla calcolare,
+            // ed era l'unica del modello fuori da OGNI forchetta reale.
+            'durata_governo'    => $cambiAnno > 0 ? count($mondo->nazioni) / $cambiAnno : 0.0,
+            'quota_irregolare'  => $cambi > 0 ? $irregolari / $cambi * 100 : 0.0,
             'guerre_aperte'     => (float) count($mondo->guerre),
             'morti_guerra_anno' => array_sum($guerreViste) / 1e6 / max(1, $anni),
         ];
