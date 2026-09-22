@@ -358,6 +358,41 @@ Goldstone misura che la popolarita' predice *peggio* delle istituzioni. Far
 vincere Goldstone significherebbe riscrivere l'equazione della legittimita',
 cioe' il cuore del motore.
 
+## I trattati veri
+
+Gli obblighi di trattato erano [FABBRICATO]: si deducevano dall'affinita', cioe'
+chi si piaceva abbastanza risultava alleato. Adesso vengono dal **Correlates of
+War, Formal Alliances v4.1** — patti di difesa, neutralita', non aggressione e
+intese, per diade direzionata.
+
+COW arriva al **2012** e il seme e' del 2024-25: gli allargamenti successivi
+(Montenegro 2017, Macedonia del Nord 2020, Finlandia 2023, Svezia 2024) stanno
+nell'importatore con la data accanto. Non si applica un dataset autorevole a un
+mondo di un'altra epoca — e' l'errore che questo progetto ha gia' fatto una
+volta.
+
+**Il controllo sono le assenze.** Gli Stati Uniti e Israele **non hanno** un
+patto di difesa reciproca, e la vecchia formula glielo dava; nessuno garantisce
+Taiwan, perche' quel trattato fu denunciato nel 1980. Mentre la Cina e la Corea
+del Nord ce l'hanno dal 1961, e la vecchia formula non glielo dava.
+
+E l'asimmetria: «A|B» e' l'obbligo di A verso B, quindi al gradino nucleare
+conta l'arsenale di A. Gli Stati Uniti garantiscono la Germania a 128, la
+Germania garantisce gli Stati Uniti a 96. E' la ragione per cui l'articolo 5
+pesa piu' di qualunque altra firma al mondo.
+
+**Collegando il dato sono emersi tre difetti.** La matrice delle relazioni era
+troppo rada e ne perdeva l'ottanta per cento in silenzio. La fase 06
+ricalcolava l'obbligo dall'affinita' a ogni tick e lo abbassava col due per
+cento di probabilita': su quindici anni i patti di difesa passavano da 2.907 a
+DICIASSETTE, e **nessuna garanzia veniva mai messa alla prova** — l'integrita',
+che e' il meccanismo con cui Crawford rende costose le promesse, non aveva su
+cosa mordere. E il gradino nucleare si concedeva per simpatia: risultavano
+garanti quattordici Stati, contro i nove che l'atomica ce l'hanno.
+
+Adesso un trattato regge al raffreddamento — la Grecia e la Turchia stanno nella
+NATO da settant'anni senza volersi bene — e cede solo alla rottura vera.
+
 ## Che cosa non è
 
 **Non è una previsione.** Nessuna delle cifre che il modello produce dice

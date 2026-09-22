@@ -45,6 +45,7 @@ final class Fase06Relazioni implements Fase
         $recupero = $cal->numero('relazioni.recupero_integrita_anno', 5.0);
         /** @var array<string,int> $tavolaObblighi */
         $tavolaObblighi = (array) $cal->leggi('relazioni.obbligo', []);
+        $rotturaTrattato = $c->calibrazione->numero('relazioni.rottura_trattato', -35.0);
         /** @var array<string,int> $soglie */
         $soglie = (array) $cal->leggi('relazioni.soglie_obbligo', []);
         $consumoSpinta = $cal->numero('relazioni.consumo_spinta_anno', 0.12) * $perTick;
@@ -202,10 +203,42 @@ final class Fase06Relazioni implements Fase
                 $r->affinita >= ($soglie['diplomatiche'] ??  22) => $tavolaObblighi['diplomatiche'] ??  16,
                 default                                          => $tavolaObblighi['nessuna']      ??   0,
             };
+            // Un trattato si firma in fretta e si denuncia con fatica: il
+            // rialzo e' immediato, il ribasso e' una probabilita' per tick.
+            //
+            // MA NON SI SCENDE SOTTO QUEL CHE E' SCRITTO. Prima si scendeva, e
+            // siccome il due per cento per tick su quindici anni e' una
+            // certezza, la struttura di alleanze del mondo si sfaldava: da
+            // 2.763 patti di difesa a diciassette, e ZERO garanzie messe alla
+            // prova in quindici anni. L'integrita' — il meccanismo con cui
+            // Crawford rende costose le promesse — non aveva su cosa mordere.
+            //
+            // Le alleanze vere non si sciolgono perche' due governi si
+            // raffreddano. La Grecia e la Turchia stanno nella NATO da
+            // settant'anni senza volersi bene, e la Francia usci' dal comando
+            // integrato senza uscire dal patto. Il trattato cede solo quando
+            // il rapporto si ROMPE davvero.
+            // Il gradino nucleare non si concede per simpatia: e' una proprieta'
+            // dell'ARSENALE del garante. Senza questo tetto la Germania, la
+            // Spagna e la Nuova Zelanda risultavano garanti nucleari — erano
+            // quattordici, contro nove Stati che l'atomica ce l'hanno davvero.
+            $garanteIso = explode('|', (string) $chiave)[0];
+            $chiGarantisce = $mondo->nazioni[$garanteIso] ?? null;
+            if ($chiGarantisce !== null && $chiGarantisce->posturaNucleare < 4) {
+                $obbligoNaturale = min($obbligoNaturale, 96);
+            }
+
             if ($obbligoNaturale > $r->obbligo) {
                 $r->obbligo = $obbligoNaturale;
-            } elseif ($obbligoNaturale < $r->obbligo && $c->caso->prova('06_trattati', crc32($chiave), $c->tick, 0.02)) {
-                $r->obbligo = $obbligoNaturale;
+            } elseif ($obbligoNaturale < $r->obbligo
+                && $c->caso->prova('06_trattati', crc32($chiave), $c->tick, 0.02)) {
+                $pavimento = $r->affinita <= $rotturaTrattato ? 0 : $r->obbligoFirmato;
+                $r->obbligo = max($obbligoNaturale, $pavimento);
+            }
+            // E se il rapporto si e' rotto, la firma non vale piu' nemmeno
+            // come pavimento: e' la denuncia vera, e va detta una volta sola.
+            if ($r->affinita <= $rotturaTrattato) {
+                $r->obbligoFirmato = 0;
             }
         }
 

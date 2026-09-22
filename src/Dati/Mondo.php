@@ -53,6 +53,9 @@ final class Mondo
             throw new RuntimeException("Seme non trovato: $percorsoCsv. Lancia prima bin/importa_factbook.php");
         }
         $mondo = new self();
+        // I file del seme che stanno accanto al CSV — V-Dem, alleanze — si
+        // leggono per cartella, e la cartella serve anche piu' avanti.
+        $mondo->cartellaSeme = dirname($percorsoCsv);
         // L'indice di democrazia liberale di V-Dem, accanto al seme. Se manca
         // il mondo gira lo stesso, con tutti alla mediana mondiale — ma il
         // modello di Goldstone non distinguerebbe piu' niente, quindi vale la
@@ -220,6 +223,27 @@ final class Mondo
             }
         }
 
+        // E ogni coppia legata da un trattato vero, anche se non e' fra
+        // potenze ne' fra vicini. La matrice e' volutamente rada — Crawford
+        // dovette buttare via la multipolarita' perche' quella piena non gli
+        // stava in memoria — ma un'alleanza E' un rapporto degno di essere
+        // simulato: senza questo, delle 2.907 coppie di difesa del Correlates
+        // of War ne atterravano 567 e le altre sparivano in silenzio.
+        $alleanzeNote = $this->cartellaSeme !== ''
+            ? @include $this->cartellaSeme . '/alleanze.php'
+            : false;
+        if (is_array($alleanzeNote)) {
+            foreach (array_keys($alleanzeNote) as $chiave) {
+                $pezzi = explode('|', (string) $chiave);
+                if (count($pezzi) !== 2) {
+                    continue;
+                }
+                $a = $this->nazioni[$pezzi[0]] ?? null;
+                $b = $this->nazioni[$pezzi[1]] ?? null;
+                if ($a !== null && $b !== null) { $aggiungi($a, $b); }
+            }
+        }
+
         foreach ($coppie as [$a, $b]) {
             $confinanti = $this->relazioni->confinanti($a->iso3, $b->iso3);
 
@@ -279,26 +303,57 @@ final class Mondo
             }
         }
 
-        // [FABBRICATO] Obblighi di trattato iniziali, dedotti dall'affinita'.
-        // Senza trattati l'integrita' non ha su cosa mordere, e l'integrita' e'
-        // il meccanismo che rende costose le promesse. Da sostituire con
-        // Correlates of War.
-        $grandiIso = [];
-        foreach ($grandi as $g) {
-            $grandiIso[$g->iso3] = true;
+        // --- gli obblighi di trattato -------------------------------------
+        //
+        // Vengono dal Correlates of War, Formal Alliances v4.1, attraverso
+        // db/seed/alleanze.php. Prima erano [FABBRICATO]: si deducevano
+        // dall'affinita', cioe' chi si piaceva abbastanza risultava alleato.
+        // E' un modo per avere dei trattati, non per avere QUELLI VERI —
+        // e l'integrita', che e' il meccanismo con cui Crawford rende costose
+        // le promesse, mordeva su garanzie che nessuno aveva mai firmato.
+        //
+        // La differenza si vede dove conta: gli Stati Uniti e Israele NON
+        // hanno un patto di difesa reciproca, e la vecchia formula glielo
+        // dava; la Cina e la Corea del Nord ce l'hanno dal 1961, e la vecchia
+        // formula non glielo dava.
+        $alleanze = $this->cartellaSeme !== ''
+            ? @include $this->cartellaSeme . '/alleanze.php'
+            : false;
+        if (!is_array($alleanze)) {
+            $alleanze = [];
         }
+
         foreach ($this->relazioni->tutte() as $chiave => $r) {
-            [$da, $verso] = explode('|', $chiave);
-            // Un trattato e' un atto raro e costoso, non il sottoprodotto di
-            // una simpatia. Si garantisce un vicino, o un cliente di peso.
-            $plausibile = $r->confinanti || isset($grandiIso[$da]) || isset($grandiIso[$verso]);
-            $r->obbligo = ($plausibile && $r->affinita >= 80.0)
-                ? ($r->affinita >= 105.0 ? 96 : 64)
-                : (($plausibile && $r->affinita >= 55.0) ? 32 : 0);
+            $r->obbligo = (int) ($alleanze[$chiave] ?? 0);
+            $r->obbligoFirmato = $r->obbligo;
+        }
+
+        // Il gradino piu' alto — la garanzia nucleare — non sta nel dataset,
+        // perche' COW classifica i patti per quel che promettono e non per chi
+        // li firma. Si deriva qui: un patto di difesa il cui GARANTE ha
+        // l'atomica non e' un patto di difesa qualunque, ed e' il motivo per
+        // cui l'articolo 5 pesa piu' di qualunque altra firma al mondo.
+        //
+        // La relazione «A|B» e' l'obbligo di A verso B: quindi conta l'arsenale
+        // di A. Gli Stati Uniti garantiscono la Germania a 128, la Germania
+        // garantisce gli Stati Uniti a 96.
+        foreach ($this->relazioni->tutte() as $chiave => $r) {
+            if ($r->obbligo < 96) {
+                continue;
+            }
+            [$garante] = explode('|', $chiave);
+            $g = $this->nazioni[$garante] ?? null;
+            if ($g !== null && $g->posturaNucleare >= 4) {
+                $r->obbligo = 128;
+                $r->obbligoFirmato = 128;
+            }
         }
     }
 
     /** @return list<Nazione> in ordine deterministico: mai affidarsi all'ordine implicito. */
+    /** La cartella da cui viene il seme: ci stanno accanto gli altri dati. */
+    public string $cartellaSeme = '';
+
     public function elenco(): array
     {
         $elenco = array_values($this->nazioni);

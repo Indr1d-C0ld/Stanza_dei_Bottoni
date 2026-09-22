@@ -657,7 +657,94 @@ da leggere.
 
 ---
 
-## 10. Quel che questo episodio insegna
+## 10. I trattati veri, e un meccanismo che non aveva mai funzionato
+
+Gli obblighi di trattato erano `[FABBRICATO]`: si deducevano dall'affinità —
+chi si piace abbastanza risulta alleato. È un modo per avere dei trattati, non
+per avere **quelli veri**. Il codice chiedeva già la sostituzione: «Da
+sostituire con Correlates of War».
+
+`bin/importa_alleanze.php` la fa. **COW Formal Alliances v4.1** (Gibler,
+Università dell'Alabama): patti di difesa, neutralità, non aggressione e intese,
+per diade direzionata. 3.122 coppie fra le nostre 189 nazioni.
+
+**E l'epoca, di nuovo.** COW arriva al **2012**, il nostro seme è del 2024-25.
+Dodici anni in cui sono entrati nella NATO il Montenegro (2017), la Macedonia
+del Nord (2020), la Finlandia (2023) e la Svezia (2024). Stanno nella tavola
+`AGGIORNAMENTI` dell'importatore, ciascuno con la propria data. *Non si prende
+un dataset autorevole e lo si applica a un mondo di un'altra epoca.*
+
+### Il controllo sono le assenze, non le presenze
+
+| | |
+|---|---|
+| Stati Uniti → Germania | 128 |
+| Germania → Stati Uniti | 96 |
+| Cina → Corea del Nord | 128 (trattato del 1961) |
+| **Stati Uniti → Israele** | **0** |
+| **chiunque → Taiwan** | **0** |
+
+Le due assenze valgono più di tutte le presenze. Gli Stati Uniti e Israele
+**non hanno** un patto di difesa reciproca, e la vecchia formula sull'affinità
+glielo dava di sicuro. Il trattato con Taiwan fu denunciato nel 1980.
+
+L'asimmetria è il pezzo più bello: `A|B` è l'obbligo di *A verso B*, quindi al
+gradino 128 conta **l'arsenale di A**. Gli Stati Uniti garantiscono la Germania
+al livello nucleare; la Germania garantisce gli Stati Uniti al convenzionale. È
+la ragione per cui l'articolo 5 pesa più di qualunque altra firma al mondo, e
+adesso il modello la sa.
+
+### Tre difetti scoperti collegando il dato
+
+**La matrice era troppo rada.** Le relazioni esistono solo fra potenze e fra
+vicini — Crawford dovette buttare via la multipolarità perché la matrice piena
+non gli stava in memoria. Delle 2.907 coppie di difesa di COW ne atterravano
+**567**: le altre non avevano un oggetto su cui posarsi e sparivano in silenzio.
+Ora un'alleanza crea la relazione, perché *è* un rapporto degno di essere
+simulato. Le relazioni passano da 3.074 a 5.530.
+
+**La struttura si sfaldava durante la corsa, ed è il difetto grosso.** La fase
+06 ricalcola l'obbligo dall'affinità a ogni tick e lo abbassa col 2% di
+probabilità: su 780 tick la denuncia è praticamente certa. Misurato dopo quindici
+anni:
+
+| | al seme | dopo 15 anni |
+|---|---:|---:|
+| patti di difesa (≥96) | 2.907 | **17** |
+| garanzia nucleare (128) | 144 | 16 |
+| gradino 16 | 11 | **2.291** |
+
+Il mondo si scioglieva in una nebbia di intese diplomatiche, e la struttura
+importata veniva rimpiazzata proprio dalla formula sull'affinità che avevo
+appena tolto. **Zero garanzie messe alla prova in quindici anni**: l'integrità —
+il meccanismo con cui Crawford rende costose le promesse — non ha mai avuto su
+cosa mordere.
+
+Adesso l'obbligo **non scende sotto quel che è scritto** (`obbligoFirmato`)
+finché il rapporto non si rompe davvero. Le alleanze vere sopravvivono al
+raffreddamento: la Grecia e la Turchia stanno nella NATO da settant'anni senza
+volersi bene, e la Francia uscì dal comando integrato senza uscire dal patto.
+Dopo quindici anni restano **2.692** patti di difesa.
+
+**Il gradino nucleare si concedeva per simpatia.** La fase 06 dava 128 a
+chiunque avesse affinità sopra 100: risultavano garanti nucleari **quattordici**
+Stati, fra cui la Germania, la Spagna e la Nuova Zelanda, contro i nove che
+l'atomica ce l'hanno. Ora il tetto è l'arsenale del garante, e restano sette:
+Stati Uniti, Francia, Gran Bretagna, Russia, Pakistan, Cina, Corea del Nord.
+L'India e Israele hanno l'atomica e non garantiscono nessuno — che è esatto:
+nessuno dei due ha un trattato di difesa reciproca.
+
+### Una verifica che valida invece di smentire
+
+Su cinque corse da vent'anni le uniche guerre fra Stati sono state **Cina contro
+Taiwan**, e nessuna garanzia è scattata. Non è un difetto: COW dice che nessuno
+garantisce Taiwan, ed è vero. Il meccanismo è corretto, semplicemente non è
+stato esercitato. La prova lo verifica per via diretta — l'Estonia, che è nella
+NATO, ha più di dieci garanti a cui rispondere.
+
+---
+
+## 11. Quel che questo episodio insegna
 
 Le duecentonove prove esistenti verificavano **meccaniche**: che le cose
 succedessero, nell'ordine giusto, con le cause giuste. Nessuna verificava

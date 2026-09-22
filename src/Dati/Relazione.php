@@ -17,6 +17,23 @@ final class Relazione
         public float $affinita = 0.0,
         /** Obbligo di trattato: 0 / 16 / 32 / 64 / 96 / 128 */
         public int   $obbligo = 0,
+        /**
+         * L'obbligo MESSO PER ISCRITTO: il trattato che esiste davvero, dal
+         * Correlates of War. E' un fatto, non un sentimento.
+         *
+         * Serve perche' la fase 06 ricalcola l'obbligo dall'affinita' a ogni
+         * tick e lo abbassa col due per cento di probabilita': su quindici anni
+         * la denuncia e' praticamente certa, e la struttura di alleanze del
+         * mondo si sfaldava da 2.763 patti di difesa a diciassette. Nessuna
+         * garanzia veniva mai messa alla prova, e l'integrita' — il meccanismo
+         * con cui Crawford rende costose le promesse — non aveva su cosa
+         * mordere.
+         *
+         * Le alleanze vere non si sciolgono perche' due governi si
+         * raffreddano: la Grecia e la Turchia stanno nella NATO da
+         * settant'anni senza volersi bene.
+         */
+        public int   $obbligoFirmato = 0,
         /** Sfera di influenza di A su B (DontMess), 1 .. 15 */
         public int   $sfera = 1,
         /** La memoria delle crisi vinte o perse su questo paese: si somma

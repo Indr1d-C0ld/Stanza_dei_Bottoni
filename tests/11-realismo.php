@@ -165,3 +165,55 @@ Prove::che('e la provenienza porta una data in formato italiano',
 Prove::che('e l\'importatore la riscrive da solo',
     str_contains((string) file_get_contents($radice . '/bin/importa_factbook.php'),
         'PROVENIENZA.md'));
+
+Prove::gruppo('I trattati vengono dal Correlates of War, non dalle simpatie');
+
+$mondoT = Mondo::daSeme($radice . '/db/seed/nazioni.csv');
+
+// Fatti verificabili, non numeri tondi: sono il controllo che l'importazione
+// ha preso i trattati VERI e non una funzione dell'affinita'.
+$obb = static fn (string $a, string $b): int => $mondoT->relazioni->fra($a, $b)?->obbligo ?? -1;
+
+Prove::che('gli Stati Uniti garantiscono la Germania al gradino nucleare',
+    $obb('USA', 'DEU') === 128, 'obbligo ' . $obb('USA', 'DEU'));
+Prove::che('ma la Germania garantisce gli Stati Uniti solo al convenzionale',
+    $obb('DEU', 'USA') === 96, 'l\'impegno e\' asimmetrico: conta chi ha l\'atomica');
+Prove::che('gli Stati Uniti NON hanno un patto di difesa con Israele',
+    $obb('USA', 'ISR') <= 0,
+    'e\' il caso che la vecchia formula sull\'affinita\' sbagliava di sicuro');
+Prove::che('la Cina ha un patto con la Corea del Nord',
+    $obb('CHN', 'PRK') >= 96, 'trattato del 1961, tuttora in vigore');
+Prove::che('la Finlandia e\' entrata nella NATO dopo il dataset',
+    $obb('USA', 'FIN') >= 96, 'COW arriva al 2012, la Finlandia e\' del 2023');
+Prove::che('e nessuno garantisce Taiwan',
+    $obb('USA', 'TWN') <= 0, 'il trattato fu denunciato nel 1980');
+
+Prove::gruppo('Un trattato regge al raffreddamento, e le garanzie scattano');
+
+// La fase 06 ricalcola l'obbligo dall'affinita' e lo abbassa col 2% per tick:
+// su quindici anni la denuncia era certa, e la struttura di alleanze passava
+// da 2.763 patti di difesa a DICIASSETTE. Nessuna garanzia veniva mai messa
+// alla prova, perche' quando arrivava una guerra non c'erano piu' trattati.
+$calT = Calibrazione::carica($radice, 'gioco');
+$mT   = Mondo::daSeme($radice . '/db/seed/nazioni.csv');
+$eT   = new EsecutoreTick($calT, null, true, $mT);
+for ($t = 1; $t <= 15 * 52; $t++) { $mT->tick = $t; $eT->esegui($t, 1); }
+
+$difesa = 0;
+foreach ($mT->relazioni->tutte() as $r) {
+    if ($r->obbligo >= 96) { $difesa++; }
+}
+Prove::che('dopo quindici anni le alleanze di difesa esistono ancora',
+    $difesa > 500, sprintf('%d patti (prima della correzione ne restavano 17)', $difesa));
+
+// E il meccanismo deve poter scattare: si mette una guerra contro un difensore
+// che i trattati proteggono davvero, e si guarda se qualcuno viene chiamato.
+$mG = Mondo::daSeme($radice . '/db/seed/nazioni.csv');
+$garanti = 0;
+foreach ($mG->elenco() as $x) {
+    if ($x->iso3 === 'EST' || $x->iso3 === 'RUS') { continue; }
+    $r = $mG->relazioni->fra($x->iso3, 'EST');
+    if ($r !== null && $r->obbligo >= 64) { $garanti++; }
+}
+Prove::che('un membro della NATO ha molti garanti a cui rispondere',
+    $garanti > 10, sprintf('l\'Estonia ne ha %d', $garanti));

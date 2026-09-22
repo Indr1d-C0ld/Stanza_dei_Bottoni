@@ -261,6 +261,13 @@ return [
 
     // ----------------------------------------------------------- relazioni
     'relazioni' => [
+        // Sotto quale affinita' un trattato non regge piu' nemmeno sulla
+        // carta. NON e' la soglia a cui si smette di volersi bene: e' quella a
+        // cui ci si considera nemici. Le alleanze vere sopravvivono al
+        // raffreddamento — Grecia e Turchia stanno nella NATO da settant'anni
+        // — e cedono solo alla rottura.
+        'rottura_trattato' => -35.0,
+
         // Tabella degli obblighi di trattato (BoP, invariata).
         // A che affinita' scatta ciascun gradino della tavola qui sotto.
         //

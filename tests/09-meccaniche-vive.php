@@ -139,7 +139,23 @@ foreach ($mondo->relazioni->tutte() as $r) {
 }
 Prove::che('il gradino piu\' alto esiste nel mondo',
     ($obblighi[128] ?? 0) > 0, 'nessuna garanzia di difesa nucleare');
-Prove::che('ma e\' raro', ($obblighi[128] ?? 0) < 20, sprintf('%d relazioni', $obblighi[128] ?? 0));
+// «Raro» valeva finche' il gradino 128 si raggiungeva per affinita' estrema.
+// Adesso viene dai trattati veri del Correlates of War, e la garanzia nucleare
+// e' rara fra le POTENZE, non fra le relazioni: gli Stati Uniti, la Gran
+// Bretagna e la Francia ne garantiscono trentuno ciascuno solo dentro la NATO,
+// piu' il Giappone, la Corea del Sud, la Russia verso il CSTO e la Cina verso
+// la Corea del Nord. Un centinaio e mezzo di relazioni e' il conto giusto; il
+// controllo vero e' che restino una minoranza del mondo.
+Prove::che('ma e\' una minoranza delle relazioni',
+    ($obblighi[128] ?? 0) < $mondo->relazioni->quante() * 0.10,
+    sprintf('%d relazioni su %d', $obblighi[128] ?? 0, $mondo->relazioni->quante()));
+Prove::che('e i garanti nucleari sono pochi', (static function () use ($mondo): int {
+    $chi = [];
+    foreach ($mondo->relazioni->tutte() as $k => $r) {
+        if ($r->obbligo >= 128) { $chi[explode('|', $k)[0]] = true; }
+    }
+    return count($chi);
+})() <= 12, 'nel mondo vero gli Stati dotati sono nove');
 $usati = count(array_filter(array_keys($obblighi), static fn($k) => $k > 0));
 Prove::che('e tutti i gradini sono usati', $usati >= 4, sprintf('%d gradini su 5', $usati));
 
