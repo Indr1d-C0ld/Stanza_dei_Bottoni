@@ -428,8 +428,24 @@ final class Fase00Chiusura implements Fase
                 $candidati['aiuto_economico'] = 4.0;
                 $candidati['vendita_armi'] = $b->netPeace >= 4 ? 3.0 : 1.2;
             }
-            // Un rapporto caldo senza trattato chiede di essere formalizzato.
-            if ($r->affinita > 70.0 && $r->obbligo < 64) {
+            // Un rapporto piu' caldo del trattato che lo regge chiede di essere
+            // formalizzato meglio.
+            //
+            // La condizione era «affinita' alta E obbligo sotto 64», e reggeva
+            // finche' gli obblighi si deducevano dall'affinita' stessa: c'era
+            // sempre qualche coppia calda e slegata. Adesso i trattati vengono
+            // dal Correlates of War, e le coppie calde un patto ce l'hanno
+            // gia' — cosi' il verbo «trattato» non usciva PIU' MAI, e la
+            // diplomazia perdeva il suo atto piu' semplice.
+            //
+            // Quel che conta non e' se un trattato esiste: e' se e' all'altezza
+            // del rapporto. Ci si lega di piu' con chi si e' avvicinati.
+            $gradinoMeritato = match (true) {
+                $r->affinita > 100.0 => 96,
+                $r->affinita >  70.0 => 64,
+                default              => 0,
+            };
+            if ($gradinoMeritato > $r->obbligo) {
                 $candidati['trattato'] = 2.0;
             }
             // Guerra altrui, e noi non siamo schierati: c'e' prestigio da fare.
@@ -442,7 +458,8 @@ final class Fase00Chiusura implements Fase
             // ragione per cui le immagini dall'alto servono a qualcosa.
             if ($n->posturaNucleare < 3 && $r->affinita < -45.0
                 && ($r->confinanti || $b->posturaNucleare >= 3)
-                && $n->maturita > 120 && $n->pilProCapite > 9000.0) {
+                && $n->pilProCapite > 9000.0) {   // `maturita` era qui accanto:
+                // e' il reddito travestito, e il reddito c'e' gia'.
                 $candidati['programma_nucleare'] = 0.6;
             }
 

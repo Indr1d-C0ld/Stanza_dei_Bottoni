@@ -408,8 +408,10 @@ final class Fase10Gabinetto implements Fase
         $n->clamoreSociale *= 0.55;
         $n->cambiEsecutivo++;
         $n->annoUltimoCambio = $c->tick;
-        // L'alternanza pacifica non erode le istituzioni: le conferma.
-        $n->maturita = min(255, $n->maturita + 1);
+        // L'alternanza pacifica non erode le istituzioni: le conferma. E le
+        // istituzioni sono `democrazia`, non `maturita` — che e' il reddito
+        // travestito, e un'elezione non arricchisce nessuno.
+        $n->democrazia = min(1.0, $n->democrazia + 0.004);
         $c->annota('elezione', ['nazione' => $n->nome, 'esito' => $esito]);
         // Un voto e' pubblico per costruzione: non passa dal vaglio
         // dell'attribuzione della fase 09, che del resto ha gia' chiuso il

@@ -744,7 +744,108 @@ NATO, ha più di dieci garanti a cui rispondere.
 
 ---
 
-## 11. Quel che questo episodio insegna
+## 11. `maturita`: una variabile che diceva il falso su se stessa
+
+La richiesta era «sostituisci `maturita` con V-Dem». Misurandola prima di
+toccarla, si è scoperto che **la sostituzione sarebbe stata sbagliata quasi
+ovunque** — e che il difetto vero era un altro.
+
+| correlazione | r |
+|---|---:|
+| `maturita` vs logaritmo del reddito pro capite | **0,989** |
+| `maturita` vs alfabetizzazione | 0,849 |
+| `maturita` vs democrazia (V-Dem) | 0,520 |
+
+`maturita` **non è** una misura istituzionale. È il reddito con un'altra faccia:
+0,989 significa che non porta quasi nessuna informazione propria. E il nome —
+«lo stato di diritto di Crawford» — dichiarava una cosa che il dato non era.
+
+Sostituirla in blocco con V-Dem avrebbe reso **deboli i servizi segreti cinesi
+e forti quelli norvegesi**, che è falso. La capacità di un apparato non è la sua
+democrazia.
+
+### Il difetto vero: il reddito contato due volte, e una volta tre
+
+Essendo `maturita` il reddito, moltiplicarla *per* il reddito è elevarlo al
+quadrato. Succedeva in tre posti:
+
+```php
+// proliferazione nucleare, fase 06 — reddito al cubo
+$capacita = ($n->maturita / 255.0)
+    * min(1.0, $n->pilProCapite / 25000.0)
+    * max(0.0, min(1.0, $n->alfabetizzazione));
+
+// commercio, settore finanza — reddito al quadrato travestito
+'finanza' => $peso * (0.012 + 0.140 * ($ricch * $matur) ** 1.2),
+
+// programma nucleare, fase 00 — due cancelli per la stessa cosa
+&& $n->maturita > 120 && $n->pilProCapite > 9000.0
+```
+
+E nel reclutamento insurrezionale: `debolezza = 1 - maturita/255` era la povertà
+un'altra volta, mentre la povertà entra già nel moltiplicatore di Fearon &
+Laitin aggiunto due sezioni fa.
+
+### La correzione: due variabili che dicono due cose
+
+`maturita` resta quel che è — **sviluppo** — e smette di essere usata dove si
+intendevano le istituzioni. Lì subentra `democrazia`, che è V-Dem.
+
+| dove | vuole dire | adesso |
+|---|---|---|
+| chi va alle urne | istituzioni | `democrazia` |
+| quando un ricambio è **irregolare** | istituzioni | `democrazia` |
+| quanto un regime stringe sull'informazione | istituzioni | `democrazia` |
+| chi si disarma | istituzioni | `democrazia` |
+| un colpo di Stato erode… | istituzioni | `democrazia` |
+| un'alternanza pacifica consolida… | istituzioni | `democrazia` |
+| capacità di costruire l'atomica | tecnica e industria | reddito × istruzione |
+| solidità di un apparato, di un servizio | capacità | `maturita` |
+| settore finanziario | ricchezza | `ricch` al quadrato, scritto com'è |
+
+Due di questi erano difetti visibili a un osservatore: **un ricambio di governo
+in Cina risultava «regolare»** perché la Cina è ricca, e gli Emirati
+controllavano poco l'informazione per lo stesso motivo.
+
+### Una variabile che cambiava e non veniva registrata
+
+`democrazia` adesso **si muove**: un colpo di Stato la erode di 0,02,
+un'alternanza pacifica la consolida di 0,004. Ma arrivava dal seme e non era
+salvata, quindi a ogni tick sarebbe tornata al valore di partenza: il mondo si
+ricostruisce dal seme e poi si sovrascrive con lo stato registrato, e **quel che
+non è registrato torna com'era**.
+
+È lo stampo dei quattro campi che il motore muoveva per frazioni mentre erano
+dichiarati interi, trovato nell'audit precedente: *una grandezza che cambia e
+non viene registrata è una grandezza che non cambia.* Migrazione 0027.
+
+### E la vista mentiva
+
+La scheda di una nazione diceva «Maturità istituzionale 215/255». Adesso dice
+**Sviluppo 215/255** e **Istituzioni 0,64/1,00** — due righe, due cose diverse.
+
+### Tre prove fragili smascherate per strada
+
+La ritaratura ha fatto cadere tre prove, e in tutti e tre i casi il difetto era
+nella prova:
+
+- **la proliferazione** («qualcuno si è armato in quindici anni») guardava una
+  sola traiettoria: misurata su cinque semi esce in quattro, con zero-tre nuove
+  posture per corsa. Un evento raro non può essere preteso sempre;
+- **il verbo `trattato`** non usciva più, ed era una conseguenza *vera*: la
+  condizione era «rapporto caldo e nessun trattato», e con i patti veri del
+  Correlates of War le coppie calde un patto ce l'hanno già. Riscritta come
+  «rapporto cresciuto oltre il trattato che lo regge» — e resta rara, come nel
+  mondo vero;
+- **l'onere militare** sfiorava il tetto della fascia. Il tetto è salito da 3,2
+  a 3,6 *sul dato*, non per far passare la prova: SIPRI registra la salita più
+  ripida dal 1988, dal 2,2% del 2020 al 2,5% del 2024, cioè +0,075 punti l'anno
+  — su quindici farebbero +1,1, e il modello ne fa +0,7. Sale più piano del
+  mondo vero, non più in fretta.
+
+---
+
+## 12. Quel che questo episodio insegna
 
 Le duecentonove prove esistenti verificavano **meccaniche**: che le cose
 succedessero, nell'ordine giusto, con le cause giuste. Nessuna verificava

@@ -338,8 +338,11 @@ final class Fase06Relazioni implements Fase
                 + ($n->netPeace >= 5 ? 0.5 : 0.0)
                 + $vicinoArmato * 0.8);
             $volonta = $paura * (0.5 + ($n->ambizione - 2) * 0.18) * (1.0 - 0.85 * $ombrello);
-            $capacita = ($n->maturita / 255.0)
-                * min(1.0, $n->pilProCapite / 25000.0)
+            // La capacita' di costruire l'atomica e' tecnica e industriale:
+            // reddito e istruzione. Qui c'era anche `maturita`, che di quei
+            // due e' una funzione (r = 0,989 col logaritmo del reddito): era
+            // lo stesso segnale moltiplicato per se' stesso.
+            $capacita = min(1.0, $n->pilProCapite / 25000.0)
                 * max(0.0, min(1.0, $n->alfabetizzazione))
                 * min(1.0, $n->pil / 250000.0);
 
@@ -365,8 +368,12 @@ final class Fase06Relazioni implements Fase
             // Chi ce l'ha la tiene, quasi sempre. Si posa solo quando la paura
             // e' passata, le istituzioni reggono, e qualcun altro garantisce.
             $sicuro = $paura < 0.15 && $n->netPeace <= 2;
-            if ($sicuro && $n->maturita > 170 && $ombrello > 0.5) {
-                $p = $rateoGiu * ($n->maturita / 255.0);
+            // Ci si disarma quando «le istituzioni reggono»: e' una questione
+            // di istituzioni, non di reddito. Il Sudafrica smantello' il
+            // proprio arsenale nel 1989 uscendo dall'apartheid, non
+            // arricchendosi.
+            if ($sicuro && $n->democrazia > 0.35 && $ombrello > 0.5) {
+                $p = $rateoGiu * $n->democrazia;
                 if ($c->caso->prova('06_disarmo', crc32($n->iso3), $c->tick, min(0.01, $p))) {
                     $n->posturaNucleare = max(1, $n->posturaNucleare - 1);
                     $mosse++;

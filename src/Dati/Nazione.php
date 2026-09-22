@@ -18,6 +18,24 @@ final class Nazione
         public string $nome,
         public string $regione,
         public string $ideologiaFormale,
+        /**
+         * SVILUPPO, non stato di diritto — malgrado il nome.
+         *
+         * Nasce come «la maturita' istituzionale che Crawford confessa di aver
+         * inventato», ma l'importatore la ricava da reddito e alfabetizzazione
+         * e MISURATO correla 0,989 col logaritmo del reddito pro capite: non e'
+         * una misura delle istituzioni, e' il reddito con un'altra faccia.
+         * Con l'indice di democrazia di V-Dem correla appena 0,520.
+         *
+         * Serve ancora, e va bene dov'e' rimasta: capacita' industriale,
+         * solidita' di un apparato, competenza di un servizio. Dove invece si
+         * intendevano le ISTITUZIONI — chi va alle urne, quando un ricambio e'
+         * irregolare, quanto un regime stringe sull'informazione, chi si
+         * disarma — adesso decide `democrazia`.
+         *
+         * E non va moltiplicata per il reddito: era il reddito due volte, e in
+         * un caso tre.
+         */
         public int    $maturita,
         public int    $valoreStrategico,
         public int    $valorePrestigio,

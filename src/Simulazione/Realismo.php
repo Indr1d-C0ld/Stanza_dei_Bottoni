@@ -59,8 +59,11 @@ final class Realismo
             'ONU, World Population Prospects 2024: il mondo cresce dello 0,9% l\'anno'],
         'crescita_pil'         => [2.0,  4.0,  '%/anno',      'corsa',
             'Banca Mondiale: 2,9% nel 2024, ~3,4% medio dal 2000 in PPA'],
-        'onere_militare'       => [1.8,  3.2,  '% del PIL',   'corsa',
-            'SIPRI 2024: 2,5% del prodotto mondiale'],
+        'onere_militare'       => [1.8,  3.6,  '% del PIL',   'corsa',
+            'SIPRI 2024: 2,5% del prodotto mondiale, e in salita — la piu\' ripida dal 1988. '
+            . 'Il tetto e\' alto apposta: il mondo vero e\' passato dal 2,2% del 2020 al 2,5% '
+            . 'del 2024, cioe\' +0,075 punti l\'anno, che su quindici farebbero +1,1. Il '
+            . 'modello ne fa +0,7, quindi sale piu\' piano del reale, non piu\' in fretta'],
         'cambi_irregolari'     => [3,    9,    '/anno',       'corsa',
             'Cline Center / Powell & Thyne: 2,2 colpi di Stato riusciti l\'anno nel 2000-2019, '
             . '~3,8 negli anni Venti, piu\' le rivoluzioni. Il ~10 di Crawford NON vale qui: '

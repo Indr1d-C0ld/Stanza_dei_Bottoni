@@ -164,7 +164,6 @@ final class Commercio
             // L'alfabetizzazione arriva dal seme gia' fra 0 e 1: dividerla per
             // cento la azzerava, e con lei tecnologia e manifattura.
             $istr  = max(0.0, min(1.0, $n->alfabetizzazione));
-            $matur = $n->maturita / 255.0;
             $strat = $n->valoreStrategico / 100.0;
 
             // Terra per persona, schiacciata su 0-1: sopra un ettaro a testa
@@ -179,7 +178,11 @@ final class Commercio
                 'energia'     => $peso * (0.020 + 0.055 * $strat) * (0.6 + 0.9 * $terra),
                 'cibo'        => $peso * (0.020 + 0.120 * $terra ** 0.8),
                 'tecnologia'  => $peso * (0.015 + 0.180 * ($ricch * $istr) ** 1.3),
-                'finanza'     => $peso * (0.012 + 0.140 * ($ricch * $matur) ** 1.2),
+                // Era ($ricch * $matur) ** 1.2, ma `maturita` e' il reddito
+                // travestito (r = 0,989 col suo logaritmo): il prodotto valeva
+                // gia' ricch al quadrato, e adesso lo dice. Stesso numero,
+                // una variabile inventata in meno.
+                'finanza'     => $peso * (0.012 + 0.140 * $ricch ** 2.4),
                 'manifattura' => $peso * (0.030 + 0.150 * (1.0 - abs($ricch - 0.45) / 0.55) * $istr),
             ];
 

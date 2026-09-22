@@ -119,7 +119,7 @@ final class Deposito
     {
         $campi = [
             'popolazione', 'pil', 'crescita_pil', 'pil_pro_capite', 'consumo_pro_capite',
-            'quota_consumi', 'quota_investimenti', 'quota_militare',
+            'quota_consumi', 'quota_investimenti', 'quota_militare', 'democrazia',
             'influenza_totale', 'etica', 'ambizione', 'qualita_vita', 'stato_polizia',
             'net_peace', 'legittimita', 'aspettativa', 'clamore_sociale', 'orientamento',
             'ansia_militare', 'controllo_info', 'cyber_difesa',
@@ -142,6 +142,7 @@ final class Deposito
             array_push($valori, $id, $tick,
                 (int) $n->popolazione, $n->pil, $n->crescitaPil, $n->pilProCapite,
                 $n->consumoProCapite, $n->quotaConsumi, $n->quotaInvestimenti, $n->quotaMilitare,
+                $n->democrazia,
                 $n->influenzaTotale, $n->etica, $n->ambizione, $n->qualitaVita, $n->statoPolizia,
                 $n->netPeace, $n->legittimita, $n->aspettativa, $n->clamoreSociale, $n->orientamento,
                 $n->ansiaMilitare, $n->controlloInfo, $n->cyberDifesa,
@@ -460,6 +461,9 @@ final class Deposito
             $n->quotaConsumi      = (float) $r['quota_consumi'];
             $n->quotaInvestimenti = (float) $r['quota_investimenti'];
             $n->quotaMilitare     = (float) $r['quota_militare'];
+            // Le istituzioni si muovono e vanno rilette: se restassero al
+            // valore del seme, ogni colpo di Stato verrebbe dimenticato.
+            $n->democrazia        = (float) $r['democrazia'];
             $n->influenzaTotale   = (float) $r['influenza_totale'];
             $n->etica             = (int) $r['etica'];
             $n->ambizione         = (int) $r['ambizione'];

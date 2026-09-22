@@ -143,8 +143,11 @@ final class Fase05SicurezzaInterna implements Fase
             // abbassava la disinformazione altrui e non lo alzava niente — e
             // dopo quindici anni centosettantacinque paesi su centottantanove
             // erano ancora esattamente al valore di partenza.
+            // Quanto un regime stringe sul racconto e' una questione di
+            // istituzioni, non di reddito: gli Emirati e Singapore sono
+            // ricchissimi e controllano moltissimo. Qui c'era `maturita`.
             $obiettivoInfo = 18.0 + 17.0 * $n->statoPolizia
-                - 22.0 * ($n->maturita / 255.0);
+                - 22.0 * $n->democrazia;
             $n->controlloInfo = max(0.0, min(100.0, $n->controlloInfo
                 + (max(0.0, $obiettivoInfo) - $n->controlloInfo) * $rispostaPolizia * 0.7));
 
@@ -166,7 +169,12 @@ final class Fase05SicurezzaInterna implements Fase
             // amato non aveva alcuna insurrezione, il che non somiglia a
             // nessun posto reale.
             $malcontento = max(0.0, (55.0 - $n->legittimita) / 55.0);
-            $debolezza   = 1.0 - ($n->maturita / 255.0);
+            // La debolezza dello Stato che alimenta l'insurrezione. Era
+            // 1 - maturita/255, cioe' — essendo `maturita` il reddito
+            // travestito — la poverta' un'altra volta: e la poverta' entra
+            // gia' nel moltiplicatore di Fearon & Laitin qui sotto. Adesso
+            // dice quel che deve dire, cioe' quanto le istituzioni tengono.
+            $debolezza   = 1.0 - $n->democrazia;
             $spinta      = 0.30 + 0.70 * $malcontento;
             if ($debolezza > 0.15) {
                 $successo = $n->forzaInsorti > 0.0
@@ -392,7 +400,15 @@ final class Fase05SicurezzaInterna implements Fase
     /** Cambio al vertice: cambia chi comanda, non l'apparato. */
     private function cambioEsecutivo(Nazione $n, ContestoTick $c): void
     {
-        $irregolare = $n->maturita < 140;
+        // «Irregolare» vuol dire che il paese non ha un modo ordinario di
+        // cambiare chi comanda. E' una proprieta' delle ISTITUZIONI, e qui
+        // c'era `maturita`, che correla 0,989 col logaritmo del reddito: un
+        // paese ricco aveva ricambi «regolari» anche se non votava nessuno.
+        //
+        // E' la stessa soglia con cui la fase 10 decide chi va alle urne,
+        // perche' e' la stessa domanda: o le istituzioni elettorali
+        // funzionano, o il potere cambia per un'altra via.
+        $irregolare = $n->democrazia < $c->calibrazione->numero('elezioni.democrazia_minima', 0.25);
         // Un nuovo governo non è il precedente con la legittimità ricaricata:
         // è gente diversa, con fortuna diversa. Alcuni consolidano per un
         // decennio, altri cadono in sei mesi, e questo NON è deducibile.
@@ -404,7 +420,9 @@ final class Fase05SicurezzaInterna implements Fase
         // Un cambio irregolare erode la fiducia nelle istituzioni: se è potuto
         // accadere una volta, può riaccadere.
         if ($irregolare) {
-            $n->maturita = max(10, $n->maturita - 3);
+            // Un colpo di Stato non impoverisce il paese da un giorno
+            // all'altro: gli rompe le istituzioni. L'erosione va li'.
+            $n->democrazia = max(0.0, $n->democrazia - 0.02);
             $n->orientamento = max(-128, min(128, -$n->orientamento + ($n->orientamento === 0 ? 24 : 0)));
         }
         $n->cambiEsecutivo++;

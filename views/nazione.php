@@ -36,7 +36,10 @@ $ruoli = App\Dati\Gabinetto::RUOLI;
       <dt>Qualità della vita</dt><dd><?= (int) $n['qualita_vita'] ?>/10</dd>
       <dt>Legittimità</dt><dd><?= n((float) $n['legittimita'], 0) ?>/100</dd>
       <dt>Clamore sociale</dt><dd><?= n((float) $n['clamore_sociale'], 0) ?>%</dd>
-      <dt>Maturità istituzionale</dt><dd><?= (int) $n['maturita'] ?>/255</dd>
+      <dt>Sviluppo</dt><dd><?= (int) $n['maturita'] ?>/255</dd>
+      <?php if (isset($n['democrazia'])): ?>
+      <dt>Istituzioni</dt><dd><?= n((float) $n['democrazia'], 2) ?>/1,00</dd>
+      <?php endif; ?>
       <dt>Tensione interna</dt><dd><?= $tensioni[(int) $n['net_peace']] ?? '—' ?></dd>
     </dl>
   </section>

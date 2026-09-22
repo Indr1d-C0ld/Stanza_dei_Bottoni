@@ -393,6 +393,29 @@ garanti quattordici Stati, contro i nove che l'atomica ce l'hanno.
 Adesso un trattato regge al raffreddamento — la Grecia e la Turchia stanno nella
 NATO da settant'anni senza volersi bene — e cede solo alla rottura vera.
 
+## Sviluppo e istituzioni, che non sono la stessa cosa
+
+`maturita` nasce come «lo stato di diritto che Crawford confessa di aver
+inventato». Misurata, correla **0,989** col logaritmo del reddito pro capite e
+0,520 con l'indice di democrazia di V-Dem: non e' una misura istituzionale, e'
+il reddito con un'altra faccia.
+
+Sostituirla in blocco con V-Dem avrebbe reso deboli i servizi segreti cinesi e
+forti quelli norvegesi. Il difetto vero era un altro: essendo `maturita` il
+reddito, moltiplicarla PER il reddito lo elevava al quadrato — e nella
+proliferazione nucleare al cubo.
+
+Adesso sono due variabili che dicono due cose. `maturita` e' lo **sviluppo**, e
+regge quel che e' capacita': l'industria che serve per l'atomica, la solidita' di
+un apparato, la competenza di un servizio. `democrazia` sono le **istituzioni**,
+e regge chi va alle urne, quando un ricambio e' irregolare, quanto un regime
+stringe sull'informazione, chi si disarma. Due di questi erano difetti visibili:
+un ricambio di governo in Cina risultava «regolare» perche' la Cina e' ricca.
+
+E `democrazia` adesso si muove — un colpo di Stato la erode, un'alternanza
+pacifica la consolida — quindi va registrata: una grandezza che cambia e non
+viene salvata e' una grandezza che non cambia.
+
 ## Che cosa non è
 
 **Non è una previsione.** Nessuna delle cifre che il modello produce dice
