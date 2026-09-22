@@ -10,9 +10,9 @@ $tensioni = [1=>'quiete',2=>'pace',3=>'tensione',4=>'conflitto aperto',5=>'guerr
 <h1><?= htmlspecialchars($ruoli[$poltrona['ruolo']] ?? '') ?>
     <span class="tenue">di</span> <?= htmlspecialchars((string) $poltrona['nazione']) ?></h1>
 <p class="tenue">Al tuo posto sedeva <?= htmlspecialchars((string) $poltrona['nome']) ?>.
-   Legittimità del governo <?= number_format((float) $nazione['legittimita'], 0) ?>/100 ·
+   Legittimità del governo <?= n((float) $nazione['legittimita'], 0) ?>/100 ·
    <?= $tensioni[(int) $nazione['net_peace']] ?? '' ?> ·
-   influenza <?= number_format((float) $nazione['influenza_totale'], 2) ?>%</p>
+   influenza <?= n((float) $nazione['influenza_totale'], 2) ?>%</p>
 
 <?php if ($poltrona['per_delega'] ?? false): ?>
 <p class="allarme">Stai sedendo alla poltrona di
@@ -186,8 +186,8 @@ $tensioni = [1=>'quiete',2=>'pace',3=>'tensione',4=>'conflitto aperto',5=>'guerr
       <p class="riga-due">Gradino <?= (int) $k['livello'] ?> di 9:
          <strong><?= htmlspecialchars($gradini[(int) $k['livello']] ?? '') ?></strong>.
          <?= $tocca ? 'Tocca a te.' : 'Stiamo aspettando la loro mossa.' ?></p>
-      <p class="riga-tre tenue">Se cedi ora perdi <?= number_format($miaPosta, 0) ?> punti di faccia;
-         se cedono loro ne perdono <?= number_format($suaPosta, 0) ?>.
+      <p class="riga-tre tenue">Se cedi ora perdi <?= n($miaPosta, 0) ?> punti di faccia;
+         se cedono loro ne perdono <?= n($suaPosta, 0) ?>.
          <?php if ((int) $k['livello'] >= 5): ?>
            <span class="ostile">Da qui in su ogni passo può sfuggire di mano.</span>
          <?php endif; ?>
@@ -296,9 +296,9 @@ $tensioni = [1=>'quiete',2=>'pace',3=>'tensione',4=>'conflitto aperto',5=>'guerr
       <tr>
         <td><?= htmlspecialchars($nomiPaesi[$a['iso']] ?? $a['iso']) ?></td>
         <td class="<?= $a['costa_a_loro'] > $a['costa_a_noi'] ? 'positivo' : 'negativo' ?>">
-          &minus;<?= number_format(100 * $a['costa_a_loro'], 2, ',', '.') ?>%</td>
+          &minus;<?= n(100 * $a['costa_a_loro'], 2) ?>%</td>
         <td class="<?= $a['costa_a_noi'] >= $a['costa_a_loro'] ? 'negativo' : 'tenue' ?>">
-          &minus;<?= number_format(100 * $a['costa_a_noi'], 2, ',', '.') ?>%</td>
+          &minus;<?= n(100 * $a['costa_a_noi'], 2) ?>%</td>
       </tr>
     <?php endforeach; ?>
   </table>
@@ -406,7 +406,7 @@ $tensioni = [1=>'quiete',2=>'pace',3=>'tensione',4=>'conflitto aperto',5=>'guerr
         <td class="tenue"><?= htmlspecialchars($ruoli[$c['ruolo']] ?? '') ?></td>
         <td><?= htmlspecialchars((string) ($c['giocatore'] ?? $c['nome'])) ?>
             <?php if ($c['giocatore'] === null): ?><span class="tenue">· apparato</span><?php endif; ?></td>
-        <td class="num"><?= number_format((float) $c['potere'], 0) ?></td>
+        <td class="num"><?= n((float) $c['potere'], 0) ?></td>
       </tr>
     <?php endforeach; ?>
     </tbody>
@@ -420,7 +420,7 @@ $tensioni = [1=>'quiete',2=>'pace',3=>'tensione',4=>'conflitto aperto',5=>'guerr
       <tr>
         <td><a href="<?= u('/nazione') ?>/<?= $r['codice'] ?>"><?= htmlspecialchars((string) $r['nome']) ?></a></td>
         <td class="num <?= (float) $r['affinita'] < -35 ? 'ostile' : ((float) $r['affinita'] > 55 ? 'amico' : '') ?>">
-            <?= number_format((float) $r['affinita'], 0) ?></td>
+            <?= n((float) $r['affinita'], 0) ?></td>
       </tr>
     <?php endforeach; ?>
     </tbody>

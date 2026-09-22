@@ -27,7 +27,7 @@ foreach (array_slice($argv, 1) as $a) {
     }
 }
 
-$lente = ['04-taratura-e-leve.php'];
+$lente = ['04-taratura-e-leve.php', '11-realismo.php'];
 
 $file = glob(dirname(__DIR__) . '/tests/[0-9]*.php') ?: [];
 sort($file);

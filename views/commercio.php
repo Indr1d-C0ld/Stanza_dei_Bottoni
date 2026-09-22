@@ -4,7 +4,7 @@
 /** @var array<string,string> $nomi */
 $settoriIt = ['energia'=>'energia','cibo'=>'cibo','tecnologia'=>'tecnologia',
               'finanza'=>'finanza','manifattura'=>'manifattura'];
-$pct = fn(float $x): string => number_format(100 * $x, 2, ',', '.') . '%';
+$pct = fn(float $x): string => n(100 * $x, 2) . '%';
 ?>
 <h1>Il commercio</h1>
 <p class="tenue">Un embargo non è un pulsante. Chiudere un rubinetto fa male a
@@ -76,7 +76,7 @@ $pct = fn(float $x): string => number_format(100 * $x, 2, ',', '.') . '%';
       <tr>
         <td><?= htmlspecialchars((string) $s['fornitore']) ?></td>
         <td><?= htmlspecialchars((string) $s['cliente']) ?></td>
-        <td><?= number_format(100 * $s['quota'], 0) ?>%</td>
+        <td><?= n(100 * $s['quota'], 0) ?>%</td>
         <td class="negativo">&minus;<?= $pct($s['costa_al_cliente']) ?></td>
         <td class="negativo">&minus;<?= $pct($s['costa_al_fornitore']) ?></td>
         <td class="tenue"><?= (int) $s['restano'] ?> giri</td>

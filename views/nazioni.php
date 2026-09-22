@@ -21,9 +21,9 @@ $tensioni = [1=>'quiete',2=>'pace',3=>'tensione',4=>'conflitto',5=>'guerra',6=>'
     <tr<?= (int) $n['net_peace'] >= 4 ? ' class="in-crisi"' : '' ?>>
       <td><a href="<?= u('/nazione') ?>/<?= $n['codice'] ?>"><?= htmlspecialchars($n['nome']) ?></a></td>
       <td class="tenue"><?= htmlspecialchars((string) $n['regione']) ?></td>
-      <td class="num"><?= number_format((float) $n['influenza_totale'], 2) ?>%</td>
-      <td class="num"><?= number_format((float) $n['pil'] / 1000, 0) ?></td>
-      <td class="num"><?= number_format((float) $n['legittimita'], 0) ?></td>
+      <td class="num"><?= n((float) $n['influenza_totale'], 2) ?>%</td>
+      <td class="num"><?= n((float) $n['pil'] / 1000, 0) ?></td>
+      <td class="num"><?= n((float) $n['legittimita'], 0) ?></td>
       <td class="num"><?= (int) $n['qualita_vita'] ?></td>
       <td class="tenue"><?= $tensioni[(int) $n['net_peace']] ?? '—' ?></td>
     </tr>

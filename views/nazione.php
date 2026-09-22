@@ -22,11 +22,11 @@ $ruoli = App\Dati\Gabinetto::RUOLI;
   <section class="quadrante">
     <h3>Economia</h3>
     <dl>
-      <dt>Prodotto interno</dt><dd><?= number_format((float) $n['pil'] / 1000, 1) ?> mld</dd>
-      <dt>Reddito pro capite</dt><dd><?= number_format((float) $n['pil_pro_capite'], 0) ?></dd>
-      <dt>Consumo pro capite</dt><dd><?= number_format((float) $n['consumo_pro_capite'], 0) ?></dd>
-      <dt>Crescita</dt><dd><?= number_format((float) $n['crescita_pil'] * 100, 1) ?>%</dd>
-      <dt>Popolazione</dt><dd><?= number_format((float) $n['popolazione'] / 1_000_000, 1) ?> mln</dd>
+      <dt>Prodotto interno</dt><dd><?= n((float) $n['pil'] / 1000, 1) ?> mld</dd>
+      <dt>Reddito pro capite</dt><dd><?= n((float) $n['pil_pro_capite'], 0) ?></dd>
+      <dt>Consumo pro capite</dt><dd><?= n((float) $n['consumo_pro_capite'], 0) ?></dd>
+      <dt>Crescita</dt><dd><?= n((float) $n['crescita_pil'] * 100, 1) ?>%</dd>
+      <dt>Popolazione</dt><dd><?= n((float) $n['popolazione'] / 1_000_000, 1) ?> mln</dd>
     </dl>
   </section>
 
@@ -34,8 +34,8 @@ $ruoli = App\Dati\Gabinetto::RUOLI;
     <h3>Società</h3>
     <dl>
       <dt>Qualità della vita</dt><dd><?= (int) $n['qualita_vita'] ?>/10</dd>
-      <dt>Legittimità</dt><dd><?= number_format((float) $n['legittimita'], 0) ?>/100</dd>
-      <dt>Clamore sociale</dt><dd><?= number_format((float) $n['clamore_sociale'], 0) ?>%</dd>
+      <dt>Legittimità</dt><dd><?= n((float) $n['legittimita'], 0) ?>/100</dd>
+      <dt>Clamore sociale</dt><dd><?= n((float) $n['clamore_sociale'], 0) ?>%</dd>
       <dt>Maturità istituzionale</dt><dd><?= (int) $n['maturita'] ?>/255</dd>
       <dt>Tensione interna</dt><dd><?= $tensioni[(int) $n['net_peace']] ?? '—' ?></dd>
     </dl>
@@ -44,7 +44,7 @@ $ruoli = App\Dati\Gabinetto::RUOLI;
   <section class="quadrante">
     <h3>Influenza</h3>
     <dl>
-      <dt>Influenza totale</dt><dd><?= number_format((float) $n['influenza_totale'], 2) ?>%</dd>
+      <dt>Influenza totale</dt><dd><?= n((float) $n['influenza_totale'], 2) ?>%</dd>
       <dt>Valore di prestigio</dt><dd><?= (int) $n['valore_prestigio'] ?></dd>
       <dt>Valore strategico</dt><dd><?= (int) $n['valore_strategico'] ?>/100</dd>
       <dt>Etica percepita</dt><dd><?= $etiche[(int) $n['etica']] ?? '—' ?></dd>
@@ -55,11 +55,11 @@ $ruoli = App\Dati\Gabinetto::RUOLI;
   <section class="quadrante">
     <h3>Forze</h3>
     <dl>
-      <dt>Effettivi</dt><dd><?= number_format((float) $n['soldati'], 0) ?></dd>
-      <dt>Quota militare</dt><dd><?= number_format((float) $n['quota_militare'] * 100, 1) ?>% del PIL</dd>
-      <dt>Potenza</dt><dd><?= number_format((float) $n['potenza_militare'], 0) ?></dd>
+      <dt>Effettivi</dt><dd><?= n((float) $n['soldati'], 0) ?></dd>
+      <dt>Quota militare</dt><dd><?= n((float) $n['quota_militare'] * 100, 1) ?>% del PIL</dd>
+      <dt>Potenza</dt><dd><?= n((float) $n['potenza_militare'], 0) ?></dd>
       <dt>Postura nucleare</dt><dd><?= $nucleare[(int) $n['postura_nucleare']] ?? '—' ?></dd>
-      <dt>Insorti</dt><dd><?= number_format((float) $n['forza_insorti'], 0) ?></dd>
+      <dt>Insorti</dt><dd><?= n((float) $n['forza_insorti'], 0) ?></dd>
     </dl>
   </section>
 </div>
@@ -74,9 +74,9 @@ $ruoli = App\Dati\Gabinetto::RUOLI;
       <tr>
         <td class="tenue"><?= htmlspecialchars($ruoli[$p['ruolo']] ?? $p['ruolo']) ?></td>
         <td><?= htmlspecialchars((string) $p['nome']) ?> <span class="tenue"><?= (int) $p['eta'] ?> anni</span></td>
-        <td class="num"><?= number_format((float) $p['potere'], 0) ?></td>
-        <td class="num"><?= number_format((float) $p['lealta'], 0) ?></td>
-        <td class="num"><?= number_format((float) $p['competenza'] * 100, 0) ?></td>
+        <td class="num"><?= n((float) $p['potere'], 0) ?></td>
+        <td class="num"><?= n((float) $p['lealta'], 0) ?></td>
+        <td class="num"><?= n((float) $p['competenza'] * 100, 0) ?></td>
       </tr>
     <?php endforeach; ?>
     </tbody>
@@ -86,8 +86,8 @@ $ruoli = App\Dati\Gabinetto::RUOLI;
   <ul class="fazioni">
     <?php foreach ($fazioni as $f): ?>
       <li><strong><?= htmlspecialchars((string) $f['nome']) ?></strong>
-          <span class="num">forza <?= number_format((float) $f['forza'], 0) ?></span>
-          <span class="num <?= (float) $f['favore'] < 0 ? 'ostile' : '' ?>">favore <?= number_format((float) $f['favore'], 0) ?></span>
+          <span class="num">forza <?= n((float) $f['forza'], 0) ?></span>
+          <span class="num <?= (float) $f['favore'] < 0 ? 'ostile' : '' ?>">favore <?= n((float) $f['favore'], 0) ?></span>
           <span class="tenue">«<?= htmlspecialchars((string) $f['agenda']) ?>»</span></li>
     <?php endforeach; ?>
   </ul>
@@ -105,7 +105,7 @@ $ruoli = App\Dati\Gabinetto::RUOLI;
         <td><a href="<?= u('/nazione') ?>/<?= $r['codice'] ?>"><?= htmlspecialchars((string) $r['nome']) ?></a></td>
         <td class="<?= (int) $r['umore'] >= 6 ? 'ostile' : ((int) $r['umore'] <= 2 ? 'amico' : '') ?>">
             <?= $umori[(int) $r['umore']] ?? '—' ?></td>
-        <td class="num"><?= number_format((float) $r['affinita'], 0) ?></td>
+        <td class="num"><?= n((float) $r['affinita'], 0) ?></td>
         <td class="tenue"><?= (int) $r['obbligo'] >= 96 ? 'difesa' : ((int) $r['obbligo'] >= 64 ? 'basi' : ((int) $r['obbligo'] >= 32 ? 'commercio' : '—')) ?></td>
       </tr>
     <?php endforeach; ?>

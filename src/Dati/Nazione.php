@@ -35,6 +35,10 @@ final class Nazione
         public float $crescitaStrutturale,
         public float $crescitaBase,
         public float $quotaInvestimentiIniziale,
+        // La quota militare di partenza: e' l'ancora dell'obiettivo di spesa.
+        // Senza, il bersaglio del motore e' una costante universale e il mondo
+        // converge a un onere militare che non e' quello di nessuno.
+        public float $quotaMilitareIniziale,
         public float $pilProCapite,
         public float $consumoProCapite,
         public float $quotaConsumi,

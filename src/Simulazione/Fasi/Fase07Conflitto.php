@@ -41,6 +41,8 @@ final class Fase07Conflitto implements Fase
         $tickAnno = $c->calibrazione->numero('tempo.tick_per_anno', 52.0);
         $perTick  = 1.0 / $tickAnno;
         $attrito  = $c->calibrazione->numero('insurrezione.attrito_anno', 0.25) * $perTick;
+        $quotaCaduti = $c->calibrazione->numero('conflitto.quota_caduti', 0.33);
+        $civili      = $c->calibrazione->numero('conflitto.civili_per_militare', 1.0);
 
         $aperte = 0;
         $chiuse = 0;
@@ -72,10 +74,26 @@ final class Fase07Conflitto implements Fase
 
             $logoraA = $forzaD * $attrito;
             $logoraD = $forzaA * $attrito;
-            $g['morti'] += ($logoraA + $logoraD) * 60.0;
 
-            $this->logora($a, $logoraA, $forzaA);
-            $this->logora($d, $logoraD, $forzaD);
+            // --- le perdite umane ------------------------------------------
+            // Qui c'era un moltiplicatore libero (x60 sull'attrito) che non
+            // aveva niente a che vedere con gli uomini che la stessa fase
+            // toglieva dai ruoli: produceva decine di milioni di morti l'anno
+            // in una guerra bilaterale, cento volte i riferimenti storici.
+            // Adesso i morti SONO una frazione delle perdite contate.
+            $persiA = $this->logora($a, $logoraA, $forzaA);
+            $persiD = $this->logora($d, $logoraD, $forzaD);
+
+            $cadutiA = $persiA * $quotaCaduti;
+            $cadutiD = $persiD * $quotaCaduti;
+            // I civili muoiono dove si combatte, cioe' quasi tutti in casa del
+            // difensore: e' l'asimmetria che rende l'invasione una catastrofe
+            // per l'invaso molto prima che per l'invasore.
+            $civiliMorti = ($cadutiA + $cadutiD) * $civili;
+            $g['morti'] += $cadutiA + $cadutiD + $civiliMorti;
+
+            $a->popolazione = max(1000.0, $a->popolazione - $cadutiA);
+            $d->popolazione = max(1000.0, $d->popolazione - $cadutiD - $civiliMorti);
 
             $a->netPeace = 6;
             $d->netPeace = 6;
@@ -112,12 +130,20 @@ final class Fase07Conflitto implements Fase
         return new EsitoFase(['guerre' => $aperte, 'concluse' => $chiuse, 'garanzie' => $garanzie]);
     }
 
-    /** Il danno si scarica su uomini ed equipaggiamento, in proporzione. */
-    private function logora($n, float $danno, float $forza): void
+    /**
+     * Il danno si scarica su uomini ed equipaggiamento, in proporzione.
+     *
+     * @return float gli uomini tolti dai ruoli: caduti, feriti, prigionieri e
+     *               dispersi insieme. Chi chiama decide quanti sono morti.
+     */
+    private function logora($n, float $danno, float $forza): float
     {
         $quota = $forza > 0 ? min(0.4, $danno / $forza) : 0.0;
         $n->equipaggiamento *= 1.0 - $quota * 0.9;
+        $prima = $n->soldati;
         $n->soldati = max(500.0, $n->soldati * (1.0 - $quota * 0.45));
+
+        return max(0.0, $prima - $n->soldati);
     }
 
     /**

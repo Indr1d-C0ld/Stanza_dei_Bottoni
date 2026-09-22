@@ -60,6 +60,18 @@ function u(string $percorso = '/'): string
     return BASE . $percorso;
 }
 
+/**
+ * Un numero scritto all'italiana: punto per le migliaia, virgola per i decimi.
+ *
+ * Le date le avevamo gia' messe in GG/MM/AAAA; i numeri erano rimasti
+ * all'anglosassone in trentatre' punti su trentotto, e «25,680 mld» un occhio
+ * italiano lo legge venticinque virgola sei.
+ */
+function n(float $x, int $decimali = 0): string
+{
+    return number_format($x, $decimali, ',', '.');
+}
+
 $percorso = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/', '/');
 if (BASE !== '' && str_starts_with('/' . $percorso, BASE . '/')) {
     $percorso = trim(substr('/' . $percorso, strlen(BASE)), '/');

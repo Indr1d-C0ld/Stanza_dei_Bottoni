@@ -19,14 +19,14 @@ dominio: il gabinetto esiste perché il mondo è troppo grande per una persona s
 Le poltrone vuote restano in mano all'apparato, che decide da sé.</p>
 <?php foreach ($per as $nazione => $poltrone): ?>
   <h2><?= htmlspecialchars((string) $nazione) ?>
-      <span class="tenue"><?= number_format((float) $poltrone[0]['influenza_totale'], 2) ?>% di influenza</span></h2>
+      <span class="tenue"><?= n((float) $poltrone[0]['influenza_totale'], 2) ?>% di influenza</span></h2>
   <table>
     <tbody>
     <?php foreach ($poltrone as $p): ?>
       <tr>
         <td><?= htmlspecialchars($ruoli[$p['ruolo']] ?? (string) $p['ruolo']) ?></td>
         <td class="tenue">titolare uscente: <?= htmlspecialchars((string) $p['titolare']) ?></td>
-        <td class="num">potere <?= number_format((float) $p['potere'], 0) ?></td>
+        <td class="num">potere <?= n((float) $p['potere'], 0) ?></td>
         <td>
           <form method="post" action="" class="in-linea">
             <input type="hidden" name="gettone" value="<?= htmlspecialchars($sessione->gettone()) ?>">

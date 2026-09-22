@@ -42,6 +42,36 @@ return [
         'pressione_consumi_k'      => 1.0,
         'pressione_investimenti_k' => 0.35,
         'pressione_militare_k'     => 1.0,
+
+        // --- dove punta il motore ------------------------------------------
+        // Le tre quote convergono verso un obiettivo. Se quell'obiettivo e'
+        // una costante universale, ogni paese si stacca dalla propria storia:
+        // gli investimenti salivano dal 22% al 29% del prodotto per TUTTI, e
+        // siccome la crescita premia chi investe piu' del proprio solito, il
+        // mondo incassava un punto di crescita l'anno che nessuno aveva
+        // guadagnato. L'obiettivo ruota invece intorno alla quota di partenza
+        // del paese, e le pressioni lo spostano da li'.
+        //
+        // La spinta neutra e' il valore che la pressione assume in un paese
+        // tranquillo al tick 0: mettendola qui, al tick 0 l'obiettivo coincide
+        // con la quota osservata e nessuno parte in guadagno.
+        'spinta_investimenti_neutra' => 0.71,
+        'ampiezza_investimenti'      => 0.16,
+        // I due punti neutri NON si deducono: si misurano sul seme, perche'
+        // sono il valore che la spinta assume quando il mondo sta fermo al
+        // tick 0. Messi a occhio, il mondo parte in guadagno o in perdita.
+        'spinta_militare_neutra'     => 0.21,
+        'ampiezza_militare'          => 0.09,
+        // Quanto in fretta la tendenza di crescita torna alla propria base dopo
+        // un programma di investimenti. Era 0,10 l'anno, cioe' piu' lenta del
+        // ritmo con cui gli eventi la alzavano: saliva e non tornava piu'
+        // (3,56% -> 4,82% in quindici anni, un mondo che cresce del 4% l'anno
+        // contro il 3% storico).
+        'rientro_strutturale'        => 0.60,
+        // E comunque un programma di investimenti non puo' spostare la
+        // tendenza di un paese di piu' di due punti: oltre, non e' politica
+        // economica, e' fantasia.
+        'margine_strutturale'        => 0.02,
         // NOTA: qui c'erano 'peso_commercio' e 'peso_dipendenza'. Sono state
         // tolte, non dimenticate. Esprimevano un modello — il saldo
         // commerciale che muove la crescita — che e' stato provato e scartato:
@@ -91,6 +121,26 @@ return [
         // popolazione e per anno. [FABBRICATO] — e' il parametro che decide se
         // il mondo ha guerre civili o se non ne ha mai: da ritarare per primo.
         'reclutamento_k'     => 1.6,
+    ],
+
+    // ------------------------------------------------------- guerre fra Stati
+    // I morti di una guerra non sono una funzione libera della potenza: sono
+    // una frazione degli uomini che il fronte toglie davvero dai ruoli.
+    // Riferimenti storici usati per tarare (morti annui di UNA guerra
+    // bilaterale): Iran-Iraq 1980-88 ~50-150 mila/anno, Corea 1950-53
+    // ~400 mila/anno, fronte orientale 1941-45 alcuni milioni/anno.
+    'conflitto' => [
+        // Di ogni soldato tolto dai ruoli, quanti muoiono. Il resto e' ferito,
+        // prigioniero o disperso: il rapporto caduti/perdite totali sta intorno
+        // a uno su tre da Verdun in poi.
+        'quota_caduti'        => 0.33,
+        // Civili morti per ogni militare caduto. Eckhardt, ripreso dal CICR:
+        // la quota civile dei morti di guerra resta intorno al 50% da tre
+        // secoli, cioe' circa un civile per militare. Nelle guerre totali sale
+        // a 2 (seconda guerra mondiale), nelle guerre aeree asimmetriche
+        // scende sotto 0,2: uno non copre l'altro, e la media e' la scelta
+        // meno sbagliata per un modello che non distingue i tipi di guerra.
+        'civili_per_militare' => 1.0,
     ],
 
     'colpo_di_stato' => [

@@ -189,6 +189,55 @@ verifica.
 
 ---
 
+## I numeri devono essere credibili
+
+Un modello può avere tutte le meccaniche al posto giusto e dichiarare numeri da
+fantascienza. Questo li dichiarava: il planisfero annunciava **64.710.856 morti**
+per un anno di guerra fra Francia e Cina, quando la seconda guerra mondiale ne
+fece settanta milioni in sei anni e su tutti i fronti del pianeta. Il modello
+toglieva centocinquantamila uomini dai ruoli e poi ne dichiarava morti
+duecentoventidue volte tanto, perché i caduti si ottenevano moltiplicando
+l'attrito per un sessanta che non aveva nessuna unità di misura dietro.
+
+Duecentonove prove automatiche non se ne erano accorte, perché verificavano
+tutte delle **meccaniche** — che la guerra cominciasse, che finisse, che le
+garanzie scattassero — e nessuna verificava delle **grandezze**.
+
+```bash
+php bin/realismo.php --anni=15
+```
+
+Lo strumento fa girare il mondo a vuoto e confronta undici grandezze con la
+fascia in cui il mondo vero le tiene, ciascuna con la fonte accanto: ONU per la
+popolazione, Banca Mondiale per il prodotto, SIPRI per la spesa militare, IISS
+per gli effettivi, UCDP/PRIO per i morti di guerra, Crawford per i cambi di
+governo. Le fasce stanno in `App\Simulazione\Realismo::FASCE`, in un posto
+solo, e le legge anche la prova automatica: due tabelle che divergono sarebbero
+peggio di nessuna tabella.
+
+**Una distinzione che sembra pedanteria e non lo è.** Un *livello* — il prodotto
+mondiale, gli effettivi sotto le armi — si giudica al seme, perché dopo quindici
+anni di crescita non è più confrontabile col dato di oggi: rimproverare al 2040
+di non somigliare al 2024 non è una misura, è un errore di categoria. Un *tasso*
+o un *rapporto* si giudica invece sulla corsa, perché è lì che vive il
+comportamento del motore — e un motore può partire giusto e andare alla deriva.
+
+Andava alla deriva. Cercando altri numeri irreali sono emerse tre pompe
+nell'economia, tutte con lo stesso vizio: il motore puntava a un bersaglio
+uguale per tutti, diverso da dove il mondo parte davvero, e la differenza
+diventava un premio permanente. Il prodotto mondiale cresceva del 4,0% l'anno
+contro il 3% storico; l'onere militare si dimezzava, dal 2,3% all'1,0%, mentre
+il riferimento SIPRI è il 2,5%.
+
+L'invariante che mancava, e che in retrospettiva è ovvia:
+
+> I morti non possono essere più degli uomini che il fronte ha tolto dai ruoli.
+
+Il racconto completo, con le misure e i due tentativi sbagliati prima di quello
+giusto, è in `docs/26-i-numeri-realistici.md`.
+
+---
+
 ## Che cosa non è
 
 **Non è una previsione.** Nessuna delle cifre che il modello produce dice

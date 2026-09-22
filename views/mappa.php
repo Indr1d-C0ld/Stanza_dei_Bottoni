@@ -25,15 +25,36 @@ $letture = App\Dati\Planisfero::LETTURE;
   <?php require __DIR__ . '/parti/mappa.php'; ?>
 <?php endif; ?>
 
-<?php if ($guerre !== []): ?>
+<?php
+// Una guerra con fine_tick valorizzato e' finita: stamparla sotto «in corso»
+// e' quello che faceva questa pagina, e raccontava conflitti spenti da mesi.
+$inCorso   = array_filter($guerre, static fn ($g) => $g['fine_tick'] === null);
+$concluse  = array_filter($guerre, static fn ($g) => $g['fine_tick'] !== null);
+?>
+<?php if ($inCorso !== []): ?>
 <section>
   <h2>Guerre in corso</h2>
   <ul class="elenco-piano">
-    <?php foreach ($guerre as $g): ?>
+    <?php foreach ($inCorso as $g): ?>
       <li><a href="<?= u('/nazione/') ?><?= $g['cod_a'] ?>"><?= htmlspecialchars((string) $g['aggressore']) ?></a>
           contro <a href="<?= u('/nazione/') ?><?= $g['cod_d'] ?>"><?= htmlspecialchars((string) $g['difensore']) ?></a>
           <span class="tenue">dal <?= App\Nucleo\Calendario::tick((int) $g['inizio_tick']) ?>,
-            <?= number_format((float) $g['morti'], 0, ',', '.') ?> morti</span></li>
+            <?= n((float) $g['morti'], 0) ?> morti</span></li>
+    <?php endforeach; ?>
+  </ul>
+</section>
+<?php endif; ?>
+
+<?php if ($concluse !== []): ?>
+<section>
+  <h2>Guerre concluse</h2>
+  <ul class="elenco-piano">
+    <?php foreach ($concluse as $g): ?>
+      <li><a href="<?= u('/nazione/') ?><?= $g['cod_a'] ?>"><?= htmlspecialchars((string) $g['aggressore']) ?></a>
+          contro <a href="<?= u('/nazione/') ?><?= $g['cod_d'] ?>"><?= htmlspecialchars((string) $g['difensore']) ?></a>
+          <span class="tenue">dal <?= App\Nucleo\Calendario::tick((int) $g['inizio_tick']) ?>
+            al <?= App\Nucleo\Calendario::tick((int) $g['fine_tick']) ?>,
+            <?= n((float) $g['morti'], 0) ?> morti</span></li>
     <?php endforeach; ?>
   </ul>
 </section>

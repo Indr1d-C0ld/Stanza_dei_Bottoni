@@ -70,6 +70,12 @@ final class Fase03Economia implements Fase
         $kConsumi     = $cal->numero('economia.pressione_consumi_k', 1.0);
         $kInvest      = $cal->numero('economia.pressione_investimenti_k', 0.35);
         $kMilitare    = $cal->numero('economia.pressione_militare_k', 1.0);
+        $spintaInvNeutra = $cal->numero('economia.spinta_investimenti_neutra', 0.93);
+        $ampiezzaInv     = $cal->numero('economia.ampiezza_investimenti', 0.16);
+        $spintaMilNeutra = $cal->numero('economia.spinta_militare_neutra', 0.10);
+        $ampiezzaMil     = $cal->numero('economia.ampiezza_militare', 0.09);
+        $rientro         = $cal->numero('economia.rientro_strutturale', 0.60);
+        $margine         = $cal->numero('economia.margine_strutturale', 0.02);
         // Quanto le quote possono spostarsi in un anno: le economie non
         // cambiano struttura in una settimana.
         $velocita     = 0.25 * $perTick;
@@ -84,19 +90,36 @@ final class Fase03Economia implements Fase
             // Una minaccia interna spinge alla spesa militare: è la radice del
             // rapporto di forze insorti/governo.
             $minacciaInterna  = sqrt(max(0.0, $n->forzaInsorti) / max(1.0, $n->potenzaGoverno()));
-            $pressioneMil     = $kMilitare * min(1.5, $minacciaInterna);
+            // E una minaccia di fuori pure. L'ansia militare esisteva, cresceva
+            // a ogni provocazione e la leggeva solo la fase 06 per la
+            // diffidenza: non spostava un centesimo di bilancio. Un paese
+            // circondato che non arma nessuno non e' un modello, e' una svista.
+            $minacciaEsterna  = $n->ansiaMilitare / 100.0;
+            $pressioneMil     = $kMilitare * min(1.5, $minacciaInterna + $minacciaEsterna);
 
             // I consumi sono il RESIDUO, non una voce contesa: è quel che resta
             // dopo che investimenti e difesa si sono presi la loro parte. Farne
             // una voce come le altre significa lasciare che gli investimenti
             // assorbano mezzo prodotto interno, e il mondo esplode.
             $totale = max(0.0001, $pressioneConsumi + $pressioneInvest + $pressioneMil);
-            $obiettivoInvest   = max(0.08, min(0.34, 0.14 + 0.16 * ($pressioneInvest / $totale)));
-            $obiettivoMilitare = max(0.004, min(0.22, 0.010 + 0.16 * ($pressioneMil / $totale)));
+            // L'obiettivo ruota intorno alla quota storica del paese, non
+            // intorno a una costante uguale per tutti: al tick 0 coincide con
+            // quel che il paese fa davvero, e da li' le pressioni lo spostano.
+            //
             // La pressione dei consumi non aumenta la loro quota: riduce quella
             // degli investimenti. È il modo in cui un governo debole si mangia
-            // il futuro per comprare il presente.
-            $obiettivoInvest  *= 1.0 - 0.45 * ($pressioneConsumi / $totale);
+            // il futuro per comprare il presente. Entra QUI, dentro la spinta,
+            // e non come fattore applicato all'obiettivo gia' calcolato: fuori
+            // renderebbe il punto neutro indefinibile, e un paese fermo si
+            // ritroverebbe un bersaglio sotto la propria quota di partenza.
+            $spintaInvest = ($pressioneInvest / $totale)
+                          * (1.0 - 0.45 * ($pressioneConsumi / $totale));
+            $spintaMil    = $pressioneMil / $totale;
+
+            $obiettivoInvest   = max(0.08, min(0.34, $n->quotaInvestimentiIniziale
+                + $ampiezzaInv * ($spintaInvest - $spintaInvNeutra)));
+            $obiettivoMilitare = max(0.004, min(0.22, $n->quotaMilitareIniziale
+                + $ampiezzaMil * ($spintaMil - $spintaMilNeutra)));
             $obiettivoConsumi  = max(0.45, 1.0 - $obiettivoInvest - $obiettivoMilitare);
 
             $n->quotaConsumi      += ($obiettivoConsumi  - $n->quotaConsumi)      * $velocita;
@@ -124,7 +147,10 @@ final class Fase03Economia implements Fase
             // senza questo rientro, ogni evento "investimenti" alzava la
             // tendenza di crescita PER SEMPRE e il mondo aveva una pompa
             // inflazionistica senza contrappeso.
-            $n->crescitaStrutturale += ($n->crescitaBase - $n->crescitaStrutturale) * 0.10 * $perTick;
+            $n->crescitaStrutturale += ($n->crescitaBase - $n->crescitaStrutturale) * $rientro * $perTick;
+            // e il tetto e' relativo alla base del paese, non assoluto: il
+            // limite a 0,09 lasciava salire di quattro punti chi partiva basso.
+            $n->crescitaStrutturale = min($n->crescitaBase + $margine, $n->crescitaStrutturale);
 
             $maturazione  = min(1.0, $n->pilProCapite / 50000.0);
             $strutturale  = $n->crescitaStrutturale * (1.0 - 0.85 * $maturazione)

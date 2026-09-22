@@ -34,9 +34,9 @@ $umori = [1=>'armonia',2=>'amicizia',3=>'cooperazione',4=>'indifferenza',
       <tr>
         <td><a href="<?= u('/nazione') ?>/<?= $p['codice'] ?>"><?= htmlspecialchars($p['nome']) ?></a>
             <?php if ((int) $p['giocabile']): ?><span class="pastiglia">giocabile</span><?php endif; ?></td>
-        <td class="num"><?= number_format((float) $p['influenza_totale'], 2) ?>%</td>
-        <td class="num"><?= number_format((float) $p['pil'] / 1000, 0) ?> mld</td>
-        <td class="num"><?= number_format((float) $p['legittimita'], 0) ?></td>
+        <td class="num"><?= n((float) $p['influenza_totale'], 2) ?>%</td>
+        <td class="num"><?= n((float) $p['pil'] / 1000, 0) ?> mld</td>
+        <td class="num"><?= n((float) $p['legittimita'], 0) ?></td>
         <td class="num"><?= (int) $p['qualita_vita'] ?>/10</td>
         <td><?php if ((float) $p['influenza_totale'] >= 5): ?><span class="rango">grande potenza</span>
             <?php elseif ((float) $p['influenza_totale'] >= 3): ?><span class="rango tenue">potenza maggiore</span>
