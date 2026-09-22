@@ -53,6 +53,14 @@ final class Mondo
             throw new RuntimeException("Seme non trovato: $percorsoCsv. Lancia prima bin/importa_factbook.php");
         }
         $mondo = new self();
+        // L'indice di democrazia liberale di V-Dem, accanto al seme. Se manca
+        // il mondo gira lo stesso, con tutti alla mediana mondiale — ma il
+        // modello di Goldstone non distinguerebbe piu' niente, quindi vale la
+        // pena accorgersene.
+        $democrazia = @include dirname($percorsoCsv) . '/democrazia.php';
+        if (!is_array($democrazia)) {
+            $democrazia = [];
+        }
         $fh = fopen($percorsoCsv, 'r');
         $intestazione = fgetcsv($fh, 0, ',', '"', '\\');
         while (($riga = fgetcsv($fh, 0, ',', '"', '\\')) !== false) {
@@ -86,6 +94,7 @@ final class Mondo
                 quotaInvestimentiIniziale: $quotaInv,
                 quotaMilitareIniziale: $quotaMil,
                 soldatiIniziali:      (float) $d['soldati'],
+                democrazia:           $democrazia[$d['iso3']] ?? 0.355,
                 pilProCapite:        (float) $d['pil_pro_capite'],
                 consumoProCapite:    (float) $d['pil_pro_capite'] * $quotaCons,
                 quotaConsumi:        $quotaCons,

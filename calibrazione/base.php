@@ -182,6 +182,41 @@ return [
         'civili_per_militare' => 1.0,
     ],
 
+    // --------------------------------------------- instabilita' politica
+    // GOLDSTONE, BATES, EPSTEIN, GURR, LUSTIK, MARSHALL, ULFELDER, WOODWARD
+    // (2010), «A Global Model for Forecasting Political Instability»,
+    // American Journal of Political Science 54(1): 190-208.
+    //
+    // Quattro predittori, 81,7% di accuratezza a due anni su tutte le
+    // instabilita' del mondo dal 1955 al 2003 — e la conclusione va contro
+    // l'intuito: sono le ISTITUZIONI a predire, non l'economia, non la
+    // demografia, non la geografia.
+    //
+    // Fonte contemporanea e viva: il PITF e' stato organizzato nel 1994 e il
+    // modello e' del 2010. Non ha il problema d'epoca del World Handbook.
+    'instabilita' => [
+        // Di quanti punti di legittimita' un regime parziale «anticipa» la
+        // soglia di caduta. NON e' un moltiplicatore del rischio: sposta il
+        // centro della logistica, perche' un fattore lineare su una logistica
+        // che spazia su ordini di grandezza resta schiacciato (provato e
+        // misurato: da 4 a 25 il rapporto fra parziali e autocrazie si muoveva
+        // solo da 1,1 a 1,6).
+        //
+        // Con la pendenza a 7: dodici punti valgono ~5 volte le probabilita',
+        // e la faziosita' li raddoppia fino a ventiquattro, cioe' ~30 volte.
+        // E' il rapporto che Goldstone misura fra una democrazia parziale
+        // fazionalizzata e un'autocrazia piena.
+        'spostamento_regime'   => 12.0,
+        // Quanto la CHIUSURA protegge, in punti di legittimita'. E' il ramo
+        // sinistro della U: un'autocrazia piena reprime e tiene. Senza questo
+        // termine la repressione costava legittimita' e non comprava niente, e
+        // le dittature risultavano piu' fragili delle democrazie.
+        'protezione_chiusura'  => 10.0,
+        // Il contagio: quattro o piu' confinanti in conflitto armato e
+        // l'instabilita' passa il confine.
+        'peso_vicinato'        => 1.2,
+    ],
+
     'colpo_di_stato' => [
         // La destabilizzazione SI SOMMA alla soglia, non la sostituisce:
         // non puoi far cadere un governo che reggerebbe comunque.
@@ -215,10 +250,12 @@ return [
         // sostituzione di sempre, e va ritarata ogni volta che si tocca un
         // pezzo a monte.
         //
-        // A 0,14: colpi 3,8-3,9 l'anno (riferimento anni Venti: 3,8) e
-        // rivoluzioni 2,5-2,6, dentro il riferimento di Crawford (~1% di
-        // ~10.000 rivolte in quarant'anni, cioe' 2,5 l'anno).
-        'rischio_massimo_anno'   => 0.14,
+        // Ritarato una seconda volta quando il tipo di regime e' entrato DENTRO
+        // la logistica (blocco 'instabilita' qui sopra): spostare il centro
+        // cambia il tasso, non solo la distribuzione. A 0,10 i colpi stanno
+        // intorno a 3-4 l'anno, dentro il riferimento 2,2-3,8 degli anni
+        // Duemila-Venti, e le rivoluzioni a ~2,5, dentro quello di Crawford.
+        'rischio_massimo_anno'   => 0.10,
         'pendenza'               => 7.0,
     ],
 

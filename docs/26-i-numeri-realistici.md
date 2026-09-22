@@ -536,7 +536,128 @@ spariscano tutti insieme.
 
 ---
 
-## 9. Quel che questo episodio insegna
+## 9. Goldstone: le istituzioni, e un asse che non c'era
+
+Il passo successivo era il modello del **Political Instability Task Force**
+— Goldstone, Bates, Epstein, Gurr, Lustik, Marshall, Ulfelder, Woodward (2010),
+*A Global Model for Forecasting Political Instability*, AJPS 54(1). Quattro
+predittori, **81,7% di accuratezza a due anni** su tutte le instabilità del
+mondo dal 1955 al 2003, e una conclusione che va contro l'intuito: sono le
+**istituzioni** a predire, non l'economia, non la demografia, non la geografia.
+
+I quattro sono: tipo di regime, mortalità infantile, prossimità a vicini in
+conflitto, discriminazione di Stato verso le minoranze. Il più forte è il primo,
+e in particolare la **democrazia parziale fazionalizzata**, che ha oltre
+**trenta volte** le probabilità d'instabilità di un'autocrazia piena.
+
+### Il blocco: non c'era nessun asse democrazia-autocrazia
+
+Il modello non si poteva implementare, e la ragione era già scritta nel codice.
+
+- **`maturita`** sembrava l'asse istituzionale e non lo è: è marcata
+  `[SEGNAPOSTO]` e si ricava da reddito e alfabetizzazione, quindi mette
+  Singapore e l'Arabia Saudita accanto alla Norvegia. Il commento diceva già
+  «DA SOSTITUIRE con V-Dem».
+- **`ideologia_formale`** è peggio: è la descrizione giuridica che ogni Stato dà
+  di sé, e **146 paesi su 189 si dichiarano democrazie liberali**. L'importatore
+  avverte da sé che «serve per il colore, non per il modello».
+- **`statoPolizia`** vive su scala 1-5, non 0-100, e al seme vale 2,00 per
+  tutti; **`controlloInfo`** vale 50 per tutti.
+
+Al primo tentativo avevo costruito l'apertura istituzionale da questi ultimi
+due, dividendo per cento. Risultato misurato: **zero autocrazie su 189 paesi**.
+
+### V-Dem, come il codice chiedeva
+
+`bin/importa_vdem.php` scarica l'**indice di democrazia liberale del V-Dem
+Institute** (Università di Göteborg) via Our World in Data e scrive
+`db/seed/democrazia.php`. Dato aggiornato al **2025**, copre 173 delle nostre
+189 nazioni; per i 16 micro-Stati che V-Dem non segue il valore è stimato dai
+punteggi Freedom House con una relazione dichiarata, non nascosta.
+
+| | V-Dem |
+|---|---:|
+| Norvegia · Italia · Stati Uniti | 0,847 · 0,642 · 0,571 |
+| Singapore · Ungheria · India | 0,360 · 0,315 · 0,260 |
+| Turchia · Russia · Cina · Corea del Nord | 0,110 · 0,056 · 0,039 · 0,014 |
+
+**Gli ancoraggi dell'arco non sono 0, 0,5 e 1.** L'indice V-Dem è compresso e
+mezzo punto non è «metà democrazia»: col vertice ingenuo a 0,5 gli Stati Uniti
+risultavano *più parziali* di Singapore. Guardando dove cadono i paesi veri, il
+vertice sta a **0,25** e la democrazia piena comincia a **0,55**. Con quegli
+ancoraggi: India 0,97 · Nigeria 0,80 · Ungheria 0,78 · Singapore 0,63 ·
+Pakistan 0,63 nella zona di rischio; Norvegia, Italia, Stati Uniti, Cina,
+Corea del Nord a zero, dai due lati opposti.
+
+### Tre meccanismi, e una forma sbagliata scoperta misurando
+
+**La faziosità** (`Gabinetto::faziosita()`) non è `pressioneInterna()`: quella
+misura l'ostilità al capo, questa misura quanto la politica è **spaccata** in
+blocchi contrapposti dove chi vince prende tutto. Al primo tentativo avevo
+normalizzato l'intensità per 90 e la coesione per 120; misurate, quelle
+grandezze hanno mediana 30 e stanno fra 50 e 75. La faziosità non superava mai
+0,35 e il moltiplicatore più importante del modello non si accendeva mai. *Una
+grandezza che non arriva mai in fondo alla propria scala è una grandezza che
+non esiste.*
+
+**Il tipo di regime moltiplicava il rischio, e non doveva.** Misurato:
+sestuplicare il peso da 4 a 25 muoveva il rapporto fra regimi parziali e
+autocrazie da **1,1 a 1,6 soltanto** — perché la logistica sulla legittimità
+spazia su ordini di grandezza e un fattore lineare non la tocca. Adesso il
+regime sposta il **centro** della logistica, che è anche la forma giusta: un
+regime parziale fazionalizzato cade con una legittimità con cui un'autocrazia
+reggerebbe. Con la pendenza a 7, dodici punti valgono ~5 volte le probabilità e
+ventiquattro ne valgono ~30 — il rapporto che PITF misura.
+
+**E la chiusura non proteggeva.** `statoPolizia` non compariva in *nessun* punto
+del rischio di colpo di Stato: la repressione costava legittimità e non comprava
+niente. Un'autocrazia pagava il pugno di ferro senza averne il beneficio, e
+risultava più fragile di una democrazia (legittimità media 43,1 contro 53,6).
+È empiricamente falso, ed è il ramo sinistro della U di Goldstone.
+
+### Quel che funziona, misurato
+
+**Il contagio geografico funziona e si vede.** Un paese in conflitto ha in media
+**1,60 confinanti in guerra**, uno in pace **0,31**: un raggruppamento cinque
+volte più denso, che emerge dal meccanismo invece di essere imposto. È entrato
+nel cruscotto come `raggruppamento`, e le grandezze sorvegliate sono adesso
+**diciassette**.
+
+### Quel che NON funziona, e va detto
+
+**La U rovesciata non raggiunge la magnitudine di PITF.** Misurando con la
+classificazione fissa del seme — per togliere la causazione inversa, visto che
+un paese che subisce un colpo si chiude e finirebbe nel cassetto delle
+autocrazie — le democrazie piene stanno a 0,2× le autocrazie, e questo è giusto.
+Ma i regimi parziali restano intorno a 0,7-1,1×, invece dei 5-30× di Goldstone.
+
+La causa è strutturale e vale la pena nominarla: **nel nostro motore la
+legittimità delle autocrazie è sistematicamente più bassa**, e sono le code
+basse a generare gli eventi. La logistica di Crawford domina qualunque
+correzione istituzionale le si metta accanto o dentro.
+
+Detto altrimenti: **Crawford e Goldstone sono in tensione**. Crawford fa
+dell'instabilità una funzione della popolarità; Goldstone misura che la
+popolarità e l'economia predicono *peggio* delle istituzioni. Far vincere
+Goldstone significherebbe riscrivere la fase 04 — l'equazione della legittimità,
+cioè il cuore del motore — e non è una cosa da fare di straforo in fondo a una
+ritaratura. Resta come il prossimo passo, dichiarato.
+
+**E un quarto predittore manca del tutto.** La mortalità infantile di PITF non è
+stata implementata: il nostro `qualitaVita` vale 1 per tutti al seme e non è
+usabile, e l'unico sostituto sarebbe il reddito pro capite, che già entra nel
+reclutamento insurrezionale per via di Fearon & Laitin. Aggiungerlo due volte
+sarebbe contarlo due volte. Meglio tre predittori onesti che quattro di cui uno
+inventato.
+
+**La faziosità copre 14 nazioni su 189**, perché i gabinetti esistono solo per
+le potenze giocabili: è una scelta di disegno del motore, non un difetto, ma il
+predittore più forte di PITF vale quindi solo dove c'è una struttura di élite
+da leggere.
+
+---
+
+## 10. Quel che questo episodio insegna
 
 Le duecentonove prove esistenti verificavano **meccaniche**: che le cose
 succedessero, nell'ordine giusto, con le cause giuste. Nessuna verificava

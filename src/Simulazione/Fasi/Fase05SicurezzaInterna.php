@@ -52,6 +52,9 @@ final class Fase05SicurezzaInterna implements Fase
         $pendenza    = $cal->numero('colpo_di_stato.pendenza', 6.0);
         $resistenzaEstremi = $cal->numero('colpo_di_stato.resistenza_estremisti', 2.0);
         $vittoriaInsorti   = $cal->numero('insurrezione.vittoria_insorti_anno', 0.22);
+        $spostamentoRegime = $cal->numero('instabilita.spostamento_regime', 12.0);
+        $protezioneChiusura = $cal->numero('instabilita.protezione_chiusura', 10.0);
+        $pesoVicinato  = $cal->numero('instabilita.peso_vicinato', 1.2);
 
         $soglie = [
             'pace'         => $cal->numero('insurrezione.soglia_pace', 512.0),
@@ -59,6 +62,38 @@ final class Fase05SicurezzaInterna implements Fase
             'guerriglia'   => $cal->numero('insurrezione.soglia_guerriglia', 2.0),
             'guerraCivile' => $cal->numero('insurrezione.soglia_guerra_civile', 1.0),
         ];
+
+        // --- i vicini in conflitto, contati UNA volta -------------------
+        // Il contagio di PITF ha bisogno di sapere quanti confinanti sono in
+        // guerra. Contarlo dentro il ciclo delle nazioni sarebbe O(n^2) a ogni
+        // tick su centottantanove paesi: si conta qui, una volta, sullo stato
+        // con cui la fase e' entrata.
+        //
+        // ATTENZIONE: si legge il netPeace di INIZIO fase, non quello che il
+        // ciclo qui sotto sta riscrivendo. Altrimenti il contagio dipenderebbe
+        // dall'ordine alfabetico in cui le nazioni vengono visitate, e il
+        // mondo avrebbe una freccia del tempo che punta da 'AFG' a 'ZWE'.
+        $viciniInConflitto = [];
+        foreach ($mondo->elenco() as $x) {
+            $viciniInConflitto[$x->iso3] = 0;
+        }
+        // La Relazione non porta i due codici: stanno nella chiave «A|B», e
+        // ogni coppia compare in entrambi i versi perche' i rapporti sono
+        // asimmetrici. Un giro solo basta quindi a contare i due lati.
+        foreach ($mondo->relazioni->tutte() as $chiave => $r) {
+            if (!$r->confinanti) {
+                continue;
+            }
+            $pezzi = explode('|', $chiave);
+            if (count($pezzi) !== 2) {
+                continue;
+            }
+            [$io, $lui] = $pezzi;
+            $altro = $mondo->nazioni[$lui] ?? null;
+            if ($altro !== null && $altro->netPeace >= 4 && isset($viciniInConflitto[$io])) {
+                $viciniInConflitto[$io]++;
+            }
+        }
 
         $colpi = 0;
         $rivoluzioni = 0;
@@ -230,15 +265,80 @@ final class Fase05SicurezzaInterna implements Fase
             // discreti, solo più di rado — ed è quel "più di rado" a fare la
             // differenza fra una storia e un orologio.
             $centro = $sogliaColpo + $resistenzaEstremi * (abs($n->orientamento) / 128.0);
+
+            // Il tipo di regime sposta il CENTRO della logistica, non la
+            // moltiplica — ed e' una differenza di forma, non di taratura.
+            // Moltiplicandola il termine istituzionale restava schiacciato:
+            // misurato, sestuplicare il peso da 4 a 25 muoveva il rapporto fra
+            // regimi parziali e autocrazie piene da 1,1 a 1,6 soltanto, perche'
+            // la logistica sulla legittimita' spazia su ordini di grandezza e
+            // un fattore lineare non la tocca.
+            //
+            // Spostando il centro si dice invece la cosa giusta, che e' anche
+            // quella di Goldstone: un regime parziale fazionalizzato cade con
+            // una legittimita' con cui un'autocrazia piena reggerebbe. Con la
+            // pendenza a 7, dodici punti di spostamento valgono circa cinque
+            // volte le probabilita', ventiquattro ne valgono trenta — che e'
+            // il rapporto che PITF misura fra i due estremi.
+            $gab = $mondo->gabinetti[$n->iso3] ?? null;
+            $faziosita = $gab !== null ? $gab->faziosita() : 0.0;
+            $centro += $spostamentoRegime * $n->regimeParziale() * (1.0 + $faziosita);
+
+            // E LA CHIUSURA PROTEGGE. Era il pezzo mancante, ed e' il ramo
+            // sinistro della U di Goldstone: le autocrazie piene non cadono
+            // spesso: reprimono e tengono.
+            //
+            // Nel modello la repressione costava legittimita' — la fase 04 la
+            // scala — e non comprava NIENTE: `statoPolizia` non compariva in
+            // nessun punto del rischio di colpo di Stato. Un'autocrazia pagava
+            // il prezzo del pugno di ferro senza averne il beneficio, e
+            // risultava piu' fragile di una democrazia (legittimita' media
+            // 43,1 contro 53,6). E' empiricamente falso, ed e' il motivo per
+            // cui i regimi parziali finivano SOTTO le autocrazie invece che
+            // sopra.
+            $centro -= $protezioneChiusura * (1.0 - $n->aperturaIstituzionale());
+
             $rischioAnnuo = $rischioMax / (1.0 + exp(($n->legittimita - $centro) / $pendenza));
             // Il clamore accelera, senza essere lui a decidere.
             $rischioAnnuo *= 1.0 + $n->clamoreSociale / 120.0;
+
+            // --- il modello PITF ------------------------------------------
+            // GOLDSTONE, BATES, EPSTEIN, GURR, LUSTIK, MARSHALL, ULFELDER,
+            // WOODWARD (2010), «A Global Model for Forecasting Political
+            // Instability», American Journal of Political Science 54(1).
+            //
+            // Quattro predittori, 81,7% di accuratezza a due anni su tutte le
+            // instabilita' del mondo dal 1955 al 2003. La loro conclusione e'
+            // netta e va contro l'intuito: sono le ISTITUZIONI, «properly
+            // specified», a predire — non l'economia, non la demografia, non
+            // la geografia.
+            //
+            // Qui entrano i due che il nostro motore non aveva.
+            //
+            // IL PRIMO, la U rovesciata. Il rischio non cresce ne' cala con
+            // l'apertura: ha un massimo in mezzo. Un'autocrazia piena
+            // reprime il dissenso, una democrazia piena lo incanala; e' il
+            // regime PARZIALE che salta — aperto abbastanza da far competere,
+            // non abbastanza da far perdere senza perdere tutto. E se quella
+            // competizione e' FAZIOSA, organizzata in blocchi dove chi vince
+            // prende tutto, le probabilita' superano di oltre TRENTA VOLTE
+            // quelle di un'autocrazia piena. E' il predittore piu' forte che
+            // abbiano trovato.
+            //
+            // La nostra logistica sulla legittimita' e' monotona e non puo'
+            // vedere niente di tutto questo: per lei un paese chiuso e uno
+            // aperto con la stessa legittimita' rischiano uguale.
+            // IL SECONDO, il vicinato. Quattro o piu' confinanti in conflitto
+            // armato e l'instabilita' passa il confine: armi, profughi,
+            // santuari, e l'esempio che si puo' fare. Da noi i conflitti non
+            // contagiavano nessuno.
+            $rischioAnnuo *= 1.0 + $pesoVicinato
+                * min(1.0, ($viciniInConflitto[$n->iso3] ?? 0) / 4.0);
 
             // E il palazzo pesa quanto la piazza: un capo puo' essere amato nel
             // paese e finito dentro le mura, se le fazioni che lo hanno messo
             // li' hanno smesso di volerlo. E' il Panel di CyberJudas — chi ti
             // ha dato il potere e' anche chi te lo toglie.
-            $gab = $mondo->gabinetti[$n->iso3] ?? null;
             if ($gab !== null) {
                 $rischioAnnuo *= 1.0 + $gab->pressioneInterna() / 55.0;
             }

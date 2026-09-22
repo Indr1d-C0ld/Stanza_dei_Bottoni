@@ -318,6 +318,46 @@ demografico di Fearon & Laitin — la differenza fra la quota di paesi grandi in
 conflitto e quella dei piccoli, che nel mondo vero vale circa +25 punti e nel
 modello ne valeva MENO 21.
 
+## Goldstone e il PITF: le istituzioni
+
+Dopo Fearon & Laitin, il modello del **Political Instability Task Force**
+— Goldstone et al. (2010), *A Global Model for Forecasting Political
+Instability*: quattro predittori, 81,7% di accuratezza a due anni, e una
+conclusione contro l'intuito — sono le **istituzioni** a predire, non
+l'economia ne' la demografia ne' la geografia. Il piu' forte e' il tipo di
+regime, e in particolare la democrazia PARZIALE fazionalizzata, che ha oltre
+trenta volte le probabilita' d'instabilita' di un'autocrazia piena.
+
+Non si poteva implementare, perche' **il motore non aveva nessun asse
+democrazia-autocrazia**. `maturita` sembrava esserlo ed e' marcata SEGNAPOSTO:
+si ricava da reddito e alfabetizzazione, quindi mette Singapore accanto alla
+Norvegia. `ideologia_formale` e' la descrizione giuridica che ogni Stato da' di
+se stesso, e centoquarantasei paesi su centottantanove si dichiarano democrazie
+liberali. Il codice lo sapeva gia': «DA SOSTITUIRE con V-Dem».
+
+`bin/importa_vdem.php` fa quella sostituzione. L'indice di democrazia liberale
+del **V-Dem Institute** (Universita' di Goteborg), aggiornato al 2025, copre 173
+delle 189 nazioni; per i sedici micro-Stati scoperti il valore e' stimato dai
+punteggi Freedom House, con la relazione scritta in chiaro nell'importatore.
+
+Tre meccanismi nuovi: il tipo di regime sposta il **centro** della logistica
+d'instabilita' (moltiplicarla non funzionava — misurato: sestuplicare il peso
+muoveva il rapporto da 1,1 a 1,6, perche' un fattore lineare non tocca una
+logistica che spazia su ordini di grandezza); la **chiusura protegge**, che
+prima non faceva — la repressione costava legittimita' e non comprava niente, e
+le dittature risultavano piu' fragili delle democrazie; e il **contagio dal
+vicinato**, che funziona e si vede: un paese in conflitto ha in media 1,60
+confinanti in guerra, uno in pace 0,31.
+
+**Quel che non funziona e' scritto accanto a quel che funziona.** La U
+rovesciata non raggiunge la magnitudine di PITF: le democrazie piene stanno
+correttamente a 0,2 volte le autocrazie, ma i regimi parziali restano intorno a
+1, invece di 5-30. La ragione e' strutturale — **Crawford e Goldstone sono in
+tensione**. Crawford fa dell'instabilita' una funzione della popolarita';
+Goldstone misura che la popolarita' predice *peggio* delle istituzioni. Far
+vincere Goldstone significherebbe riscrivere l'equazione della legittimita',
+cioe' il cuore del motore.
+
 ## Che cosa non è
 
 **Non è una previsione.** Nessuna delle cifre che il modello produce dice

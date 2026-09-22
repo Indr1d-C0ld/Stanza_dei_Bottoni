@@ -43,6 +43,15 @@ final class Nazione
         // ricostruisce. Senza, l'attrito li toglieva e nessuna fase li
         // rimpiazzava — un esercito logorato rimpiccioliva PER SEMPRE.
         public float $soldatiIniziali,
+        /**
+         * Indice di democrazia liberale, 0 (autocrazia piena) .. 1 (piena).
+         * Viene da V-Dem (db/seed/democrazia.php). E' l'unico asse
+         * democrazia-autocrazia che il motore abbia: `maturita` e' marcata
+         * SEGNAPOSTO e si ricava da reddito e alfabetizzazione, quindi mette
+         * Singapore accanto alla Norvegia; `ideologiaFormale` e' la
+         * descrizione giuridica che ogni Stato da' di se stesso.
+         */
+        public float $democrazia = 0.355,
         public float $pilProCapite,
         public float $consumoProCapite,
         public float $quotaConsumi,
@@ -150,6 +159,82 @@ final class Nazione
     }
 
     /** Rapporto di forze governo/insorti: è su questo che stanno le soglie. */
+    /**
+     * Apertura istituzionale, da 0 (autocrazia piena) a 1 (democrazia piena).
+     *
+     * NON viene da ideologiaFormale. Quella e' la descrizione giuridica che
+     * ogni Stato da' di se stesso, e centoquarantasei paesi su centottantanove
+     * si dichiarano democrazie liberali: l'importatore stesso avverte che
+     * «serve per il colore, non per il modello».
+     *
+     * Viene invece da come lo Stato TRATTA i propri cittadini — quanto
+     * reprime e quanto controlla cio' che possono sapere — che e' la sostanza
+     * di quel che Polity misura e che il Political Instability Task Force usa
+     * per classificare i regimi.
+     */
+    /** Sotto questa apertura il regime e' un'autocrazia piena: reprime e tiene. */
+    private const AUTOCRAZIA_PIENA = 0.05;
+
+    /** Il vertice dell'arco: la democrazia parziale, quella che salta. */
+    private const PARZIALE_MASSIMO = 0.25;
+
+    /** Sopra questa apertura il regime incanala il dissenso invece di subirlo. */
+    private const DEMOCRAZIA_PIENA = 0.55;
+
+    public function aperturaIstituzionale(): float
+    {
+        // La base e' il dato V-Dem, che e' una misura vera e aggiornata.
+        // Da li' il gioco puo' spostarla: uno Stato che stringe la morsa
+        // sull'informazione si chiude davvero, ed e' una delle cose che un
+        // giocatore fa. La repressione poliziesca vive su scala ~1..5, non
+        // 0..100: normalizzarla a cento la faceva contare zero, ed e' l'errore
+        // che ha fatto risultare il mondo senza nemmeno un'autocrazia.
+        $strettaInfo    = max(0.0, ($this->controlloInfo - 50.0) / 50.0);
+        $strettaPolizia = max(0.0, ($this->statoPolizia - 2.0) / 6.0);
+        $chiusura = 0.35 * $strettaInfo + 0.25 * min(1.0, $strettaPolizia);
+
+        return max(0.0, min(1.0, $this->democrazia - $chiusura));
+    }
+
+    /**
+     * Quanto questo regime sta nella parte PARZIALE dell'arco: 0 agli estremi
+     * (autocrazia piena o democrazia piena), 1 nel mezzo.
+     *
+     * E' l'ingrediente della U rovesciata di Goldstone et al. (2010): il
+     * rischio d'instabilita' non cresce ne' cala con l'apertura, ha un massimo
+     * in mezzo. Le autocrazie piene reprimono il dissenso, le democrazie piene
+     * lo incanalano; e' il mezzo — istituzioni aperte abbastanza da far
+     * competere ma non abbastanza da far perdere senza perdere tutto — che
+     * salta.
+     */
+    public function regimeParziale(): float
+    {
+        $a = $this->aperturaIstituzionale();
+
+        // Gli ancoraggi NON sono 0, 0,5 e 1. L'indice di V-Dem non e' lineare
+        // come la scala Polity che PITF usa: e' compresso, e mezzo punto non
+        // e' «meta' democrazia». Guardando dove cadono i paesi veri:
+        //
+        //   autocrazie piene  Corea del Nord 0,014 · Cina 0,039 · Russia 0,056
+        //   parziali          Turchia 0,110 · India 0,260 · Ungheria 0,315 ·
+        //                     Singapore 0,360
+        //   democrazie piene  Stati Uniti 0,571 · Italia 0,642 · Norvegia 0,847
+        //
+        // Col vertice ingenuo a 0,5 gli Stati Uniti risultavano «piu' parziali»
+        // di Singapore, che e' esattamente il contrario di quel che il modello
+        // deve dire.
+        if ($a <= self::AUTOCRAZIA_PIENA || $a >= self::DEMOCRAZIA_PIENA) {
+            return 0.0;
+        }
+        if ($a <= self::PARZIALE_MASSIMO) {
+            return ($a - self::AUTOCRAZIA_PIENA)
+                 / (self::PARZIALE_MASSIMO - self::AUTOCRAZIA_PIENA);
+        }
+
+        return (self::DEMOCRAZIA_PIENA - $a)
+             / (self::DEMOCRAZIA_PIENA - self::PARZIALE_MASSIMO);
+    }
+
     public function rapportoForze(): float
     {
         $insorti = max(0.001, $this->forzaInsorti);

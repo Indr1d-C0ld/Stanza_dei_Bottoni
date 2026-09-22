@@ -89,6 +89,12 @@ final class Realismo
             . 'piu\' forti dell\'insorgenza, non fra i protettivi. Quota di paesi in conflitto '
             . 'sopra i 10 milioni MENO quella sotto: nel mondo vero (UCDP 2024) vale circa '
             . '+25 punti. Il modello faceva MENO 21, cioe\' il mondo alla rovescia'],
+        'raggruppamento'       => [1.5,  14.0, 'volte',       'corsa',
+            'Goldstone et al. (2010), PITF: la prossimita\' a vicini in conflitto e\' uno dei '
+            . 'quattro predittori. Quanti confinanti in guerra ha in media un paese in '
+            . 'conflitto, diviso quanti ne ha uno in pace: i conflitti si raggruppano, non '
+            . 'si spargono a caso. La fascia e\' larga in alto perche\' quando i conflitti '
+            . 'sono pochi e vicini il rapporto sale molto: su un seme ha toccato 9'],
     ];
 
     /**
@@ -170,6 +176,34 @@ final class Realismo
         }
         $quotaGrandi  = $grandi[0]  > 0 ? $grandi[1]  / $grandi[0]  : 0.0;
         $quotaPiccoli = $piccoli[0] > 0 ? $piccoli[1] / $piccoli[0] : 0.0;
+
+        // Il raggruppamento geografico: quanti confinanti in conflitto ha in
+        // media chi e' in guerra, contro chi e' in pace.
+        $vicini = [];
+        foreach ($mondo->elenco() as $n) {
+            $vicini[$n->iso3] = 0;
+        }
+        foreach ($mondo->relazioni->tutte() as $chiave => $r) {
+            if (!$r->confinanti) {
+                continue;
+            }
+            $pezzi = explode('|', $chiave);
+            if (count($pezzi) !== 2) {
+                continue;
+            }
+            $altro = $mondo->nazioni[$pezzi[1]] ?? null;
+            if ($altro !== null && $altro->netPeace >= 4 && isset($vicini[$pezzi[0]])) {
+                $vicini[$pezzi[0]]++;
+            }
+        }
+        $sommaGuerra = [0, 0];
+        $sommaPace   = [0, 0];
+        foreach ($mondo->elenco() as $n) {
+            if ($n->netPeace >= 4) { $sommaGuerra[0]++; $sommaGuerra[1] += $vicini[$n->iso3]; }
+            else                   { $sommaPace[0]++;   $sommaPace[1]   += $vicini[$n->iso3]; }
+        }
+        $mediaGuerra = $sommaGuerra[0] > 0 ? $sommaGuerra[1] / $sommaGuerra[0] : 0.0;
+        $mediaPace   = $sommaPace[0]   > 0 ? $sommaPace[1]   / $sommaPace[0]   : 0.0;
         $cambiAnno = $cambi / $anni;
 
         $misure = $alSeme + [
@@ -191,6 +225,9 @@ final class Realismo
             // su un altro, senza che il modello fosse cambiato. La differenza
             // e' stabile e si legge da sola.
             'gradiente_taglia'  => ($quotaGrandi - $quotaPiccoli) * 100.0,
+            // Se nessuno e' in pace accanto a una guerra il rapporto non si
+            // puo' formare: si dichiara neutro invece di dividere per zero.
+            'raggruppamento'    => $mediaPace > 0.0 ? $mediaGuerra / $mediaPace : 1.5,
             'guerre_aperte'     => (float) count($mondo->guerre),
             'morti_guerra_anno' => array_sum($guerreViste) / 1e6 / max(1, $anni),
         ];
