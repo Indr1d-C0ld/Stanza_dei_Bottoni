@@ -923,7 +923,89 @@ instabilità.
 
 ---
 
-## 13. Quel che questo episodio insegna
+## 13. La riscrittura che NON abbiamo fatto
+
+Alla fine della sezione 9 era rimasta dichiarata una cosa sola: far vincere
+Goldstone su Crawford, cioè riscrivere l'equazione della legittimità. È stata
+istruita e **scartata**, e le ragioni valgono quanto una correzione.
+
+### Primo: l'uscita osservabile è già giusta
+
+Sei corse da quindici anni, i venti paesi più colpiti da colpi di Stato su
+centottantanove:
+
+> Sud Sudan · **Guinea** · Afghanistan · **Burkina Faso** · Costa d'Avorio ·
+> Etiopia · Venezuela · Centrafrica · Ucraina · Angola · Zimbabwe · Uganda ·
+> Ruanda · Burundi · Congo · **Niger** · Congo (RDC) · Mozambico · Somalia ·
+> **Mali**
+
+Quattro degli otto paesi che hanno subito un colpo **vero** nel 2020-23 —
+Guinea, Burkina Faso, Niger, Mali — stanno nei primi venti. Per caso ce ne
+aspetteremmo 0,85: il modello fa cinque volte meglio. E il resto dell'elenco è
+la lista di qualunque indice di fragilità.
+
+**Chi guarda vede i nomi giusti.** Il divario con Goldstone è in un rapporto
+aggregato, non in quel che il mondo racconta.
+
+### Secondo: la legittimità non è senza struttura
+
+Era la premessa implicita della proposta — «il punto di riposo è 50 per tutti» —
+e misurata è falsa. Dopo quindici anni la legittimità correla con:
+
+| | r |
+|---|---:|
+| stato di polizia | **−0,802** |
+| reddito (log) | +0,628 |
+| qualità della vita | +0,584 |
+| democrazia | +0,452 |
+| disuguaglianza | −0,019 |
+
+La struttura c'è, ed è **emersa dalle retroazioni** invece di essere imposta —
+che per un modello è un pregio, non un difetto.
+
+### Terzo: il divario è in parte un errore di categoria
+
+PITF predice l'*instability onset*: guerre rivoluzionarie, guerre etniche,
+cambi di regime avversi, genocidi, su un orizzonte di due anni. Il nostro
+`colpo_di_stato` è più stretto. Il trenta a uno di Goldstone vale per un'altra
+variabile d'esito, e pretenderlo qui è confrontare due cose diverse.
+
+### Quarto: non esiste la versione economica
+
+L'ipotesi era che bastasse rafforzare la protezione della chiusura — le
+autocrazie reprimono e reggono. Provata: portandola da 10 a 22 punti il tasso
+scende, ma il rapporto fra regimi parziali e autocrazie **resta 0,5×**.
+
+| protezione | colpi/anno | parziali vs autocrazie |
+|---:|---:|---:|
+| 10 | 5,47 | 0,5× |
+| 22 | 4,40 | 0,5× |
+
+Non c'è una manopola: lo sbilanciamento sta dentro le dinamiche, e si toglie
+solo rifacendole.
+
+### E il prezzo
+
+La legittimità è letta in **otto fasi, trenta punti**. E almeno dieci costanti
+interlacciate — rischio di colpo, soglia di legittimità, pendenza, rischio di
+crisi, centro elettorale, spostamento di regime, protezione della chiusura,
+peso della qualità della vita, reclutamento insurrezionale, vittoria degli
+insorti — sono tarate **contro la distribuzione attuale**. Sono i valori trovati
+misurando in due giorni.
+
+Rifare l'equazione significa rifare tutta quella taratura, per guadagnare un
+rapporto aggregato in un mondo che già nomina i paesi giusti.
+
+> **Resta un difetto dichiarato, non un difetto da correggere.** Se un giorno
+> servisse davvero, la strada non è l'equazione: è la disuguaglianza
+> ORIZZONTALE fra gruppi (Cederman, Weidmann, Gleditsch 2011), che richiede dati
+> etnici nel seme e sistemerebbe insieme il lato delle guerre civili, dove
+> l'evidenza è forte, e il lato dell'instabilità, dove il nostro Gini verticale
+> per costruzione non può arrivare.
+
+---
+
+## 14. Quel che questo episodio insegna
 
 Le duecentonove prove esistenti verificavano **meccaniche**: che le cose
 succedessero, nell'ordine giusto, con le cause giuste. Nessuna verificava
