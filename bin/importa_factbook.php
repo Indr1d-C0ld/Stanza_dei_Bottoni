@@ -164,6 +164,26 @@ function mediaPercentuale(?array $blocco): ?float
 }
 
 /** "0.7% (2024 est.)" -> 0.007 ; "2% of GDP" -> 0.02. */
+/**
+ * Dati del Factbook scaduti, con la fonte che li sostituisce e la sua data.
+ *
+ * Il Factbook e' la fonte del seme, ma per qualche paese si ferma prima di un
+ * fatto che cambia tutto. L'Ucraina e' il caso che ha fatto nascere la tavola:
+ * l'ultima spesa militare riportata e' del 2021, 4% del PIL, prima
+ * dell'invasione — con una nota che dice «oltre il 30%» senza darne il numero.
+ *
+ * @var array<string, array<string, array{0:float, 1:string}>> iso3 => campo => [valore, fonte]
+ */
+const CORREZIONI = [
+    'UKR' => [
+        'crescita_pil'   => [0.042, 'Factbook stesso, media 2023-24 (5,5% e 2,9%): il -28,8% del 2022 e\' '
+            . 'il crollo dell\'invasione, uno scalino e non una tendenza. Con la media triennale il seme '
+            . 'dava all\'Ucraina una crescita strutturale di -6,8% l\'anno per sempre'],
+        'quota_militare' => [0.34, 'SIPRI, Trends in World Military Expenditure 2024 (aprile 2025): '
+            . '64,7 miliardi di dollari, il 34% del PIL, il carico militare piu\' alto del mondo'],
+    ],
+];
+
 function percentuale(?string $testo): ?float
 {
     if ($testo === null) {
@@ -376,7 +396,7 @@ foreach ($regioni as $cartella => $siglaRegione) {
                                  ?? $d['Geography']['Area']['total']['text'] ?? null) ?? 0,
             'pil_milioni'     => round($pil, 2),
             'pil_pro_capite'  => primoIntero(piuRecente($d['Economy']['Real GDP per capita'] ?? null)) ?? 0,
-            'crescita_pil'    => mediaPercentuale($d['Economy']['Real GDP growth rate'] ?? null)
+            'crescita_pil'    => CORREZIONI[$iso3]['crescita_pil'][0] ?? mediaPercentuale($d['Economy']['Real GDP growth rate'] ?? null)
                                  ?? percentuale(piuRecente($d['Economy']['Real GDP growth rate'] ?? null)) ?? 0.0,
             'crescita_pop'    => percentuale($d['People and Society']['Population growth rate']['text'] ?? null) ?? 0.004,
             // Il Factbook omette l'alfabetizzazione dove la considera scontata
@@ -384,7 +404,7 @@ foreach ($regioni as $cartella => $siglaRegione) {
             'alfabetizzazione'=> percentuale($d['People and Society']['Literacy']['total population']['text'] ?? null)
                                  ?? alfabetizzazioneStimata(primoIntero(piuRecente($d['Economy']['Real GDP per capita'] ?? null)) ?? 0),
             'alfab_stimata'   => isset($d['People and Society']['Literacy']['total population']['text']) ? 0 : 1,
-            'quota_militare'  => $quotaMil ?? 0.015,
+            'quota_militare'  => CORREZIONI[$iso3]['quota_militare'][0] ?? $quotaMil ?? 0.015,
             // Quando la fonte tace del tutto: 0,25% della popolazione, che e'
             // l'ordine di grandezza medio mondiale. Dichiarato come stima.
             'soldati'         => $soldati ?? (int) round($popolazione * 0.0025),

@@ -55,6 +55,8 @@ final class Fase05SicurezzaInterna implements Fase
         $resistenzaEstremi = $cal->numero('colpo_di_stato.resistenza_estremisti', 2.0);
         $vittoriaInsorti   = $cal->numero('insurrezione.vittoria_insorti_anno', 0.18);
         $rispostaGoverno   = $cal->numero('insurrezione.risposta_governo', 6.0);
+        $innescoBase       = $cal->numero('insurrezione.innesco_base_anno', 0.04);
+        $innescoMassimo    = $cal->numero('insurrezione.innesco_massimo_anno', 0.10);
         $spostamentoRegime = $cal->numero('instabilita.spostamento_regime', 12.0);
         $protezioneChiusura = $cal->numero('instabilita.protezione_chiusura', 10.0);
         $pesoQualitaVita = $cal->numero('instabilita.peso_qualita_vita', 2.7);
@@ -240,7 +242,29 @@ final class Fase05SicurezzaInterna implements Fase
                 $reclute = $kReclutamento * $n->popolazione * $poverta * $motivo
                     * $spinta * ($debolezza ** 1.6)
                     * (1.0 + $carrozzone * $successo) * $perTick;
-                $n->forzaInsorti += $reclute;
+
+                // L'INNESCO. Fearon e Laitin non stimano quanti ribelli ci sono:
+                // stimano la PROBABILITA' ANNUA che una guerra civile cominci —
+                // 1,9% in media sui paesi a rischio nel 1945-99, fino a circa il
+                // 10% per i piu' esposti. Qui prima un'insurrezione nasceva da
+                // sola appena il reclutamento superava l'attrito del governo, e
+                // nasceva dovunque nello stesso momento: il mondo apriva con 34
+                // paesi in conflitto e un anno dopo ne aveva una cinquantina.
+                // Adesso chi non ha un'insurrezione la accende con una
+                // probabilita' annua che cresce con quanto il terreno e'
+                // favorevole — il rapporto fra il reclutamento possibile e
+                // l'attrito che il governo infligge — fino a un tetto. Molte
+                // si spengono presto, come nel mondo vero.
+                if (!$n->haInsorti()) {
+                    $favore = $reclute / max(1e-9, $n->potenzaGoverno() * $attrito);
+                    $pInnesco = min($innescoMassimo, $innescoBase * $favore);
+                    if ($c->caso->prova('05_innesco', crc32($n->iso3), $c->tick, $pInnesco * $perTick)) {
+                        $n->forzaInsorti = max(1.0, $n->forzaInsorti) + $reclute;
+                        $c->annota('innesco', ['nazione' => $n->nome]);
+                    }
+                } else {
+                    $n->forzaInsorti += $reclute;
+                }
             } else {
                 // Senza malcontento l'insurrezione si sfalda da sola.
                 $n->forzaInsorti *= (1.0 - 0.5 * $perTick);

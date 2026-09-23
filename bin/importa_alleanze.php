@@ -62,6 +62,17 @@ const AGGIORNAMENTI = [
 ];
 
 /**
+ * Le basi: truppe straniere schierate con un mandato, che COW non conta perche'
+ * non sono un trattato fra Stati del suo elenco. Gradino 64.
+ *
+ * @var array<int, array{0:string, 1:string, 2:string}> [chi schiera, dove, perche' e quando]
+ */
+const BASI = [
+    ['USA', 'XKX', 'KFOR, Camp Bondsteel: la forza NATO in Kosovo per la risoluzione ONU 1244 (10/06/1999)'],
+    ['ITA', 'XKX', 'KFOR: l\'Italia e\' fra i contributori maggiori e ne ha avuto piu\' volte il comando'],
+];
+
+/**
  * Gli scioglimenti: i legami che il dataset porta ancora e che non esistono
  * piu'. Si tolgono in entrambe le direzioni, a ogni gradino.
  *
@@ -80,6 +91,13 @@ const SCIOGLIMENTI = [
         . 'russa dal 24/02/2022'],
     ['GEO', ['RUS', 'BLR', 'ARM', 'AZE', 'KAZ', 'KGZ', 'MDA', 'TJK', 'TKM', 'UZB'],
         'Georgia fuori dalla CSI dal 18/08/2009, dopo la guerra con la Russia del 2008'],
+    // Un congelamento non e' un'uscita, ma una garanzia che il garantito
+    // dichiara di non credere piu' non trattiene nessuno: nel 2022 e nel 2023
+    // la CSTO non si e' mossa per l'Armenia, e con lei in piedi il seme
+    // metteva l'Armenia sotto l'ombrello nucleare russo.
+    ['ARM', ['RUS', 'BLR', 'KAZ', 'KGZ', 'TJK'],
+        'Armenia: partecipazione alla CSTO congelata (Pashinyan, 22/02/2024) dopo che '
+        . 'l\'alleanza non era intervenuta negli attacchi azeri del 2022 e del 2023'],
 ];
 
 /** I membri NATO al 2012 secondo COW, piu' quelli aggiunti sopra. */
@@ -233,6 +251,13 @@ foreach ($nato as $a) {
         $obblighi[$a . '|' . $b] = max($obblighi[$a . '|' . $b] ?? 0, 96);
     }
 }
+// --- le basi con mandato -----------------------------------------------------
+foreach (BASI as [$chi, $dove, $perche]) {
+    if (isset($mondo->nazioni[$chi], $mondo->nazioni[$dove])) {
+        $obblighi[$chi . '|' . $dove] = max($obblighi[$chi . '|' . $dove] ?? 0, 64);
+    }
+}
+
 // --- gli scioglimenti posteriori (o sfuggiti) al dataset -------------------
 $sciolti = 0;
 foreach (SCIOGLIMENTI as [$chi, $altri, $perche]) {
@@ -264,6 +289,7 @@ $out = "<?php\n\ndeclare(strict_types=1);\n\n"
      . " * allargamenti successivi sono aggiunti a mano nell'importatore, con la\n"
      . " * data accanto: Montenegro 2017, Macedonia del Nord 2020, Finlandia 2023,\n"
      . " * Svezia 2024. E gli scioglimenti: l'Ucraina e la Georgia fuori dalla CSI,\n"
+     . " * l'Armenia che congela la CSTO nel 2024; e le basi con mandato (KFOR),\n"
      . " * che COW tiene ancora come patto di difesa. Prendere un dataset\n"
      . " * autorevole e applicarlo a un mondo di\n"
      . " * un'altra epoca e' l'errore che questo progetto ha gia' fatto una volta.\n"

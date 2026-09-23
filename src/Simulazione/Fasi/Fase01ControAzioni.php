@@ -167,6 +167,9 @@ final class Fase01ControAzioni implements Fase
         if ($c->db === null || $c->aVuoto) {
             return 0;
         }
+        // Al tavolo siedono il Capo e gli Esteri (Crisi::TAVOLO): una crisi e'
+        // presidiata solo se c'e' uno di loro, e il resoconto di cio' che
+        // l'apparato ha deciso va a loro.
         $aperte = $c->db->esegui(
             'SELECT l.id, l.a_nazione_id, l.b_nazione_id, pr.nazione_id AS proponente,
                     a.codice AS iso_a, b.codice AS iso_b
@@ -257,9 +260,11 @@ final class Fase01ControAzioni implements Fase
             'SELECT k.*, a.codice AS iso_sfidante, b.codice AS iso_sfidato,
                     (SELECT COUNT(*) FROM sdb_poltrona p
                       WHERE p.nazione_id = IF(k.tocca_a = "sfidante", k.sfidante_id, k.sfidato_id)
+                        AND p.ruolo IN ("capo", "esteri")
                         AND ' . \App\Gioco\Delega::sqlPresidiata('p', $c->tick) . ') AS presidiata,
                     (SELECT MIN(p2.id) FROM sdb_poltrona p2
                       WHERE p2.nazione_id = IF(k.tocca_a = "sfidante", k.sfidante_id, k.sfidato_id)
+                        AND p2.ruolo IN ("capo", "esteri")
                         AND p2.giocatore_id IS NOT NULL) AS poltrona_assente
              FROM sdb_crisi k
              JOIN sdb_nazione a ON a.id = k.sfidante_id

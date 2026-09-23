@@ -89,6 +89,12 @@ $impronta = static function (Mondo $m): array {
     $f['mondo.nastiness|']       = $m->nastiness;
     $f['mondo.livelloPace|']     = (float) $m->livelloPace;
     $f['mondo.guerre|']          = (float) count($m->guerre);
+    foreach ($m->guerre as $g) {
+        $k = $g['aggressore'] . '>' . $g['difensore'] . '@' . $g['inizio'];
+        $f["guerra.morti|$k"]            = (float) $g['morti'];
+        $f["guerra.aiuti_difensore|$k"]  = (float) ($g['aiuti_difensore'] ?? 0.0);
+        $f["guerra.aiuti_aggressore|$k"] = (float) ($g['aiuti_aggressore'] ?? 0.0);
+    }
     $f['mondo.strozzature|']     = (float) count($m->strozzature);
     $f['mondo.azioniRecenti|']   = (float) count($m->azioniRecenti);
     $f['mondo.prossimoIdEvento|'] = (float) $m->prossimoIdEvento;

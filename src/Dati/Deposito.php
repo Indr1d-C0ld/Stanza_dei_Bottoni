@@ -459,34 +459,42 @@ final class Deposito
 
     private function salvaGuerre(Mondo $mondo, int $tick): void
     {
-        $aperte = [];
         foreach ($mondo->guerre as $g) {
             $ia = $this->idPerIso[$g['aggressore']] ?? null;
             $id = $this->idPerIso[$g['difensore']] ?? null;
             if ($ia === null || $id === null) {
                 continue;
             }
-            $aperte[] = $ia . '-' . $id;
             $this->db->esegui(
                 'INSERT INTO sdb_guerra (aggressore_id, difensore_id, inizio_tick, morti)
                  SELECT ?,?,?,? FROM DUAL WHERE NOT EXISTS (
                     SELECT 1 FROM sdb_guerra WHERE aggressore_id = ? AND difensore_id = ?
                        AND inizio_tick = ? )',
-                [$ia, $id, $g['inizio'], (int) $g['morti'], $ia, $id, $g['inizio']],
+                [$ia, $id, $g['inizio'], (float) $g['morti'], $ia, $id, $g['inizio']],
             );
         }
-        // Le guerre non piu' in elenco sono finite.
+        // Le guerre non piu' in elenco sono finite. Quelle nate sul sito
+        // dopo l'ultimo tick (una crisi portata al nono gradino) hanno
+        // inizio_tick = tick - 1 e non si toccano: le prende il tick dopo.
         $this->db->esegui(
             'UPDATE sdb_guerra SET fine_tick = ? WHERE fine_tick IS NULL AND inizio_tick < ?',
             [$tick, $tick - 1],
         );
         foreach ($mondo->guerre as $g) {
-            $ia = $this->idPerIso[$g['aggressore']] ?? 0;
-            $idd = $this->idPerIso[$g['difensore']] ?? 0;
             $this->db->esegui(
-                'UPDATE sdb_guerra SET fine_tick = NULL, morti = ?
+                'UPDATE sdb_guerra SET fine_tick = NULL, morti = ?, aiuti_difensore = ?, aiuti_aggressore = ?
                  WHERE aggressore_id = ? AND difensore_id = ? AND inizio_tick = ?',
-                [(int) $g['morti'], $ia, $idd, $g['inizio']],
+                [(float) $g['morti'], (float) ($g['aiuti_difensore'] ?? 0.0), (float) ($g['aiuti_aggressore'] ?? 0.0),
+                 $this->idPerIso[$g['aggressore']] ?? 0, $this->idPerIso[$g['difensore']] ?? 0, $g['inizio']],
+            );
+        }
+        // E come sono finite quelle chiuse in questo tick.
+        foreach ($mondo->guerreConcluse as $g) {
+            $this->db->esegui(
+                'UPDATE sdb_guerra SET esito = ?
+                 WHERE aggressore_id = ? AND difensore_id = ? AND inizio_tick = ?',
+                [(string) $g['esito'], $this->idPerIso[$g['aggressore']] ?? 0,
+                 $this->idPerIso[$g['difensore']] ?? 0, $g['inizio']],
             );
         }
     }
@@ -830,6 +838,8 @@ final class Deposito
             $mondo->guerre[] = [
                 'aggressore' => $a, 'difensore' => $d,
                 'inizio' => (int) $r['inizio_tick'], 'morti' => (float) $r['morti'],
+                'aiuti_difensore'  => (float) $r['aiuti_difensore'],
+                'aiuti_aggressore' => (float) $r['aiuti_aggressore'],
             ];
         }
     }

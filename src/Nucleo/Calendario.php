@@ -40,7 +40,9 @@ final class Calendario
     public static function dataDiTick(int $tick): DateTimeImmutable
     {
         return (new DateTimeImmutable(self::ORIGINE))
-            ->modify('+' . ($tick * self::GIORNI_PER_TICK) . ' days');
+            // Con il segno esplicito: una guerra cominciata prima della
+            // divergenza ha un tick negativo, e «+-1414 days» non e' una data.
+            ->modify(sprintf('%+d days', $tick * self::GIORNI_PER_TICK));
     }
 
     /** La data del mondo al tick dato, in italiano. */

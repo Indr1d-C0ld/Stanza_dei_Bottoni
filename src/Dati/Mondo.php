@@ -41,6 +41,8 @@ final class Mondo
     public array $notizie = [];
     /** @var list<array<string,mixed>> le guerre aperte fra Stati */
     public array $guerre = [];
+    /** @var list<array<string,mixed>> le guerre finite in QUESTO tick, col loro esito: le legge il Deposito */
+    public array $guerreConcluse = [];
     /** @var array<string,int> "MANDANTE|verbo|BERSAGLIO" => tick dell'ultima volta */
     public array $azioniRecenti = [];
     public int   $tick       = 0;
@@ -227,6 +229,28 @@ final class Mondo
             };
             $n->forzaInsorti = max(1.5, $n->potenzaGoverno() / $rapporto);
             $n->netPeace = (int) $livello;
+        }
+
+        // --- le guerre fra Stati in corso al momento della divergenza -----
+        // (db/seed/guerre-note.php). L'inizio vero, anche se precede il tick
+        // zero: la durata decide mobilitazione, stanchezza e armistizio.
+        $guerreNote = @include dirname($percorsoCsv) . '/guerre-note.php';
+        foreach (is_array($guerreNote) ? $guerreNote : [] as $gn) {
+            $a = $mondo->nazioni[(string) $gn['aggressore']] ?? null;
+            $d = $mondo->nazioni[(string) $gn['difensore']] ?? null;
+            if ($a === null || $d === null) {
+                continue;
+            }
+            $giorni = (int) (new \DateTimeImmutable(\App\Nucleo\Calendario::ORIGINE))
+                ->diff(new \DateTimeImmutable((string) $gn['inizio']))->format('%r%a');
+            $mondo->guerre[] = [
+                'aggressore' => $a->iso3, 'difensore' => $d->iso3,
+                'inizio' => (int) floor($giorni / \App\Nucleo\Calendario::GIORNI_PER_TICK),
+                'morti' => 0.0, 'aiuti_difensore' => 0.0, 'aiuti_aggressore' => 0.0,
+            ];
+            $a->netPeace = 6;
+            $d->netPeace = 6;
+            $d->ansiaMilitare = 100.0;
         }
 
         $mondo->preparaRelazioni($politica['rapporti'] ?? []);

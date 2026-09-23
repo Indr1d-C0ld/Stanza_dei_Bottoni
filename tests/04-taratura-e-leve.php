@@ -82,10 +82,13 @@ $perAnnoIrregolari = $irregolari / $anni;
 $crescitaMondiale = ($mondo->pilTotale() / $pilIniziale) ** (1.0 / $anni) - 1.0;
 $legittimitaMedia = $legittimita / count($mondo->nazioni);
 
-// Crawford dava ~10 cambi irregolari l'anno nel mondo reale. Si accetta un
-// ordine di grandezza, non un numero: l'errore che conta e' quello che manda
-// il mondo a zero o a cento, non lo scarto del venti per cento.
-Prove::fra('cambi irregolari per anno', 5.0, 20.0, $perAnnoIrregolari);
+// La banda e' quella di Realismo::FASCE, datata: 2,2-3,8 colpi riusciti
+// l'anno (Cline Center, Powell & Thyne, 2000-2020 e anni Venti) piu' le
+// rivoluzioni. Qui c'era 5-20, dai ~10 di Crawford — che erano giusti per
+// il 1948-77 e che questo progetto ha smesso di usare in docs/26: la prova
+// era rimasta indietro rispetto al metro.
+[$minIrr, $maxIrr] = App\Simulazione\Realismo::FASCE['cambi_irregolari'];
+Prove::fra('cambi irregolari per anno', (float) $minIrr, (float) $maxIrr, $perAnnoIrregolari);
 Prove::fra('crescita mondiale annua', 0.01, 0.06, $crescitaMondiale);
 Prove::fra('legittimita\' media', 35.0, 70.0, $legittimitaMedia);
 Prove::che('nessuna nazione e\' sparita', count($mondo->nazioni) === 189);

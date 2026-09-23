@@ -116,6 +116,48 @@ return [
         ['ETH', 'ERI',  -55], ['SDN', 'SSD',  -45],
         ['GRC', 'TUR',  -35], ['JPN', 'PRK',  -80], ['JPN', 'CHN',  -35],
 
+        // La guerra in Ucraina (dal 24/02/2022). Prima di questa sezione il
+        // seme non sapeva che l'Europa aveva rotto con la Russia: al primo
+        // tick di guerra l'Ucraina riceveva aiuti solo dagli Stati Uniti e da
+        // una manciata di baltici, e la Cina armava la Russia.
+        //
+        // I donatori maggiori, in ordine, secondo il Kiel Institute (Ukraine
+        // Support Tracker, febbraio 2025): Stati Uniti, Germania, Regno Unito,
+        // Danimarca, Paesi Bassi, Svezia, Norvegia, Polonia, Canada, Francia,
+        // Finlandia, e in proporzione al PIL i baltici e la Cechia. Tutti nel
+        // Gruppo di contatto per la difesa dell'Ucraina (Ramstein) e, gli
+        // europei, nei diciannove pacchetti di sanzioni dell'UE (ottobre 2025).
+        ['USA', 'UKR',   70], ['DEU', 'UKR',   75], ['GBR', 'UKR',   80],
+        ['DNK', 'UKR',   85], ['NLD', 'UKR',   80], ['SWE', 'UKR',   80],
+        ['NOR', 'UKR',   80], ['POL', 'UKR',   75], ['CAN', 'UKR',   75],
+        ['FRA', 'UKR',   70], ['FIN', 'UKR',   80], ['EST', 'UKR',   90],
+        ['LVA', 'UKR',   90], ['LTU', 'UKR',   90], ['CZE', 'UKR',   75],
+        ['BEL', 'UKR',   65],
+        ['DEU', 'RUS',  -70], ['GBR', 'RUS',  -80], ['DNK', 'RUS',  -75],
+        ['NLD', 'RUS',  -75], ['SWE', 'RUS',  -75], ['NOR', 'RUS',  -70],
+        ['POL', 'RUS',  -90], ['CAN', 'RUS',  -75], ['FRA', 'RUS',  -65],
+        ['FIN', 'RUS',  -80], ['EST', 'RUS',  -95], ['LVA', 'RUS',  -95],
+        ['LTU', 'RUS',  -95], ['CZE', 'RUS',  -70], ['BEL', 'RUS',  -60],
+        // Il resto dell'UE: sanzioni votate, aiuti minori.
+        ['ITA', 'UKR',   50], ['ESP', 'UKR',   50], ['PRT', 'UKR',   50],
+        ['ROU', 'UKR',   50], ['IRL', 'UKR',   45], ['GRC', 'UKR',   40],
+        ['BGR', 'UKR',   40], ['HRV', 'UKR',   50], ['SVN', 'UKR',   45],
+        ['ITA', 'RUS',  -45], ['ESP', 'RUS',  -45], ['PRT', 'RUS',  -45],
+        ['ROU', 'RUS',  -60], ['IRL', 'RUS',  -40], ['GRC', 'RUS',  -30],
+        ['BGR', 'RUS',  -30], ['HRV', 'RUS',  -45], ['SVN', 'RUS',  -40],
+        // Le eccezioni europee: l'Ungheria di Orban ha bloccato o ritardato
+        // gli aiuti UE e non manda armi; la Slovacchia dal 2023 ha smesso di
+        // mandarne.
+        ['HUN', 'UKR',   -5], ['HUN', 'RUS',   20],
+        ['SVK', 'UKR',   15], ['SVK', 'RUS',   -5],
+        // Dall'altra parte: truppe nordcoreane nel Kursk dall'autunno 2024
+        // (riconosciute da Mosca e Pyongyang nell'aprile 2025), munizioni e
+        // droni iraniani. La Cina si dichiara neutrale, commercia con tutti e
+        // due, e non risultano forniture di armi: ne' con l'Ucraina ne' con la
+        // Russia e' in guerra.
+        ['PRK', 'RUS',   90], ['IRN', 'RUS',   75],
+        ['CHN', 'UKR',    0], ['UKR', 'CHN',    0],
+
         // Partner regionali
         ['BRA', 'ARG',   75], ['IND', 'BGD',   60], ['IND', 'NPL',   65],
         ['ZAF', 'NAM',   75], ['ZAF', 'BWA',   80], ['NGA', 'GHA',   70],

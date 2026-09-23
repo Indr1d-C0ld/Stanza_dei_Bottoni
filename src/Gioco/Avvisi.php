@@ -93,8 +93,9 @@ final class Avvisi
         $poltrona = (int) $g['poltrona_id'];
         $nazione  = (int) $g['nazione_id'];
 
-        // Le crisi in cui tocca a noi, con quanto manca.
-        foreach ($this->db->esegui(
+        // Le crisi in cui tocca a noi, con quanto manca — a chi siede al
+        // tavolo (Crisi::TAVOLO): agli altri ministri non tocca rispondere.
+        foreach (!Crisi::siedeAlTavolo((string) $g['ruolo']) ? [] : $this->db->esegui(
             'SELECT k.livello, k.scade_tick,
                     IF(k.sfidante_id = ?, b.nome, a.nome) AS altro
              FROM sdb_crisi k

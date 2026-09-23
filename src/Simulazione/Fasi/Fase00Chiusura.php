@@ -371,6 +371,7 @@ final class Fase00Chiusura implements Fase
     {
         $mondo = $c->mondo;
         $candidati = [];
+        $pesoGuerraVicini = $c->calibrazione->numero('dottrina.peso_guerra_vicini', 2.4);
 
         foreach ($mondo->relazioni->tutte() as $chiave => $r) {
             [$da, $verso] = explode('|', $chiave);
@@ -428,14 +429,49 @@ final class Fase00Chiusura implements Fase
                 || $this->haUnaTestaDiPonte($n, $b, $mondo)
                 || ($n->influenzaTotale > 8.0 && $n->regione === $b->regione);
 
-            if ($invadibile && $raggiungibile
-                && $r->affinita < -70.0 && $n->ambizione >= 4
+            $giaInGuerra = false;
+            foreach ($mondo->guerre as $gg) {
+                if (in_array($n->iso3, [$gg['aggressore'], $gg['difensore']], true)
+                    && in_array($b->iso3, [$gg['aggressore'], $gg['difensore']], true)) {
+                    $giaInGuerra = true;
+                }
+            }
+
+            // La DETERRENZA ESTESA: non si invade nemmeno chi sta sotto
+            // l'ombrello nucleare di un garante (obbligo 128, che Mondo
+            // assegna ai patti di difesa con uno Stato armato). Prima contava
+            // solo l'arsenale del bersaglio, e i baltici erano invadibili.
+            // (Le due verifiche costano: si fanno solo quando tutto il resto
+            // dice gia' di si'.)
+            if ($invadibile && $raggiungibile && !$giaInGuerra
+                && $r->affinita < -70.0
                 && $n->potenzaGoverno() > $b->potenzaGoverno() * 1.5
-                && $n->etica >= 4) {
+                && !$this->sottoOmbrello($b->iso3, $mondo, $c->tick)
+                && !$this->haUnGaranteForte($n, $b, $mondo)) {
                 // Piu' il bersaglio e' debole in casa propria, piu' la
                 // tentazione cresce: si invade chi sembra gia' mezzo caduto.
-                $candidati['invasione'] = 0.8 * ($fragile ? 2.0 : 1.0);
-                $candidati['dimostrazione_forza'] = 1.5;
+                $tentazione = $fragile ? 2.0 : 1.0;
+                if ($r->confinanti) {
+                    // LA GUERRA FRA VICINI RIVALI. E' la forma piu' comune di
+                    // guerra fra Stati: la maggior parte nasce da una disputa
+                    // territoriale fra confinanti (Vasquez, «The War Puzzle»,
+                    // 1993; Senese e Vasquez 2008) dentro una rivalita' di lunga
+                    // durata (Diehl e Goertz, «War and Peace in International
+                    // Rivalry», 2000), e la iniziano piu' spesso le autocrazie.
+                    // Prima serviva l'ambizione di una grande potenza e
+                    // un'etica estratta da un numero a caso: l'Azerbaigian, che
+                    // ha attaccato l'Armenia nel 2020 e nel 2023, non poteva.
+                    // Il peso: tarato perche' il mondo faccia qualche guerra
+                    // fra vicini in quindici anni, come il 2010-25 vero
+                    // (Russia-Ucraina, Azerbaigian-Armenia due volte,
+                    // India-Pakistan, Thailandia-Cambogia, Israele-Iran).
+                    $candidati['invasione'] = $pesoGuerraVicini * (0.25 + 0.75 * (1.0 - $n->democrazia)) * $tentazione;
+                    $candidati['dimostrazione_forza'] = 1.5;
+                } elseif ($n->ambizione >= 4 && $n->etica >= 4) {
+                    // Oltre i confini: la proiezione di una grande potenza.
+                    $candidati['invasione'] = 0.8 * $tentazione;
+                    $candidati['dimostrazione_forza'] = 1.5;
+                }
             }
 
             // Contro un rivale solido: strumenti dichiarati.
@@ -587,6 +623,50 @@ final class Fase00Chiusura implements Fase
      * logistica di Crawford: senza truppe già basate in un paese confinante,
      * una potenza può mandare soltanto una forza simbolica.
      */
+    /** @var array<string,true> chi e' sotto un ombrello nucleare, per il tick in $ombrelliDelTick */
+    private array $ombrelli = [];
+    private int $ombrelliDelTick = PHP_INT_MIN;
+
+    /** Qualcuno di armato ha promesso di difenderlo con l'atomica? */
+    private function sottoOmbrello(string $iso, $mondo, int $tick): bool
+    {
+        if ($this->ombrelliDelTick !== $tick) {
+            $this->ombrelli = [];
+            foreach ($mondo->relazioni->tutte() as $chiave => $r) {
+                if ($r->obbligo >= 128) {
+                    $this->ombrelli[explode('|', $chiave)[1]] = true;
+                }
+            }
+            $this->ombrelliDelTick = $tick;
+        }
+        return isset($this->ombrelli[$iso]);
+    }
+
+    /**
+     * La deterrenza convenzionale estesa (Huth, «Extended Deterrence and the
+     * Prevention of War», 1988): si evita di attaccare chi ha un garante
+     * impegnato — basi o difesa, obbligo >= 64 — e piu' forte di chi attacca.
+     * Il garante che c'e' davvero, sul posto, e' cio' che trattiene.
+     */
+    private function haUnGaranteForte($n, $b, $mondo): bool
+    {
+        $forza = $n->potenzaGoverno();
+        foreach ($mondo->relazioni->tutte() as $chiave => $r) {
+            if ($r->obbligo < 64) {
+                continue;
+            }
+            [$garante, $protetto] = explode('|', $chiave);
+            if ($protetto !== $b->iso3 || $garante === $n->iso3) {
+                continue;
+            }
+            $g = $mondo->nazioni[$garante] ?? null;
+            if ($g !== null && $g->potenzaGoverno() >= $forza) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private function haUnaTestaDiPonte($n, $b, $mondo): bool
     {
         foreach ($mondo->relazioni->vicinato[$b->iso3] ?? [] as $vicino) {

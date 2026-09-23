@@ -193,7 +193,10 @@ $tensioni = [1=>'quiete',2=>'pace',3=>'tensione',4=>'conflitto aperto',5=>'guerr
            <span class="ostile">Da qui in su ogni passo può sfuggire di mano.</span>
          <?php endif; ?>
          Se non rispondi entro il <?= App\Nucleo\Calendario::tick((int) $k['scade_tick']) ?>, hai ceduto.</p>
-      <?php if ($tocca): ?>
+      <?php if ($tocca && !App\Gioco\Crisi::siedeAlTavolo((string) $poltrona['ruolo'])): ?>
+      <p class="tenue">La mossa spetta al Capo o agli Esteri; se nessuno dei due è al suo
+         posto, decide l'apparato.</p>
+      <?php elseif ($tocca): ?>
       <form method="post" action="" class="in-linea">
         <input type="hidden" name="gettone" value="<?= htmlspecialchars($sessione->gettone()) ?>">
         <input type="hidden" name="azione" value="crisi">
@@ -207,7 +210,7 @@ $tensioni = [1=>'quiete',2=>'pace',3=>'tensione',4=>'conflitto aperto',5=>'guerr
 </section>
 <?php endif; ?>
 
-<?php if (!empty($contestabili)): ?>
+<?php if (!empty($contestabili) && App\Gioco\Crisi::siedeAlTavolo((string) $poltrona['ruolo'])): ?>
 <section>
   <h2>Cosa possiamo contestare</h2>
   <p class="tenue">Solo ciò che siamo riusciti a <strong>dimostrare</strong>. Sapere

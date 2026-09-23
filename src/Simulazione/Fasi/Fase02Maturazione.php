@@ -218,6 +218,16 @@ final class Fase02Maturazione implements Fase
                 $b->ansiaMilitare = min(100.0, $b->ansiaMilitare + 18.0 * $i);
                 break;
             case 'invasione':
+                // Una guerra alla volta fra due paesi. Prima una seconda
+                // invasione a guerra gia' aperta ne apriva un'altra accanto,
+                // e i due conflitti si sommavano: morti contati due volte,
+                // due attriti, due esiti.
+                foreach ($c->mondo->guerre as $gg) {
+                    if (($gg['aggressore'] === $a->iso3 && $gg['difensore'] === $b->iso3)
+                        || ($gg['aggressore'] === $b->iso3 && $gg['difensore'] === $a->iso3)) {
+                        break 2;
+                    }
+                }
                 $c->mondo->guerre[] = [
                     'aggressore' => $a->iso3, 'difensore' => $b->iso3,
                     'inizio' => $c->tick, 'morti' => 0.0,

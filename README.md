@@ -122,7 +122,26 @@ deterrenza non è una regola scritta a parte, è il risultato dei numeri.
 
 Prima di ogni mossa il gioco dice a entrambe le parti quanto costerebbe cedere
 adesso. È l'unica informazione che trasforma la scala in una decisione invece
-che in un binario.
+che in un binario. Al tavolo di una crisi siedono il Capo e gli Esteri: gli
+altri ministri la vedono, ma non la muovono.
+
+### La guerra fra Stati
+
+Il mondo comincia nel gennaio 2026 con la guerra che c'era: la Russia contro
+l'Ucraina, dal 24 febbraio 2022, coi dati del SIPRI (l'Ucraina spende il 34% del
+PIL in difesa, il carico più alto del mondo) e gli aiuti che le arrivano dai
+suoi sostenitori nella misura del Kiel Institute.
+
+Una guerra non la combattono solo in due: chi parteggia nettamente per uno dei
+due gli manda ogni settimana una parte del proprio bilancio militare, togliendola
+ai propri arsenali. Il difensore combatte in casa e si mobilita; chi deve
+attraversare il mare porta al fronte una frazione della propria forza. Si vince
+per conquista, si perde ritirandosi, e le guerre di logoramento — che sono la
+maggior parte — finiscono a un tavolo, con un armistizio.
+
+Le guerre nuove nascono dove nascono nel mondo vero: fra vicini rivali, più
+spesso per mano di un'autocrazia. Non si attacca chi sta sotto l'ombrello
+nucleare di un alleato, né chi ha accanto un garante più forte di chi attacca.
 
 ### Il commercio
 
@@ -188,9 +207,9 @@ I riferimenti storici sono quelli del mondo da cui il seme parte, non quelli di
 Crawford: i suoi ~10 cambi di esecutivo irregolari l'anno erano giusti per il
 1948-77. Oggi il Cline Center e Powell & Thyne contano 2,2-3,8 colpi riusciti
 l'anno, a cui si aggiungono una o due rivoluzioni; UCDP conta 36 paesi in
-conflitto armato e 11 in guerra. Il profilo `osservazione` fa 5,3-6,0 cambi
-irregolari l'anno, 39-44 paesi in conflitto e 11-22 in guerra, e le prove
-automatiche lo verificano.
+conflitto armato (circa 30 negli anni Dieci) e 11 in guerra. Il profilo
+`osservazione` fa 4,1-4,7 cambi irregolari l'anno, 26-29 paesi in conflitto e
+8-17 in guerra, e le prove automatiche lo verificano.
 
 ---
 
@@ -270,12 +289,18 @@ L'integrità la perde chi aveva promesso protezione — basi o difesa — a un
 governo caduto per colpo di Stato o rivoluzione, non chi aveva solo un
 trattato commerciale.
 
-**La guerriglia cronica.** Un governo che vede crescere i ribelli sposta su di
-loro truppe, bilancio e polizia: la controinsurrezione cresce con la minaccia,
-fino a sette volte. È ciò che permette al mondo di avere, come quello vero,
-molti conflitti a bassa intensità che durano decenni e pochi che arrivano alla
-guerra civile. Senza, un'insurrezione poteva solo spegnersi o crescere senza
-freni.
+**L'innesco e la guerriglia cronica.** Un'insurrezione non nasce da sola dove
+il terreno è favorevole: si accende con una probabilità annua, come la stimano
+Fearon e Laitin — l'1,9% in media, fino a circa il 10% per i paesi più esposti.
+Una volta accesa, il governo che vede crescere i ribelli sposta su di loro
+truppe, bilancio e polizia: la controinsurrezione cresce con la minaccia, fino a
+sette volte. È ciò che permette al mondo di avere, come quello vero, molti
+conflitti a bassa intensità che durano decenni e pochi che arrivano alla guerra
+civile.
+
+**Le urne.** Chi governa male perde le elezioni, e chi perde il governo perde
+anche il gabinetto: dell'apparato resta qualche ministro forte, il resto è gente
+nuova.
 
 **La deriva politica.** Accanto alla legittimità che l'economia e la società
 spiegano c'è una parte che nessun dato cattura — qualità di governo, coesione,
@@ -334,13 +359,18 @@ scaduto.
 
 | fonte | che cosa dà al motore |
 |---|---|
-| **Fearon & Laitin (2003)**, *Ethnicity, Insurgency, and Civil War*, APSR 97(1) | i predittori dell'insorgenza: popolazione grande e povertà, non l'etnia. Il reclutamento insurrezionale scala con la popolazione e col reddito inverso |
+| **Fearon & Laitin (2003)**, *Ethnicity, Insurgency, and Civil War*, APSR 97(1) | i predittori dell'insorgenza: popolazione grande e povertà, non l'etnia. Il reclutamento insurrezionale scala con la popolazione e col reddito inverso; l'innesco è una probabilità annua (1,9% in media nel 1945-99) |
+| **Vasquez**, *The War Puzzle* (1993); **Senese & Vasquez** (2008); **Diehl & Goertz**, *War and Peace in International Rivalry* (2000) | le guerre fra Stati nascono soprattutto fra vicini con una disputa territoriale, dentro rivalità di lunga durata |
+| **Huth**, *Extended Deterrence and the Prevention of War* (1988) | non si attacca chi ha un garante impegnato e più forte |
+| **Mearsheimer**, *The Tragedy of Great Power Politics* (2001) | il «potere d'arresto dell'acqua»: chi attraversa il mare porta al fronte una frazione della sua forza |
+| **Mueller** (1973) | la stanchezza di guerra, che nelle democrazie pesa più che nelle autocrazie |
+| **Kiel Institute**, *Ukraine Support Tracker* (febbraio 2025) | gli aiuti militari a un paese in guerra: circa 45 miliardi di euro l'anno all'Ucraina |
 | **Cederman, Wimmer & Min (2010)**, *Why Do Ethnic Groups Rebel?*, World Politics 62(1)<br>**Cederman, Weidmann & Gleditsch (2011)**, APSR 105(3) | la disuguaglianza orizzontale: il **motivo** accanto all'occasione |
 | **Goldstone et al. (2010)**, *A Global Model for Forecasting Political Instability*, AJPS 54(1) — il **Political Instability Task Force** | la U rovesciata del tipo di regime, la faziosità, il contagio dal vicinato, la qualità della vita |
 | **Collier et al. (2003)**, *Breaking the Conflict Trap*, Banca Mondiale | quanto costa una guerra civile: 2,3 punti di crescita l'anno |
 | **Archigos** (Goemans, Gleditsch, Chiozza) | la quota di uscite irregolari dal potere: circa un quinto |
 | **Cline Center Coup d'État Project** e **Powell & Thyne** | i colpi di Stato riusciti per decennio — e la scoperta che i «~10 l'anno» di Crawford sono gli anni Sessanta, non il presente |
-| **SIPRI** — *Military Expenditure* e *Yearbook* | l'onere militare mondiale e gli Stati dotati di nucleare |
+| **SIPRI** — *Military Expenditure* e *Yearbook* | l'onere militare mondiale, gli Stati dotati di nucleare, e la spesa ucraina del 2024 (34% del PIL) dove il Factbook si ferma al 2021 |
 | **IISS** — *The Military Balance* | gli effettivi sotto le armi, e il tetto del 5% della popolazione (la Corea del Nord, il paese più militarizzato del mondo) |
 | **ONU** — *World Population Prospects* | la crescita della popolazione |
 | **Eckhardt**, ripreso dal **CICR** | la quota civile dei morti di guerra: circa metà, da tre secoli |
@@ -351,7 +381,7 @@ scaduto.
 ```bash
 php bin/realismo.php --anni=15      # diciannove grandezze contro la loro fascia
 php bin/audit.php                   # che cosa è dichiarato e mai usato
-php bin/prova.php                   # trecentottantaquattro prove
+php bin/prova.php                   # quattrocentodue prove
 ```
 
 `bin/realismo.php` confronta diciannove grandezze con la fascia in cui il mondo
@@ -415,6 +445,10 @@ sessanta che non voleva dire niente e faceva sessantaquattro milioni di morti in
 una guerra bilaterale, le tre pompe nell'economia, la variabile che nessuno
 leggeva, la riscrittura che abbiamo **deciso di non fare** e perché.
 
+**`docs/28-la-guerra-fra-stati.md`** è il seguito del terzo: la guerra
+russo-ucraina nel seme, le guerre fra vicini, la deterrenza, l'armistizio,
+l'innesco delle insurrezioni.
+
 **`docs/27-audit-totale.md`** è il terzo, e il più largo: motore, gioco, sito e
 seme. Il reperto centrale è che il mondo vivo non era il mondo misurato — quel
 che la base dati non salvava, o salvava arrotondato, tornava al seme ogni due
@@ -426,19 +460,19 @@ sapeva produrre.
 
 ### Quel che oggi non funziona come dovrebbe
 
-- **Il mondo apre con un picco.** Parte coi conflitti veri di UCDP — trentaquattro
-  paesi — ma nel primo anno sale a una cinquantina (a livello di guerra da venti
-  a una trentina) prima di riscendere verso i quaranta del regime. Era una
-  sessantina prima della guerriglia cronica: i primi anni di un mondo nuovo
-  restano un periodo di assestamento, e qualche paese che nel mondo vero è in
-  pace — la Tanzania, Timor Est — ci finisce dentro.
-- **La guerra russo-ucraina non è nel seme.** Il seme ha le guerre civili di
-  UCDP ma non l'unica grande guerra fra Stati alla data di divergenza. Seminarla
-  non basta: il motore la chiude con una conquista russa in poco più di un anno,
-  perché non modella gli aiuti militari occidentali.
-- **Le guerre fra Stati quasi non nascono.** È giusto che un'invasione sia rara,
-  ma il mondo vero dal 2014 ne ha avute più di quante il motore ne produca in
-  quindici anni.
+- **Un'invasione cinese di Taiwan, quando avviene, riesce.** Senza un trattato
+  gli Stati Uniti mandano materiale e non combattono: l'intervento diretto di
+  chi non è alleato — l'«ambiguità strategica» — chiede un meccanismo che il
+  modello non ha. I giochi di guerra del CSIS (gennaio 2023) la danno per lo più
+  fallita proprio perché gli Stati Uniti e il Giappone intervengono.
+- **Un civile per ogni militare caduto** è la media storica, e vale per tutte
+  le guerre: in quella russo-ucraina i civili sono molti meno, e il totale dei
+  morti ne esce raddoppiato.
+- **Timor Est** finisce spesso in conflitto perché il suo PIL reale, nel
+  Factbook, comprende il petrolio in esaurimento: una crescita media di -13,6%.
+- **La CSI come patto di difesa** nel Correlates of War lega ancora paesi che
+  non si difenderebbero mai: fra nemici dichiarati il motore rompe il trattato al
+  primo tick, fra indifferenti resta.
 - **Metà dei conflitti seminati si spegne in quindici anni**, e altrettanti ne
   nascono altrove. In parte è giusto — i conflitti veri finiscono — ma il
   modello non sa *quali* devono durare.
@@ -489,7 +523,7 @@ struttura senza valori.
 php bin/tick.php              un passo del mondo
 php bin/simula.php            quindici anni a vuoto, con le statistiche
 php bin/diagnostica.php       la salute del modello
-php bin/prova.php             le prove automatiche (384, circa due minuti)
+php bin/prova.php             le prove automatiche (402, circa due minuti)
 php bin/realismo.php          diciannove grandezze contro le fonti
 php bin/audit.php             che cosa è dichiarato e mai usato
 php bin/migra.php             applica le migrazioni non ancora applicate

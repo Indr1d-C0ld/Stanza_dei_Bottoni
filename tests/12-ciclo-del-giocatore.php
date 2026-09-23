@@ -259,6 +259,9 @@ try {
         return $id;
     });
 
+    // Al tavolo di una crisi siedono il Capo e gli Esteri, non l'Intelligence.
+    $daFuori = $passo('apri dall\'Intelligence', fn() => $s->crisi->apri($poltC, $evento, $tick));
+    Prove::che('l\'Intelligence non apre una crisi', ($daFuori[0] ?? true) === false);
     $aperta = $passo('apri', fn() => $s->crisi->apri($poltA, $evento, $tick));
     Prove::che('Washington apre una crisi con Mosca', ($aperta[0] ?? false) === true, $aperta[1] ?? '');
     $idCrisi = (int) $db->esegui('SELECT id FROM sdb_crisi WHERE evento_id = ?', [$evento])->fetchColumn();

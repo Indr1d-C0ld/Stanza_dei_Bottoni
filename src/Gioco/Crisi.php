@@ -25,6 +25,21 @@ use App\Nucleo\Basedati;
  */
 final class Crisi
 {
+    /**
+     * Chi siede al tavolo di una crisi: il Capo e gli Esteri. Una crisi e' una
+     * contestazione fra governi, e la conduce chi parla per il governo. Prima
+     * contava QUALUNQUE poltrona occupata della nazione: il ministro
+     * dell'Economia poteva portare il paese al nono gradino, e bastava un
+     * giocatore seduto all'Informazione per togliere la crisi all'apparato.
+     * Se nessuno dei due e' presidiato, decide l'apparato.
+     */
+    public const TAVOLO = ['capo', 'esteri'];
+
+    public static function siedeAlTavolo(string $ruolo): bool
+    {
+        return in_array($ruolo, self::TAVOLO, true);
+    }
+
     public function __construct(
         private readonly Basedati $db,
         /** @var array<int,string> */
@@ -70,6 +85,9 @@ final class Crisi
      */
     public function apri(array $poltrona, int $evento, int $tick): array
     {
+        if (!self::siedeAlTavolo((string) ($poltrona['ruolo'] ?? ''))) {
+            return [false, 'Una contestazione la aprono il Capo o gli Esteri.'];
+        }
         $e = $this->db->esegui(
             'SELECT e.*, c.livello AS conoscenza, m.nome AS mandante, m.id AS mandante_id,
                     b.nome AS bersaglio

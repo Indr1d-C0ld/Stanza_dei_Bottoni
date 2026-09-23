@@ -228,7 +228,12 @@ delle alleanze corretto.
 
 ## 6. Quel che resta aperto
 
-Dichiarato, non nascosto.
+Dichiarato, non nascosto. *Aggiornamento: i punti di questa sezione sono stati
+affrontati subito dopo, in `docs/28-la-guerra-fra-stati.md` — la guerra
+russo-ucraina e' nel seme, le guerre fra vicini nascono, il picco d'apertura
+non c'e' piu', le crisi le conduce chi siede al tavolo, chi perde le elezioni
+cambia il gabinetto, e l'Armenia non sta piu' sotto l'ombrello della CSTO. Quel
+che resta davvero aperto sta in fondo a quel documento.*
 
 - **La guerra russo-ucraina non e' nel seme.** Il seme ha le guerre civili in
   corso secondo UCDP ma non l'unica grande guerra fra Stati alla data di

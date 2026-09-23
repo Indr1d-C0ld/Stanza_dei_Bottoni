@@ -145,6 +145,13 @@ return [
         // Crea la guerriglia cronica che l'attrito fisso non permetteva; vedi
         // Fase05 e docs/27. [FABBRICATO]
         'risposta_governo'   => 6.0,   // a 3 i paesi in guerra erano 21-25
+        // La probabilita' annua che un'insurrezione si ACCENDA dove non c'e':
+        // base per unita' di «terreno favorevole» (il reclutamento possibile
+        // diviso l'attrito del governo) e tetto. Fearon & Laitin (2003), APSR
+        // 97(1): 127 inneschi in 6.610 anni-paese nel 1945-99, cioe' 1,9%
+        // l'anno, e circa il 10% per i paesi piu' esposti.
+        'innesco_base_anno'    => 0.04,
+        'innesco_massimo_anno' => 0.10,
         // La disuguaglianza ORIZZONTALE di Cederman, Wimmer e Min: quanto
         // pesa l'esclusione etnica dal potere sul reclutamento insurrezionale.
         // E' il MOTIVO, che il modello non aveva: fin qui c'erano solo le
@@ -220,6 +227,30 @@ return [
         // scende sotto 0,2: uno non copre l'altro, e la media e' la scelta
         // meno sbagliata per un modello che non distingue i tipi di guerra.
         'civili_per_militare' => 1.0,
+        // Gli aiuti militari a un paese in guerra: la quota del proprio
+        // bilancio militare annuo che manda chi parteggia pienamente, e
+        // l'inclinazione minima per parteggiare (differenza di affinita' su
+        // 254). Tarati sul Kiel Institute, Ukraine Support Tracker (febbraio
+        // 2025): circa 45 miliardi di euro l'anno di aiuti militari
+        // all'Ucraina nel 2022-24, meta' americani e meta' europei.
+        'quota_aiuti_anno'    => 0.07,
+        'soglia_aiuti'        => 0.25,
+        // La probabilita' annua che una guerra di logoramento finisca a un
+        // tavolo: dopo il primo anno parte dalla base e cresce ogni anno fino
+        // al tetto. [FABBRICATO] nella forma; l'ordine di grandezza e' quello
+        // delle guerre lunghe del dopoguerra (Corea tre anni, Iran-Iraq otto).
+        'armistizio_base_anno'     => 0.10,
+        'armistizio_crescita_anno' => 0.08,
+        'armistizio_massimo_anno'  => 0.35,
+        // Sotto questo rapporto di forze (aggressore su difensore mobilitato)
+        // l'aggressore e' battuto e si ritira. Era 0,8: vedi Fase07.
+        'soglia_ritirata'          => 0.5,
+        // Quanta della propria forza porta al fronte chi attacca senza un
+        // confine comune (mare, o un paese in mezzo). [FABBRICATO] l'ordine di
+        // grandezza: Mearsheimer (2001) sul «potere d'arresto dell'acqua»; i
+        // giochi di guerra del CSIS su Taiwan (gennaio 2023) danno a un'invasione
+        // anfibia esiti per lo piu' falliti anche con una superiorita' netta.
+        'proiezione_oltre_confine' => 0.4,
     ],
 
     // --------------------------------------------- instabilita' politica
@@ -507,6 +538,10 @@ return [
     // giocatori questa macchina governa solo le nazioni non presidiate.
     'dottrina' => [
         'attivita'             => 0.5,   // moltiplicatore generale [FABBRICATO]
+        // Il peso dell'invasione fra vicini rivali nella scelta della
+        // dottrina, per un'autocrazia piena (una democrazia piena ne ha un
+        // quarto). [FABBRICATO] e tarato: vedi Fase00 e docs/28.
+        'peso_guerra_vicini'   => 2.4,
         // [FABBRICATO] la durata tipica di un'operazione coperta, in tick. Serve
         // a normalizzare la probabilita' di sventarla: la prova si ripete a
         // ogni giro, e senza questo un'azione lenta non arrivava mai in fondo.

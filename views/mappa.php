@@ -40,9 +40,17 @@ $concluse  = array_filter($guerre, static fn ($g) => $g['fine_tick'] !== null);
       <li><a href="<?= u('/nazione/') ?><?= $g['cod_a'] ?>"><?= htmlspecialchars((string) $g['aggressore']) ?></a>
           contro <a href="<?= u('/nazione/') ?><?= $g['cod_d'] ?>"><?= htmlspecialchars((string) $g['difensore']) ?></a>
           <span class="tenue">dal <?= App\Nucleo\Calendario::tick((int) $g['inizio_tick']) ?>,
-            <?= n((float) $g['morti'], 0) ?> morti</span></li>
+            <?= n((float) $g['morti'], 0) ?> morti<?= (int) $g['inizio_tick'] < 0 ? ' da gennaio 2026' : '' ?><?php
+            if ((float) ($g['aiuti_difensore'] ?? 0) > 0): ?>; aiuti militari ricevuti da
+            <?= htmlspecialchars((string) $g['difensore']) ?>: <?= n((float) $g['aiuti_difensore'] / 1000, (float) $g['aiuti_difensore'] < 10000 ? 1 : 0) ?> miliardi di dollari<?php
+            endif; ?></span></li>
     <?php endforeach; ?>
   </ul>
+  <?php if (array_filter($inCorso, static fn ($g) => (int) $g['inizio_tick'] < 0) !== []): ?>
+  <p class="tenue">Le guerre cominciate prima di gennaio 2026 contano i morti da allora: le stime
+     di quelli precedenti sono troppo distanti fra loro per farne un dato. Gli aiuti sono
+     in dollari a parità di potere d'acquisto, come tutto il prodotto del modello.</p>
+  <?php endif; ?>
 </section>
 <?php endif; ?>
 
@@ -55,7 +63,10 @@ $concluse  = array_filter($guerre, static fn ($g) => $g['fine_tick'] !== null);
           contro <a href="<?= u('/nazione/') ?><?= $g['cod_d'] ?>"><?= htmlspecialchars((string) $g['difensore']) ?></a>
           <span class="tenue">dal <?= App\Nucleo\Calendario::tick((int) $g['inizio_tick']) ?>
             al <?= App\Nucleo\Calendario::tick((int) $g['fine_tick']) ?>,
-            <?= n((float) $g['morti'], 0) ?> morti</span></li>
+            <?= n((float) $g['morti'], 0) ?> morti<?= (int) $g['inizio_tick'] < 0 ? ' da gennaio 2026' : '' ?><?php
+            if (!empty($g['esito'])): ?> — <?= htmlspecialchars(match ((string) $g['esito']) {
+                'conquista' => 'conquista', 'ritirata' => 'ritirata dell\'aggressore',
+                'armistizio' => 'armistizio', default => (string) $g['esito'] }) ?><?php endif; ?></span></li>
     <?php endforeach; ?>
   </ul>
 </section>

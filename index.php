@@ -563,6 +563,9 @@ function azione(array $post, Servizi $s, ?array $poltrona, int $tick): array
             // La parte non si chiede al modulo: si ricava dalla nazione della
             // poltrona. Prima arrivava come campo nascosto, e chiunque poteva
             // muovere una crisi fra due altri paesi fino alla guerra.
+            if (!\App\Gioco\Crisi::siedeAlTavolo((string) $poltrona['ruolo'])) {
+                return [[false, 'Al tavolo di una crisi siedono il Capo e gli Esteri.'], '/scrivania'];
+            }
             $idCrisi = (int) ($post['crisi'] ?? 0);
             $parte = $crisi->parteDi($idCrisi, (int) $poltrona['nazione_id']);
             if ($parte === null) {

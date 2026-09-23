@@ -120,7 +120,7 @@ final class Fase10Gabinetto implements Fase
                 $rischio = $rischioCrisi / (1.0 + exp(($n->legittimita - 42.0) / 7.0));
                 if (($c->tick - $n->annoUltimoCambio) > ($tickAnno / 2)
                     && $c->caso->prova('10_sfiducia', crc32($n->iso3), $c->tick, $rischio / $tickAnno)) {
-                    $this->ricambio($n, $c, 'sfiducia');
+                    $this->ricambio($n, $c, 'sfiducia', $bacini);
                     $ricambi++;
                 }
                 continue;
@@ -138,7 +138,7 @@ final class Fase10Gabinetto implements Fase
                 continue;
             }
 
-            $this->ricambio($n, $c, 'alternanza');
+            $this->ricambio($n, $c, 'alternanza', $bacini);
             $ricambi++;
         }
 
@@ -261,6 +261,30 @@ final class Fase10Gabinetto implements Fase
     }
 
     /**
+     * Un governo nuovo porta una squadra nuova. Si salva, con la probabilita'
+     * data, chi era abbastanza forte da restare: la continuita' dell'apparato.
+     *
+     * @param array<string,array{nomi:list<string>,cognomi:list<string>}> $bacini
+     */
+    private function nuovaSquadra(Gabinetto $g, Nazione $n, ContestoTick $c, array $bacini,
+        float $continuita, string $chiave): void
+    {
+        $nuovo = Gabinetti::perNazione($n, $bacini, $c->caso, $c->tick);
+        $i = 0;
+        foreach ($g->poltrone as $ruolo => $p) {
+            $i++;
+            if ($ruolo !== 'capo' && $p->potere > 70.0
+                && $c->caso->prova($chiave, crc32($n->iso3), $c->tick + $i, $continuita)) {
+                $nuovo->poltrone[$ruolo] = $p;
+            }
+        }
+        $g->poltrone = $nuovo->poltrone;
+        $g->fazioni  = $nuovo->fazioni;
+        $g->coesione = $nuovo->coesione;
+        $g->ultimoRimpasto = $c->tick;
+    }
+
+    /**
      * La vita del gabinetto in un tick: chi sale, chi scende, chi se ne va.
      *
      * @param array<string,array{nomi:list<string>,cognomi:list<string>}> $bacini
@@ -273,19 +297,7 @@ final class Fase10Gabinetto implements Fase
         // Se il capo e' caduto, cade con lui buona parte della squadra: si
         // salva chi era abbastanza forte o abbastanza utile da restare.
         if ($caduto) {
-            $nuovo = Gabinetti::perNazione($n, $bacini, $c->caso, $c->tick);
-            $i = 0;
-            foreach ($g->poltrone as $ruolo => $p) {
-                $i++;
-                if ($ruolo !== 'capo' && $p->potere > 70.0
-                    && $c->caso->prova('gab_continuita', crc32($n->iso3), $c->tick + $i, 0.45)) {
-                    $nuovo->poltrone[$ruolo] = $p;   // la continuita' dell'apparato
-                }
-            }
-            $g->poltrone = $nuovo->poltrone;
-            $g->fazioni  = $nuovo->fazioni;
-            $g->coesione = $nuovo->coesione;
-            $g->ultimoRimpasto = $c->tick;
+            $this->nuovaSquadra($g, $n, $c, $bacini, 0.45, 'gab_continuita');
             return 0;
         }
 
@@ -406,8 +418,19 @@ final class Fase10Gabinetto implements Fase
     }
 
     /** Alternanza per via ordinaria: cambia chi governa, non come si governa. */
-    private function ricambio(Nazione $n, ContestoTick $c, string $esito): void
+    private function ricambio(Nazione $n, ContestoTick $c, string $esito, array $bacini): void
     {
+        // Chi perde il governo perde anche il gabinetto. Prima un'elezione
+        // persa cambiava la legittimita' e lasciava al loro posto il Capo
+        // sconfitto e tutti i suoi ministri. Alle urne cambia la maggioranza, e
+        // dell'apparato resta poco; con la sfiducia la maggioranza si rimescola,
+        // e ne resta di piu'.
+        $g = $c->mondo->gabinetti[$n->iso3] ?? null;
+        if ($g !== null) {
+            $this->nuovaSquadra($g, $n, $c, $bacini, $esito === 'alternanza' ? 0.25 : 0.60,
+                'gab_continuita_' . $esito);
+        }
+
         // Anche qui una nuova squadra è gente diversa con fortuna diversa, ma
         // l'alternanza ordinaria è meno traumatica di un colpo di stato: la
         // deriva si riscrive con ampiezza minore.
