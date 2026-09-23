@@ -41,10 +41,10 @@ final class Fase10Gabinetto implements Fase
         }
 
         $tickAnno = (int) $c->calibrazione->numero('tempo.tick_per_anno', 52.0);
-        $sogliaElettorale = $c->calibrazione->numero('elezioni.democrazia_minima', 0.15);
+        $sogliaElettorale = $c->calibrazione->numero('elezioni.democrazia_minima', 0.25);
         $pendenza = $c->calibrazione->numero('elezioni.pendenza', 9.0);
         $centro   = $c->calibrazione->numero('elezioni.centro', 52.0);
-        $rischioCrisi = $c->calibrazione->numero('elezioni.rischio_crisi_anno', 0.9);
+        $rischioCrisi = $c->calibrazione->numero('elezioni.rischio_crisi_anno', 0.8);
 
         $consultazioni = 0;
         $ricambi = 0;
@@ -223,6 +223,10 @@ final class Fase10Gabinetto implements Fase
                 $c->db->esegui(
                     'UPDATE sdb_poltrona SET reclutata_da = ?, reclutata_tick = ?, lealta = lealta * 0.4
                      WHERE id = ?', [(int) $o['da_nazione_id'], $c->tick, (int) $o['a_poltrona']]);
+                // La lealta' vive ANCHE in memoria, e a fine tick salvaPalazzo()
+                // la riscrive da li': cambiarla solo nella base dati la faceva
+                // tornare com'era un attimo dopo.
+                $poltrona->lealta *= 0.4;
                 $c->annota('reclutamento_riuscito', [
                     'paese' => $c->mondo->nazioni[$o['ospite']]->nome ?? $o['ospite'],
                     'ruolo' => Gabinetto::RUOLI[$o['ruolo']] ?? (string) $o['ruolo'],
@@ -237,11 +241,16 @@ final class Fase10Gabinetto implements Fase
                     $r->affinita = max(-127.0, $r->affinita - 25.0);
                     $r->aggiornaUmore();
                 }
-                $c->annota('reclutamento_denunciato', [
+                $denuncia = [
                     'paese'    => $c->mondo->nazioni[$o['ospite']]->nome ?? $o['ospite'],
                     'accusa'   => $c->mondo->nazioni[$o['proponente']]->nome ?? $o['proponente'],
                     'poltrona' => Gabinetto::RUOLI[$o['ruolo']] ?? (string) $o['ruolo'],
-                ]);
+                ];
+                $c->annota('reclutamento_denunciato', $denuncia);
+                // Pubblica per costruzione, come l'elezione: la fase 09 che
+                // l'avrebbe messa in cronaca e' gia' passata.
+                $c->mondo->notizie[] = ['tick' => $c->tick, 'genere' => 'reclutamento_denunciato',
+                    'dati' => $denuncia];
             } else {
                 $c->db->esegui('UPDATE sdb_offerta SET stato = "rifiutata", risposta_tick = ? WHERE id = ?',
                     [$c->tick, (int) $o['id']]);
@@ -307,14 +316,17 @@ final class Fase10Gabinetto implements Fase
             // occupa davvero, e nessuno si e' mai dimesso in quindici anni.
             if ($p->potere < $capo->potere * 0.62 && $p->titolare->ambizione >= 5
                 && $c->caso->prova('gab_dimissioni', crc32($n->iso3 . $ruolo), $c->tick, 0.9 * $perTick)) {
-                $c->annota('dimissioni', [
+                $lettera = [
                     'nazione' => $n->nome,
                     'chi'     => $p->titolare->nome,
                     'ruolo'   => Gabinetto::RUOLI[$ruolo],
-                ]);
+                ];
+                $c->annota('dimissioni', $lettera);
+                // Pubbliche, e la fase 09 e' gia' passata: in cronaca da qui.
+                $c->mondo->notizie[] = ['tick' => $c->tick, 'genere' => 'dimissioni', 'dati' => $lettera];
                 $g->poltrone[$ruolo] = new Poltrona(
                     ruolo: $ruolo,
-                    titolare: Gabinetti::personaggio($n, $bacini, $c->caso, crc32($n->iso3), $c->tick % 97, $c->tick),
+                    titolare: Gabinetti::personaggio($n, $bacini, $c->caso, crc32($n->iso3 . $ruolo), $c->tick % 97, $c->tick),
                     potere: 30.0,
                     lealta: 75.0,
                     insediatoTick: $c->tick,

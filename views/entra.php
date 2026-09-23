@@ -1,3 +1,4 @@
+<?php defined('BASE') || exit; // si include da index.php, non si apre dal browser ?>
 <h1>Entra</h1>
 <form method="post" action="" class="modulo">
   <input type="hidden" name="gettone" value="<?= htmlspecialchars($sessione->gettone()) ?>">

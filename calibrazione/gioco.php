@@ -46,13 +46,14 @@ return [
     // grande e il tempo e' compresso ottantaquattro volte: il compromesso che
     // giustificava i tredici colpi l'anno, in pratica, non esisteva.
     //
-    // Quindi nessuna deviazione: vale lo 0,25 di base.php. Questo profilo
+    // Quindi nessuna deviazione: vale colpo_di_stato.rischio_massimo_anno di
+    // base.php (i valori qui sopra sono quelli di allora, per il confronto). Questo profilo
     // resta piu' mosso dell'altro dove il premio serve davvero — aspettative,
     // soglie d'insurrezione, generosita' della scoperta — e non dove servirebbe
     // solo a raccontare un'epoca che non e' quella del seme.
 
     'intelligence' => [
         // Scoperta più generosa: la paranoia totale non è divertente.
-        'difficolta_livello' => [1 => 8.0, 2 => 6.5, 3 => 4.5, 4 => 8.0],
+        'difficolta_livello' => [1 => 8.0, 2 => 6.5, 3 => 4.5, 4 => 4.0],   // il quarto resta il muro
     ],
 ];

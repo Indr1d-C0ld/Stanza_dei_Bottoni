@@ -35,13 +35,39 @@ final class Sessione
                 'samesite' => 'Lax',
                 'secure'   => !empty($_SERVER['HTTPS']),
             ]);
+            // Un identificativo di sessione che il server non ha emesso non si
+            // accetta: sullo stesso dominio girano altre applicazioni, e senza
+            // la modalita' rigorosa una di loro potrebbe imporne uno.
+            ini_set('session.use_strict_mode', '1');
             session_start();
         }
         $id = (int) ($_SESSION['giocatore'] ?? 0);
         if ($id > 0) {
-            $r = $this->db->esegui('SELECT * FROM sdb_giocatore WHERE id = ? AND attivo = 1', [$id])->fetch();
+            // La sospensione vale anche per chi e' gia' dentro. Prima si
+            // controllava solo all'ingresso, e un giocatore sospeso restava
+            // attivo finche' non usciva da solo.
+            $r = $this->db->esegui(
+                'SELECT * FROM sdb_giocatore
+                 WHERE id = ? AND attivo = 1 AND (sospeso_fino IS NULL OR sospeso_fino <= NOW())',
+                [$id])->fetch();
+            // E la sessione vale finche' vale la parola d'ordine con cui e'
+            // nata: chi reimposta la password perche' teme di averla persa
+            // deve chiudere fuori chiunque sia entrato con quella vecchia.
+            // Prima la reimpostazione rinnovava solo la sessione di chi la
+            // faceva, e le altre restavano aperte.
+            if ($r !== false && !hash_equals(self::impronta((string) $r['hash_password']),
+                    (string) ($_SESSION['impronta'] ?? ''))) {
+                $r = false;
+                unset($_SESSION['giocatore'], $_SESSION['impronta']);
+            }
             $this->giocatore = $r === false ? null : $r;
         }
+    }
+
+    /** Un'impronta della parola d'ordine, da tenere in sessione al suo posto. */
+    private static function impronta(string $hash): string
+    {
+        return hash('sha256', 'sessione|' . $hash);
     }
 
     public function autenticato(): bool
@@ -103,6 +129,12 @@ final class Sessione
         if (mb_strlen($nome) < 3 || mb_strlen($nome) > 48) {
             return [false, 'Il nome in gioco deve stare fra 3 e 48 caratteri.'];
         }
+        // Si entra col nome O con l'indirizzo, e la ricerca e' «email = ? OR
+        // nome = ?»: chi si registrava col nome uguale all'indirizzo di un
+        // altro gli dirottava l'accesso e il recupero della parola d'ordine.
+        if (str_contains($nome, '@')) {
+            return [false, 'Il nome in gioco non può contenere la chiocciola.'];
+        }
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return [false, 'Indirizzo di posta non valido.'];
         }
@@ -127,16 +159,27 @@ final class Sessione
         $gettone = bin2hex(random_bytes(32));
         $ore = max(1, (int) Configurazione::leggi('posta.scadenza_gettone_ore', 48));
 
-        $this->db->esegui(
-            'INSERT INTO sdb_giocatore
-                (nome, email, hash_password, creato, email_verificata, gettone_verifica,
-                 gettone_scade, ip_registrazione)
-             VALUES (?,?,?,NOW(),0,?,DATE_ADD(NOW(), INTERVAL ? HOUR),?)',
-            [$nome, $email, password_hash($password, PASSWORD_DEFAULT), $gettone, $ore,
-             mb_substr((string) ($_SERVER['REMOTE_ADDR'] ?? ''), 0, 45)],
-        );
-        $id = $this->db->ultimoId();
-        $inviti->consuma($invito, $id);
+        $id = 0;
+        try {
+            $id = (int) $this->db->inTransazione(function () use ($nome, $email, $password, $gettone,
+                $ore, $inviti, $invito): int {
+                $this->db->esegui(
+                    'INSERT INTO sdb_giocatore
+                        (nome, email, hash_password, creato, email_verificata, gettone_verifica,
+                         gettone_scade, ip_registrazione)
+                     VALUES (?,?,?,NOW(),0,?,DATE_ADD(NOW(), INTERVAL ? HOUR),?)',
+                    [$nome, $email, password_hash($password, PASSWORD_DEFAULT), $gettone, $ore,
+                     mb_substr((string) ($_SERVER['REMOTE_ADDR'] ?? ''), 0, 45)],
+                );
+                $nuovo = $this->db->ultimoId();
+                if (!$inviti->consuma($invito, $nuovo)) {
+                    throw new \RuntimeException('invito gia\' usato');
+                }
+                return $nuovo;
+            });
+        } catch (\RuntimeException $e) {
+            return [false, 'Quell\'invito è appena stato usato da qualcun altro.'];
+        }
 
         $this->mandaVerifica($id, $nome, $email, $gettone, $ore);
         $this->avvisaArbitri($nome, $email);
@@ -148,7 +191,7 @@ final class Sessione
     }
 
     /** Il messaggio con il collegamento di conferma. */
-    private function mandaVerifica(int $id, string $nome, string $email, string $gettone, int $ore): void
+    private function mandaVerifica(int $id, string $nome, string $email, string $gettone, int $ore, bool $subito = true): void
     {
         $url = rtrim((string) Configurazione::leggi('app.url_pubblico', ''), '/')
             . '/verifica?g=' . $gettone;
@@ -170,9 +213,16 @@ final class Sessione
             Stanza dei Bottoni
             TESTO;
 
-        (new \App\Nucleo\Posta($this->db))->invia(
-            $email, 'Stanza dei Bottoni — conferma il tuo indirizzo',
-            preg_replace('/^ {12}/m', '', $corpo) ?? $corpo, 'verifica', 1);
+        $posta = new \App\Nucleo\Posta($this->db);
+        $testo = preg_replace('/^ {12}/m', '', $corpo) ?? $corpo;
+        // Alla registrazione si spedisce subito: l'esistenza dell'account non
+        // e' un segreto, e chi si e' appena iscritto aspetta la lettera. Al
+        // reinvio si ACCODA: spedire solo quando l'indirizzo esiste rivelava,
+        // nel tempo di risposta, chi e' iscritto; e teneva un processo di
+        // Apache fermo fino a quindici secondi sul server di posta.
+        $subito
+            ? $posta->invia($email, 'Stanza dei Bottoni — conferma il tuo indirizzo', $testo, 'verifica', 1)
+            : $posta->accoda($email, 'Stanza dei Bottoni — conferma il tuo indirizzo', $testo, 'verifica', 1);
     }
 
     /** Gli arbitri devono sapere chi bussa. */
@@ -284,7 +334,10 @@ final class Sessione
             Stanza dei Bottoni
             TESTO;
 
-        (new \App\Nucleo\Posta($this->db))->invia(
+        // In coda, non subito: spedire solo quando l'account esiste rivelava
+        // nel tempo di risposta chi e' iscritto. Parte al prossimo giro di
+        // bin/posta.php, entro cinque minuti, con la precedenza piu' alta.
+        (new \App\Nucleo\Posta($this->db))->accoda(
             (string) $g['email'], 'Stanza dei Bottoni — reimpostare la parola d\'ordine',
             preg_replace('/^ {12}/m', '', $corpo) ?? $corpo, 'reimposta', 1);
 
@@ -344,12 +397,25 @@ final class Sessione
         if ($g === false || (int) $g['email_verificata'] === 1) {
             return [true, 'Se quell\'indirizzo e\' in attesa di conferma, gli abbiamo appena riscritto.'];
         }
-        $gettone = bin2hex(random_bytes(32));
         $ore = max(1, (int) Configurazione::leggi('posta.scadenza_gettone_ore', 48));
+        // Un freno, con la stessa risposta: al massimo una lettera ogni dieci
+        // minuti per indirizzo. Senza, chiunque conoscesse un indirizzo in
+        // attesa poteva farlo riscrivere all'infinito e consumare il tetto
+        // giornaliero di posta — bloccando verifiche, recuperi e avvisi di
+        // tutti per ventiquattr'ore. Il gettone scade a «emissione + $ore»,
+        // quindi e' fresco se scade oltre «adesso + $ore - 10 minuti».
+        $fresco = (bool) $this->db->esegui(
+            'SELECT 1 FROM sdb_giocatore
+             WHERE id = ? AND gettone_scade > DATE_ADD(NOW(), INTERVAL ? MINUTE)',
+            [(int) $g['id'], $ore * 60 - 10])->fetchColumn();
+        if ($fresco) {
+            return [true, 'Se quell\'indirizzo e\' in attesa di conferma, gli abbiamo appena riscritto.'];
+        }
+        $gettone = bin2hex(random_bytes(32));
         $this->db->esegui(
             'UPDATE sdb_giocatore SET gettone_verifica = ?, gettone_scade = DATE_ADD(NOW(), INTERVAL ? HOUR)
              WHERE id = ?', [$gettone, $ore, (int) $g['id']]);
-        $this->mandaVerifica((int) $g['id'], (string) $g['nome'], $email, $gettone, $ore);
+        $this->mandaVerifica((int) $g['id'], (string) $g['nome'], $email, $gettone, $ore, false);
         return [true, 'Se quell\'indirizzo e\' in attesa di conferma, gli abbiamo appena riscritto.'];
     }
 
@@ -401,6 +467,7 @@ final class Sessione
 
         session_regenerate_id(true);
         $_SESSION['giocatore'] = (int) $r['id'];
+        $_SESSION['impronta']  = self::impronta((string) $r['hash_password']);
         $this->giocatore = $r;
         $this->db->esegui('UPDATE sdb_giocatore SET ultimo_accesso = NOW() WHERE id = ?', [(int) $r['id']]);
         return [true, 'Bentornato.'];

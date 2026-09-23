@@ -32,6 +32,13 @@ final class Fase09Stampa implements Fase
         // Una talpa scoperta e' per definizione pubblica: e' il processo che la
         // rende tale. Il sospetto interno no — quello resta dentro le mura.
         'talpa_scoperta', 'reclutamento_denunciato',
+        // Fatti che nessuno riesce a tenere nascosti, e che prima restavano
+        // nel giornale interno del tick senza mai arrivare in cronaca: un
+        // incidente armato, un test atomico (l'ordigno «provato» e' per
+        // definizione rilevato), un disarmo annunciato, un alleato che entra
+        // in guerra o si volta dall'altra parte, sanzioni dichiarate.
+        'incidente', 'bomba_ottenuta', 'bomba_posata',
+        'garanzia_onorata', 'garanzia_tradita', 'restrizioni',
     ];
 
     public function codice(): string { return '09'; }

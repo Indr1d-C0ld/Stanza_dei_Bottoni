@@ -72,9 +72,24 @@ final class Fase00Chiusura implements Fase
             ]);
         }
 
+        // Chi siede davvero, e dove. La dottrina governa «solo le nazioni non
+        // presidiate» (calibrazione, blocco `dottrina`), ma finora una nazione
+        // con un giocatore che QUESTA settimana non aveva dato ordini veniva
+        // governata dalla macchina — invasioni e colpi di Stato compresi. Il
+        // Capo copre ogni dominio; gli altri ministri il proprio. Si usa la
+        // stessa definizione di «presidiata» del resto del motore.
+        $umani = [];
+        if ($c->db !== null) {
+            foreach ($c->db->esegui(
+                'SELECT n.codice, p.ruolo FROM sdb_poltrona p JOIN sdb_nazione n ON n.id = p.nazione_id
+                 WHERE ' . \App\Gioco\Delega::sqlPresidiata('p', $c->tick))->fetchAll() as $r) {
+                $umani[(string) $r['codice']][(string) $r['ruolo']] = true;
+            }
+        }
+
         foreach ($mondo->elenco() as $n) {
-            if (isset($presidiate[$n->iso3])) {
-                continue;   // ha gia' agito per mano di chi la governa
+            if (isset($presidiate[$n->iso3]) || isset($umani[$n->iso3]['capo'])) {
+                continue;   // la governa una persona
             }
             if ($n->azioniInVolo >= $inVoloMax) {
                 continue;
@@ -93,6 +108,12 @@ final class Fase00Chiusura implements Fase
             }
             [$verbo, $bersaglio, $intensita] = $scelta;
             $d = $verbi[$verbo];
+            // Il dominio di quella mossa ha un ministro in carne e ossa: tocca
+            // a lui, non alla macchina.
+            $ruoloDelDominio = \App\Dati\Gabinetto::DOMINIO_DI[(string) ($d['dominio'] ?? '')] ?? null;
+            if ($ruoloDelDominio !== null && isset($umani[$n->iso3][$ruoloDelDominio])) {
+                continue;
+            }
 
             // Ripetere la stessa mossa sullo stesso bersaglio richiede tempo:
             // nessuno emette una condanna solenne ogni settimana.
@@ -154,15 +175,15 @@ final class Fase00Chiusura implements Fase
                 mandante:        $n->iso3,
                 esecutore:       null,
                 bersaglio:       $bersaglio,
-                intensita:       $intensita,
-                copertura:       $copertura,
-                impronta:        min(1.0, max(0.05, (float) $d['impronta'] * (1.0 - $copertura * 0.6) * $perdite)),
+                intensita:       self::centesimi($intensita),
+                copertura:       self::centesimi($copertura),
+                impronta:        self::centesimi(min(1.0, max(0.05, (float) $d['impronta'] * (1.0 - $copertura * 0.6) * $perdite))),
                 creatoTick:      $c->tick,
                 maturazioneTick: $c->tick + max(1, $durata),
-                dannoBase:       (float) $d['danno'],
-                attribuzioneVera: (float) $d['attribuzione'] * (1.0 - $copertura * 0.5),
+                dannoBase:       (float) (int) $d['danno'],
+                attribuzioneVera: self::centesimi((float) $d['attribuzione'] * (1.0 - $copertura * 0.5)),
                 falsaBandiera:   $falsaBandiera,
-                qualitaFalso:    $qualitaFalso,
+                qualitaFalso:    round($qualitaFalso, 3),
             );
 
             $mondo->eventi[] = $evento;
@@ -195,7 +216,8 @@ final class Fase00Chiusura implements Fase
         $mondo = $c->mondo;
         $righe = $c->db->esegui(
             'SELECT o.id, o.verbo, o.intensita, o.richiede_controfirma,
-                    n.codice AS iso, b.codice AS bersaglio, p.giocatore_id AS firmatario_umano
+                    n.codice AS iso, b.codice AS bersaglio,
+                    ' . \App\Gioco\Delega::sqlPresidiata('p', $c->tick) . ' AS firmatario_umano
              FROM sdb_ordine o
              JOIN sdb_nazione n ON n.id = o.nazione_id
              JOIN sdb_nazione b ON b.id = o.bersaglio_id
@@ -206,8 +228,12 @@ final class Fase00Chiusura implements Fase
         $verbi = $c->calibrazione->leggi('verbi', []);
 
         foreach ($righe as $r) {
-            if ($r['firmatario_umano'] !== null) {
-                continue;   // la firma spetta a una persona: aspetta lei
+            // La firma spetta a una persona solo se quella persona c'e'. Prima
+            // bastava che la poltrona avesse un titolare: un controfirmatario
+            // sparito da settimane bloccava ogni ordine fino alla scadenza, che
+            // e' esattamente il problema che docs/20 dice risolto.
+            if ((int) $r['firmatario_umano'] === 1) {
+                continue;   // la firma spetta a una persona presente: aspetta lei
             }
             $n = $mondo->nazioni[$r['iso']] ?? null;
             $b = $mondo->nazioni[$r['bersaglio']] ?? null;
@@ -286,6 +312,18 @@ final class Fase00Chiusura implements Fase
     }
 
     /**
+     * Un evento vive su piu' tick, e fra un tick e l'altro sta nella base dati
+     * in centesimi (sdb_evento). Nasce gia' in centesimi, allora: altrimenti il
+     * tick in cui nasce lo usa con tutte le cifre e i successivi arrotondato,
+     * e il mondo vivo si separa da quello misurato (tests/13). Gli ordini dei
+     * giocatori sono in centesimi per costruzione: e' la dottrina che non lo era.
+     */
+    private static function centesimi(float $x): float
+    {
+        return round($x * 100.0) / 100.0;
+    }
+
+    /**
      * Confeziona un evento a partire da una scelta gia' fatta — che venga da un
      * giocatore o dalla dottrina, il procedimento e' lo stesso.
      *
@@ -313,13 +351,13 @@ final class Fase00Chiusura implements Fase
             mandante:        $n->iso3,
             esecutore:       null,
             bersaglio:       $bersaglio,
-            intensita:       $intensita,
-            copertura:       $copertura,
-            impronta:        min(1.0, max(0.05, (float) $d['impronta'] * (1.0 - $copertura * 0.6) * $perdite)),
+            intensita:       self::centesimi($intensita),
+            copertura:       self::centesimi($copertura),
+            impronta:        self::centesimi(min(1.0, max(0.05, (float) $d['impronta'] * (1.0 - $copertura * 0.6) * $perdite))),
             creatoTick:      $c->tick,
             maturazioneTick: $c->tick + max(1, $durata),
-            dannoBase:       (float) $d['danno'],
-            attribuzioneVera: (float) $d['attribuzione'] * (1.0 - $copertura * 0.5),
+            dannoBase:       (float) (int) $d['danno'],
+            attribuzioneVera: self::centesimi((float) $d['attribuzione'] * (1.0 - $copertura * 0.5)),
         );
     }
 
@@ -350,7 +388,7 @@ final class Fase00Chiusura implements Fase
             // esattamente il momento in cui si manda aiuto e si vendono armi a
             // un amico, e senza quel segno la condizione restava quasi vuota —
             // aiuto_economico e vendita_armi non uscivano mai in quindici anni.
-            $fragile = $b->legittimita < 45.0 || $b->netPeace >= 4 || $b->forzaInsorti > 0.0;
+            $fragile = $b->legittimita < 45.0 || $b->netPeace >= 4 || $b->haInsorti();
             // L'etica non vieta: prezza. Uno Stato scrupoloso ricorre al
             // lavoro sporco di rado e solo quando la posta e' alta; uno
             // spregiudicato lo tratta come uno strumento fra gli altri.
@@ -383,7 +421,7 @@ final class Fase00Chiusura implements Fase
             //   la PROIEZIONE — per invadere bisogna poterci arrivare, cioe'
             //   confinare o avere un vicino del bersaglio che ti apra la porta
             //   (e' la regola logistica di Balance of Power).
-            $invadibile = $b->posturaNucleare < 4;
+            $invadibile = $b->posturaNucleare < (int) $c->calibrazione->numero('nucleare.soglia_armato', 4);
             // Una grande potenza puo' proiettare forza anche nella propria
             // regione senza confinare: e' il caso delle flotte.
             $raggiungibile = $r->confinanti
@@ -406,7 +444,10 @@ final class Fase00Chiusura implements Fase
                 $candidati['restrizioni_commerciali'] = 1.8;
                 if ($n->influenzaTotale > 3.0) {
                     $candidati['embargo'] = 0.8;
-                    $candidati['dimostrazione_forza'] = $n->ambizione >= 5 ? 1.0 : 0.3;
+                    // max: chi prepara un'invasione (sopra, 1,5) non deve
+                    // vedersi ridurre la dimostrazione di forza a 0,3.
+                    $candidati['dimostrazione_forza'] = max($candidati['dimostrazione_forza'] ?? 0.0,
+                        $n->ambizione >= 5 ? 1.0 : 0.3);
                 }
                 // Il colpo mirato: era nel catalogo, aveva il suo effetto nella
                 // fase 02, e nessuna riga della dottrina lo proponeva — restava
@@ -456,8 +497,9 @@ final class Fase00Chiusura implements Fase
             // propone una volta sola, quando c'e' un vicino armato e ostile e i mezzi
             // per provarci. E' l'unica azione coperta del dominio nucleare, e l'unica
             // ragione per cui le immagini dall'alto servono a qualcosa.
-            if ($n->posturaNucleare < 3 && $r->affinita < -45.0
-                && ($r->confinanti || $b->posturaNucleare >= 3)
+            $armato = (int) $c->calibrazione->numero('nucleare.soglia_armato', 4);
+            if ($n->posturaNucleare < $armato && $r->affinita < -45.0
+                && ($r->confinanti || $b->posturaNucleare >= $armato)
                 && $n->pilProCapite > 9000.0) {   // `maturita` era qui accanto:
                 // e' il reddito travestito, e il reddito c'e' gia'.
                 $candidati['programma_nucleare'] = 0.6;

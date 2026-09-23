@@ -46,6 +46,7 @@ final class Fase06Relazioni implements Fase
         /** @var array<string,int> $tavolaObblighi */
         $tavolaObblighi = (array) $cal->leggi('relazioni.obbligo', []);
         $rotturaTrattato = $c->calibrazione->numero('relazioni.rottura_trattato', -35.0);
+        $sogliaArmata = (int) $c->calibrazione->numero('nucleare.soglia_armato', 4);
         /** @var array<string,int> $soglie */
         $soglie = (array) $cal->leggi('relazioni.soglie_obbligo', []);
         $consumoSpinta = $cal->numero('relazioni.consumo_spinta_anno', 0.12) * $perTick;
@@ -123,6 +124,8 @@ final class Fase06Relazioni implements Fase
         // --- 3. le relazioni --------------------------------------------------
         $scosse = 0;
         $perditeIntegrita = 0;
+        $irregolare = static fn(string $iso): bool =>
+            in_array($codiciCaduti[$iso] ?? '', ['rivoluzione', 'colpo_di_stato'], true);
 
         foreach ($mondo->relazioni->tutte() as $chiave => $r) {
             [$isoA, $isoB] = explode('|', $chiave);
@@ -138,7 +141,12 @@ final class Fase06Relazioni implements Fase
             // Un cambio di regime da una parte o dall'altra riscrive il
             // rapporto di colpo — ed è la sola cosa che sposta l'ancora: è il
             // momento in cui la storia entra nel modello.
-            $scossa = isset($codiciCaduti[$isoA]) || isset($codiciCaduti[$isoB]);
+            //
+            // Di REGIME, appunto: un governo che cade per sfiducia in una
+            // democrazia ('cambio_governo') non cambia ideologia ne' alleanze,
+            // e prima spostava l'ancora come una rivoluzione — ogni crisi di
+            // governo a Roma riscriveva mezzo secolo di rapporti dell'Italia.
+            $scossa = $irregolare($isoA) || $irregolare($isoB);
             if ($scossa) {
                 $r->ancora += ($strutturale - $r->ancora) * 0.45;
                 $r->affinita += ($r->ancora - $r->affinita) * 0.45;
@@ -156,9 +164,14 @@ final class Fase06Relazioni implements Fase
             // --- integrità: A aveva garantito B, e B è caduto ---------------
             // Solo le cadute IRREGOLARI mettono alla prova una garanzia: se il
             // tuo cliente perde un'elezione non hai tradito nessuno.
-            $cadutaIrregolare = ($codiciCaduti[$isoB] ?? '') !== ''
-                && ($codiciCaduti[$isoB] === 'rivoluzione' || $codiciCaduti[$isoB] === 'colpo_di_stato');
-            if ($cadutaIrregolare && $r->obbligo >= 32) {
+            //
+            // E solo chi aveva PROMESSO protezione: basi o patto di difesa
+            // (obbligo >= 64). Con la soglia a 32 contava anche il trattato
+            // commerciale, e ogni colpo di Stato colpiva decine di partner che
+            // non avevano garantito niente: nel mondo vivo la mediana
+            // dell'integrita' era scesa a 19 su 128, e l'integrita' non
+            // distingueva piu' chi mantiene la parola da chi no.
+            if ($irregolare($isoB) && $r->obbligo >= 64) {
                 $prima = $a->integrita;
                 // La formula di Crawford: un trattato di difesa nucleare (128)
                 // azzera l'integrità del garante. Le promesse grosse costano.
@@ -224,15 +237,19 @@ final class Fase06Relazioni implements Fase
             // quattordici, contro nove Stati che l'atomica ce l'hanno davvero.
             $garanteIso = explode('|', (string) $chiave)[0];
             $chiGarantisce = $mondo->nazioni[$garanteIso] ?? null;
-            if ($chiGarantisce !== null && $chiGarantisce->posturaNucleare < 4) {
-                $obbligoNaturale = min($obbligoNaturale, 96);
-            }
+            // Il tetto vale anche per la firma e per l'obbligo in corso: un
+            // garante che posa l'arsenale smette SUBITO di offrire l'ombrello,
+            // non con la probabilita' del due per cento con cui si denuncia un
+            // trattato. Prima il pavimento della firma lo scavalcava.
+            $tetto = ($chiGarantisce !== null && $chiGarantisce->posturaNucleare < $sogliaArmata) ? 96 : 255;
+            $obbligoNaturale = min($obbligoNaturale, $tetto);
+            $r->obbligo = min($r->obbligo, $tetto);
 
             if ($obbligoNaturale > $r->obbligo) {
                 $r->obbligo = $obbligoNaturale;
             } elseif ($obbligoNaturale < $r->obbligo
                 && $c->caso->prova('06_trattati', crc32($chiave), $c->tick, 0.02)) {
-                $pavimento = $r->affinita <= $rotturaTrattato ? 0 : $r->obbligoFirmato;
+                $pavimento = $r->affinita <= $rotturaTrattato ? 0 : min($r->obbligoFirmato, $tetto);
                 $r->obbligo = max($obbligoNaturale, $pavimento);
             }
             // E se il rapporto si e' rotto, la firma non vale piu' nemmeno
@@ -290,7 +307,7 @@ final class Fase06Relazioni implements Fase
         $perTick = 1.0 / $cal->numero('tempo.tick_per_anno', 52.0);
         $rateo   = $cal->numero('nucleare.rateo_proliferazione_anno', 0.0022) * $perTick;
         $rateoGiu = $cal->numero('nucleare.rateo_disarmo_anno', 0.0016) * $perTick;
-        $sogliaArmato = (int) $cal->numero('nucleare.soglia_armato', 3);
+        $sogliaArmato = (int) $cal->numero('nucleare.soglia_armato', 4);
 
         $mondo = $c->mondo;
         $mosse = 0;

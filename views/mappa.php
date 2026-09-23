@@ -1,3 +1,4 @@
+<?php defined('BASE') || exit; // si include da index.php, non si apre dal browser ?>
 <?php
 /** @var App\Dati\Planisfero $planisfero */
 /** @var array<string,array{colore:string,valore:string}> $colori */

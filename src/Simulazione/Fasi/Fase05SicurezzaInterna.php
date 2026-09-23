@@ -46,14 +46,15 @@ final class Fase05SicurezzaInterna implements Fase
         $perTick  = 1.0 / $tickAnno;
         $attrito  = $cal->numero('insurrezione.attrito_anno', 0.25) * $perTick;
         $carrozzone = $cal->numero('insurrezione.effetto_carrozzone', 0.20);
-        $kReclutamento = $cal->numero('insurrezione.reclutamento_k', 2.5);
+        $kReclutamento = $cal->numero('insurrezione.reclutamento_k', 0.8e-3);
         $pesoEsclusione     = $cal->numero('insurrezione.peso_esclusione', 3.0);
         $pesoFrammentazione = $cal->numero('insurrezione.peso_frammentazione', 0.5);
-        $sogliaColpo = $cal->numero('colpo_di_stato.soglia_legittimita', 22.0);
-        $rischioMax  = $cal->numero('colpo_di_stato.rischio_massimo_anno', 0.9);
-        $pendenza    = $cal->numero('colpo_di_stato.pendenza', 6.0);
+        $sogliaColpo = $cal->numero('colpo_di_stato.soglia_legittimita', 38.0);
+        $rischioMax  = $cal->numero('colpo_di_stato.rischio_massimo_anno', 0.065);
+        $pendenza    = $cal->numero('colpo_di_stato.pendenza', 7.0);
         $resistenzaEstremi = $cal->numero('colpo_di_stato.resistenza_estremisti', 2.0);
-        $vittoriaInsorti   = $cal->numero('insurrezione.vittoria_insorti_anno', 0.22);
+        $vittoriaInsorti   = $cal->numero('insurrezione.vittoria_insorti_anno', 0.18);
+        $rispostaGoverno   = $cal->numero('insurrezione.risposta_governo', 6.0);
         $spostamentoRegime = $cal->numero('instabilita.spostamento_regime', 12.0);
         $protezioneChiusura = $cal->numero('instabilita.protezione_chiusura', 10.0);
         $pesoQualitaVita = $cal->numero('instabilita.peso_qualita_vita', 2.7);
@@ -98,6 +99,13 @@ final class Fase05SicurezzaInterna implements Fase
             }
         }
 
+        // Chi e' in guerra con un altro Stato, adesso.
+        $belligeranti = [];
+        foreach ($mondo->guerre as $g) {
+            $belligeranti[(string) $g['aggressore']] = true;
+            $belligeranti[(string) $g['difensore']] = true;
+        }
+
         $colpi = 0;
         $rivoluzioni = 0;
         $inConflitto = 0;
@@ -123,7 +131,7 @@ final class Fase05SicurezzaInterna implements Fase
             // repressione costa e non serve.
             $minaccia = $n->clamoreSociale
                 + max(0.0, 45.0 - $n->legittimita)
-                + ($n->forzaInsorti > 0.0 ? 25.0 : 0.0);
+                + ($n->haInsorti() ? 25.0 : 0.0);
             $freno = $n->maturita / 255.0;   // istituzioni: chi ne ha, reprime meno
 
             // Si converge verso un livello, non si deriva: senza un obiettivo
@@ -163,7 +171,9 @@ final class Fase05SicurezzaInterna implements Fase
             // geometrica di uomini ed equipaggiamento; contare gli insorti a
             // testa le rende incommensurabili, e il governo li annienta sempre.
             // Anche il reclutamento va quindi in unità di POTENZA, e scala con
-            // la radice della popolazione come vi scala la potenza del governo.
+            // la popolazione, col moltiplicatore di poverta' di Fearon & Laitin
+            // (vedi insurrezione.reclutamento_k: con la radice i paesi piccoli
+            // risultavano i piu' insorti del mondo).
             // Nella formula di Crawford il reclutamento insurrezionale dipende
             // da popolazione, DEBOLEZZA ISTITUZIONALE e successo accumulato —
             // la popolarita' del governo non vi compare affatto: quella decide
@@ -241,7 +251,19 @@ final class Fase05SicurezzaInterna implements Fase
             // se sono entrambi forti muoiono in molti.
             if ($n->forzaInsorti > 0.5) {
                 $potenzaGoverno = $n->potenzaGoverno();
-                $dannoAgliInsorti = $potenzaGoverno * $attrito;
+                // La controinsurrezione cresce con la minaccia. Con un attrito
+                // fisso un'insurrezione poteva solo spegnersi o crescere senza
+                // freni fino a pareggiare l'esercito: non esisteva la guerriglia
+                // cronica a bassa intensita', che e' la forma piu' comune di
+                // conflitto armato nel mondo vero (UCDP 2024: 61 conflitti
+                // statali, 11 soli arrivati al livello di guerra). Un governo
+                // che vede crescere i ribelli sposta su di loro truppe,
+                // bilancio e polizia: e' la curva di risposta che crea un
+                // equilibrio stabile sotto la guerra civile, e lascia arrivarci
+                // solo chi ha un reclutamento molte volte superiore.
+                $risposta = 1.0 + $rispostaGoverno
+                    * min(1.0, $n->forzaInsorti / max(1.0, $potenzaGoverno));
+                $dannoAgliInsorti = $potenzaGoverno * $attrito * $risposta;
                 $dannoAlGoverno   = $n->forzaInsorti * $attrito;
 
                 $n->forzaInsorti = max(0.0, $n->forzaInsorti - $dannoAgliInsorti);
@@ -255,14 +277,24 @@ final class Fase05SicurezzaInterna implements Fase
             // --- stato del conflitto ---------------------------------------
             $rapporto = $n->rapportoForze();
             $primaEra = $n->netPeace;
-            $n->netPeace = match (true) {
-                $n->forzaInsorti < 1.0             => 2,
+            $interno = match (true) {
+                !$n->haInsorti()                   => 2,
                 $rapporto > $soglie['pace']        => 2,
                 $rapporto > $soglie['terrorismo']  => 3,
                 $rapporto > $soglie['guerriglia']  => 4,
                 $rapporto > $soglie['guerraCivile']=> 5,
                 default                            => 6,
             };
+            // Il livello di conflitto non e' solo interno. Prima questa fase
+            // lo ricalcolava dalle sole insurrezioni e cancellava il resto: un
+            // paese in guerra con un altro Stato risultava «in pace» per tutta
+            // la fase 06 — i suoi controlli su guerra e disarmo lo vedevano
+            // cosi' — finche' la 07 non lo rimetteva a 6; e gli shock di un
+            // incidente o di un attacco mirato sparivano nello stesso tick in
+            // cui erano nati.
+            $esterno = isset($belligeranti[$n->iso3]) ? 6 : 0;
+            $n->netPeace = max($interno, $esterno, $n->scossaEsterna);
+            $n->scossaEsterna = 0;
             if ($n->netPeace >= 4) {
                 $inConflitto++;
             }

@@ -70,13 +70,17 @@ final class Fase03Economia implements Fase
         $kConsumi     = $cal->numero('economia.pressione_consumi_k', 1.0);
         $kInvest      = $cal->numero('economia.pressione_investimenti_k', 0.35);
         $kMilitare    = $cal->numero('economia.pressione_militare_k', 1.0);
-        $spintaInvNeutra = $cal->numero('economia.spinta_investimenti_neutra', 0.93);
+        $spintaInvNeutra = $cal->numero('economia.spinta_investimenti_neutra', 0.71);
         $ampiezzaInv     = $cal->numero('economia.ampiezza_investimenti', 0.16);
-        $spintaMilNeutra = $cal->numero('economia.spinta_militare_neutra', 0.10);
+        $spintaMilNeutra = $cal->numero('economia.spinta_militare_neutra', 0.21);
         $ampiezzaMil     = $cal->numero('economia.ampiezza_militare', 0.09);
         $rientro         = $cal->numero('economia.rientro_strutturale', 0.60);
         $margine         = $cal->numero('economia.margine_strutturale', 0.02);
         $recuperoUomini  = $cal->numero('economia.recupero_uomini_anno', 0.35);
+        $elasticitaUomini = $cal->numero('economia.elasticita_uomini', 0.5);
+        $tettoRelativo    = max(1.0, $cal->numero('economia.tetto_uomini_relativo', 3.0));
+        $tettoPopolazione = $cal->numero('economia.tetto_uomini_popolazione', 0.05);
+        $ammortamento    = $cal->numero('economia.ammortamento_equipaggiamento', 0.25);
         // Quanto le quote possono spostarsi in un anno: le economie non
         // cambiano struttura in una settimana.
         $velocita     = 0.25 * $perTick;
@@ -208,9 +212,21 @@ final class Fase03Economia implements Fase
             $n->consumoProCapite     = $n->pilProCapite * $n->quotaConsumi;
 
             // L'equipaggiamento è uno stock che si accumula e si deprezza.
+            //
+            // Il ritmo di deprezzamento decide dove lo stock si ferma: con
+            // un ammortamento A l'equilibrio e' «spesa annua / A». Era 0,08,
+            // cioe' dodici anni e mezzo di spesa — ma il seme lo avvia a
+            // QUATTRO (Mondo::daSeme), e quindi cresceva per sempre: x1,9 in
+            // cinque anni, x2,9 in dieci, e con lui potenzaGoverno, e con
+            // quella tutta la taratura di insurrezioni e guerre, che scivolava
+            // con l'eta' del mondo. Adesso l'equilibrio e' quello da cui si
+            // parte. E un quarto l'anno non e' un ritmo irragionevole: lo stock
+            // si costruisce con la spesa militare INTERA, e la parte che se ne
+            // va in stipendi, addestramento e manutenzione non resta in
+            // magazzino.
             $n->equipaggiamento = max(
                 0.5,
-                $n->equipaggiamento * (1.0 - 0.08 * $perTick) + $n->pil * $n->quotaMilitare * $perTick,
+                $n->equipaggiamento * (1.0 - $ammortamento * $perTick) + $n->pil * $n->quotaMilitare * $perTick,
             );
 
             // E GLI UOMINI ANCHE. Prima no: l'attrito li toglieva — la fase 05
@@ -228,8 +244,12 @@ final class Fase03Economia implements Fase
             // Il bersaglio sono gli uomini che il paese teneva al principio,
             // riscalati su quanto spende adesso rispetto ad allora: chi alza il
             // bilancio arruola, chi lo taglia congeda.
-            $obiettivoUomini = $n->soldatiIniziali
-                * ($n->quotaMilitare / max(1e-6, $n->quotaMilitareIniziale));
+            $rapporto = $n->quotaMilitare / max(1e-6, $n->quotaMilitareIniziale);
+            $rapporto = max(1.0 / $tettoRelativo, min($tettoRelativo, $rapporto));
+            $obiettivoUomini = min(
+                $n->soldatiIniziali * $rapporto ** $elasticitaUomini,
+                max($n->soldatiIniziali, $n->popolazione * $tettoPopolazione),
+            );
             $n->soldati = max(50.0,
                 $n->soldati + ($obiettivoUomini - $n->soldati) * $recuperoUomini * $perTick);
 

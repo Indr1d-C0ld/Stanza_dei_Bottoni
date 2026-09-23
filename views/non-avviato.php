@@ -1,3 +1,4 @@
+<?php defined('BASE') || exit; // si include da index.php, non si apre dal browser ?>
 <h1>Il mondo non è ancora avviato</h1>
 <p>La base dati esiste ma non contiene alcuno stato. Servono due comandi, in quest'ordine:</p>
 <pre>sudo bash deploy/00-avvio.sh

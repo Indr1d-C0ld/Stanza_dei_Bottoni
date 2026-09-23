@@ -46,7 +46,7 @@ final class Fase08Intelligence implements Fase
         $intel = $mondo->intelligence;
         $cal   = $c->calibrazione;
         /** @var array<int,float> $difficolta */
-        $difficolta = $cal->leggi('intelligence.difficolta_livello', [1 => 1.0, 2 => 0.6, 3 => 0.35, 4 => 0.04]);
+        $difficolta = $cal->leggi('intelligence.difficolta_livello', [1 => 6.0, 2 => 5.0, 3 => 3.5, 4 => 3.0]);
         $decadimento = $cal->numero('intelligence.decadimento_copertura', 0.01);
 
         // Le grandi potenze guardano ovunque: sono osservatori per default.
@@ -109,7 +109,7 @@ final class Fase08Intelligence implements Fase
                     * (float) ($difficolta[$prossimo] ?? 0.05)
                     / (1.0 + 2.0 * $e->copertura));
 
-                if (!$c->caso->prova('08_scoperta', $e->id * 97 + crc32($iso) % 97,
+                if (!$c->caso->prova('08_scoperta', crc32($e->id . '|' . $iso),
                         $c->tick * 4 + $avanzamenti, $probabilita)) {
                     break;
                 }
@@ -152,7 +152,7 @@ final class Fase08Intelligence implements Fase
                     if ($e->falsaBandiera !== null) {
                         $analisi = 0.25 + ($intel->capacita[$iso]['finint'] ?? 0.0) * 0.5
                             + ($intel->capacita[$iso]['humint'] ?? 0.0) * 0.35;
-                        $smaschera = $c->caso->prova('08_smaschera', $e->id * 31 + crc32($iso) % 31,
+                        $smaschera = $c->caso->prova('08_smaschera', crc32($e->id . '|' . $iso),
                             $c->tick, max(0.05, $analisi - $e->qualitaFalso));
                         if (!$smaschera) {
                             $accusato = $e->falsaBandiera;
@@ -165,8 +165,14 @@ final class Fase08Intelligence implements Fase
                             ]);
                         }
                     }
+                    // Lo scandalo scoppia una volta. Se un altro servizio ha
+                    // gia' fatto lo STESSO nome per la stessa operazione, la
+                    // notizia c'e' gia': prima ogni conferma era uno scandalo
+                    // nuovo, con la sua legittimita' persa, e un'operazione
+                    // vista da sei servizi costava sei volte.
+                    $giaDetto = in_array($accusato, $intel->accusa[$e->id] ?? [], true);
                     $intel->accusa[$e->id][$iso] = $accusato;
-                    if ($e->dominio === 'int' || $e->dominio === 'info') {
+                    if (!$giaDetto && ($e->dominio === 'int' || $e->dominio === 'info')) {
                         $c->annota('attribuzione', [
                             'chi'      => $mondo->nazioni[$iso]->nome,
                             'mandante' => $mondo->nazioni[$accusato]->nome,
@@ -183,11 +189,19 @@ final class Fase08Intelligence implements Fase
         $intercettati = $this->intercettaMessaggi($c, $intel, $osservatoriGlobali);
         $talpe = $this->uominiDentro($c, $intel);
 
-        // La copertura non mantenuta decade: una rete di informatori che non si
-        // coltiva smette di esistere, e nessuno se ne accorge finché non serve.
+        // La copertura segue l'interesse: una rete di informatori che non si
+        // coltiva smette di esistere, e nessuno se ne accorge finché non serve;
+        // dove l'interesse cresce — un rapporto che si incrina, un vicino che
+        // pesa di piu' — la rete si allarga con la stessa lentezza.
         foreach ($intel->presenza as $iso => $bersagli) {
+            $a = $mondo->nazioni[$iso] ?? null;
             foreach ($bersagli as $b => $v) {
-                $intel->presenza[$iso][$b] = max(0.02, $v * (1.0 - $decadimento));
+                $nb = $mondo->nazioni[$b] ?? null;
+                $r  = $mondo->relazioni->fra($iso, $b);
+                $obiettivo = ($a !== null && $nb !== null && $r !== null)
+                    ? Intelligence::presenzaColtivata($a, $nb, $r)
+                    : 0.0;
+                $intel->presenza[$iso][$b] = max(0.02, $v + ($obiettivo - $v) * $decadimento);
             }
         }
 
@@ -274,6 +288,12 @@ final class Fase08Intelligence implements Fase
                 'UPDATE sdb_poltrona SET reclutata_da = NULL, reclutata_tick = NULL,
                         sospettata = 0, giocatore_id = NULL, lealta = 70 WHERE id = ?',
                 [(int) $t['id']]);
+            // Anche in memoria: salvaPalazzo() a fine tick riscrive la lealta'
+            // dall'oggetto, e senza questa riga il 70 si perdeva.
+            $inMemoria = $c->mondo->gabinetti[$ospite]->poltrone[(string) $t['ruolo']] ?? null;
+            if ($inMemoria !== null) {
+                $inMemoria->lealta = 70.0;
+            }
             $c->annota('talpa_scoperta', [
                 'paese'    => $nazioneOspite->nome,
                 'ruolo'    => \App\Dati\Gabinetto::RUOLI[$t['ruolo']] ?? (string) $t['ruolo'],
@@ -393,7 +413,7 @@ final class Fase08Intelligence implements Fase
                     continue;
                 }
                 $base = min(0.85, $capacita / $difesa);
-                $seme = (int) $m['id'] * 131 + crc32($iso) % 131;
+                $seme = crc32($m['id'] . '|' . $iso);   // una chiave per coppia: col modulo due osservatori su tre condividevano la sorte
 
                 $livello = null;
                 if (isset($mirati[$iso . '|' . $mittente])) {

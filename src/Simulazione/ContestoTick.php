@@ -17,9 +17,11 @@ use App\Dati\Mondo;
  */
 final class ContestoTick
 {
-    /** @var list<array<string,mixed>> Il giornale narrativo: si accumula nelle
-     *  fasi 02-07 e viene SCRITTO solo dalla fase 09. Così la stampa e'
-     *  l'unico punto che decide cosa diventa pubblico. */
+    /** @var list<array<string,mixed>> Il giornale narrativo: lo scrivono
+     *  tutte le fasi, e la fase 09 decide cosa ne diventa pubblico. Le fasi
+     *  10 e 11 vengono DOPO la stampa: quel che annotano di pubblico per
+     *  costruzione (elezioni, dimissioni, denunce, fine d'epoca) lo mettono
+     *  in cronaca da se', o non ci arriverebbe mai. */
     private array $giornale = [];
 
     public function __construct(

@@ -1,3 +1,4 @@
+<?php defined('BASE') || exit; // si include da index.php, non si apre dal browser ?>
 <?php
 /** @var array<string,mixed> $poltrona */
 /** @var list<array<string,mixed>> $ricevuti $inviati $intercettati */
@@ -212,8 +213,8 @@ per intero, può riscriverlo prima che arrivi.</p>
       <select name="bersaglio" required>
         <option value="">—</option>
         <?php foreach ($paesi as $p): ?>
-          <?php if ((int) $p['id'] !== (int) $poltrona['nazione_id']): ?>
-            <option value="<?= (int) $p['id'] ?>"><?= htmlspecialchars((string) $p['nome']) ?></option>
+          <?php if ((int) $p['nazione_id'] !== (int) $poltrona['nazione_id']): ?>
+            <option value="<?= (int) $p['nazione_id'] ?>"><?= htmlspecialchars((string) $p['nome']) ?></option>
           <?php endif; ?>
         <?php endforeach; ?>
       </select>
@@ -222,8 +223,8 @@ per intero, può riscriverlo prima che arrivi.</p>
       <select name="verso">
         <option value="">chiunque</option>
         <?php foreach ($paesi as $p): ?>
-          <?php if ((int) $p['id'] !== (int) $poltrona['nazione_id']): ?>
-            <option value="<?= (int) $p['id'] ?>"><?= htmlspecialchars((string) $p['nome']) ?></option>
+          <?php if ((int) $p['nazione_id'] !== (int) $poltrona['nazione_id']): ?>
+            <option value="<?= (int) $p['nazione_id'] ?>"><?= htmlspecialchars((string) $p['nome']) ?></option>
           <?php endif; ?>
         <?php endforeach; ?>
       </select>

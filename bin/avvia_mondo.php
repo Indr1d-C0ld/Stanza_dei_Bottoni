@@ -32,52 +32,9 @@ if ($esistente > 0 && !array_key_exists('ricomincia', $opz)) {
 if (array_key_exists('ricomincia', $opz)) {
     echo "Azzero il mondo esistente...\n";
 
-    // L'ORDINE CONTA, e prima non contava: sdb_conoscenza ha una chiave
-    // esterna su sdb_evento, e cancellare gli eventi per primi faceva fallire
-    // l'intero riavvio con una violazione di vincolo. Lo strumento non aveva
-    // mai funzionato su un mondo che avesse prodotto anche un solo evento —
-    // cioe' su qualunque mondo vissuto. Trovato riavviando il mondo vero.
-    //
-    // Si cancella dai FIGLI verso i PADRI. Le dipendenze vere, lette dallo
-    // schema:
-    //
-    //   sdb_evento   ← sdb_conoscenza
-    //   sdb_nazione  ← sdb_capacita_intel, sdb_gabinetto, sdb_nazione_stato,
-    //                  sdb_relazione
-    //
-    // L'anagrafica (sdb_nazione, sdb_regione, sdb_ideologia) NON si tocca: la
-    // ricostruisce preparaAnagrafica() qui sotto, e le poltrone vi si
-    // appoggiano.
-    $ordine = [
-        // prima i figli
-        'sdb_conoscenza',
-        'sdb_rapporto',
-        // poi il resto dello stato del mondo
-        'sdb_evento',
-        'sdb_nazione_stato',
-        'sdb_mondo_stato',
-        'sdb_relazione',
-        'sdb_notizia',
-        'sdb_guerra',
-        'sdb_poltrona',
-        'sdb_fazione',
-        'sdb_gabinetto',
-        'sdb_tick_log',
-        'sdb_capacita_intel',
-        'sdb_presenza_intel',
-        'sdb_assenza_fatto',
-        'sdb_ordine',
-        'sdb_punteggio',
-    ];
-    foreach ($ordine as $t) {
-        try {
-            $db->esegui("DELETE FROM $t");
-        } catch (\Throwable $e) {
-            // Una tabella che non c'e' piu' non e' un motivo per non
-            // ripartire: si dice e si tira avanti.
-            fwrite(STDERR, "  (salto $t: " . $e->getMessage() . ")\n");
-        }
-    }
+    // Cosa si cancella e in che ordine sta in Deposito::azzeraMondo(), che
+    // usa anche la prova di fedelta' della persistenza.
+    $dep->azzeraMondo();
 }
 
 echo "Anagrafica...\n";

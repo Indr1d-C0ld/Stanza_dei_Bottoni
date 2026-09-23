@@ -154,9 +154,79 @@ final class Agende
     }
 
     /**
+     * Che genere di agenda e', perche' si chiudono in tre modi diversi.
+     *
+     *   raggiungi  riesce appena la condizione si avvera; se a fine era non si
+     *              e' avverata, e' fallita
+     *   difendi    fallisce appena la cosa temuta accade; se a fine era non e'
+     *              accaduta, e' RIUSCITA — «arriva alla fine dell'era senza...»
+     *   mantieni   si giudica a fine era: conta dove si e' arrivati, non se ci
+     *              si e' passati — «porta l'affinita' sopra 80, E MANTIENILA»
+     *
+     * Prima non c'era distinzione. Le agende difensive potevano solo fallire o
+     * restare aperte per sempre, perche' nessuno le dichiarava riuscite alla
+     * chiusura d'epoca; e «amicizia» si chiudeva la prima volta che
+     * l'affinita' toccava 80, anche se poi crollava.
+     */
+    private const TIPO = [
+        'influenza'         => 'raggiungi',
+        'benessere'         => 'raggiungi',
+        'riarmo'            => 'raggiungi',
+        'caduta'            => 'raggiungi',
+        'scalata'           => 'raggiungi',
+        'discredito'        => 'raggiungi',
+        'pace'              => 'difendi',
+        'mani_pulite'       => 'difendi',
+        'protezione'        => 'difendi',
+        'contenimento'      => 'difendi',
+        'stabilita_interna' => 'difendi',
+        'amicizia'          => 'mantieni',
+    ];
+
+    /**
+     * Chiude le agende rimaste aperte alla fine di un'epoca. La chiama
+     * Epoca::chiudi() PRIMA di fare i conti.
+     *
+     * @return int quante ne ha chiuse
+     */
+    public function chiudiEpoca(int $tick): int
+    {
+        $aperte = $this->db->esegui(
+            'SELECT a.*, p.nazione_id, p.ruolo, p.potere FROM sdb_agenda a
+             JOIN sdb_poltrona p ON p.id = a.poltrona_id
+             WHERE a.stato = "aperta"')->fetchAll();
+        $chiuse = 0;
+        foreach ($aperte as $a) {
+            $tipo = self::TIPO[(string) $a['codice']] ?? 'raggiungi';
+            $riuscita = match ($tipo) {
+                'difendi'  => true,     // e' arrivata fin qui senza fallire
+                'mantieni' => $this->mantenuta($a),
+                default    => false,    // non raggiunta in tempo
+            };
+            $this->db->esegui('UPDATE sdb_agenda SET stato = ?, chiusa_tick = ? WHERE id = ?',
+                [$riuscita ? 'riuscita' : 'fallita', $tick, (int) $a['id']]);
+            $chiuse++;
+        }
+        return $chiuse;
+    }
+
+    /**
      * @param array<string,mixed> $a l'agenda
      * @param array<string,mixed> $s lo stato della nazione
      * @return bool|null null = ancora aperta
+     *
+     * I CASI SONO I CODICI DEL CATALOGO. Fino all'audit di settembre 2026
+     * cinque di questi casi avevano un altro nome — `nessuno_scandalo`,
+     * `governo_caduto`, `governo_in_piedi`, `influenza_altrui_sotto`,
+     * `prima_poltrona` — mentre la base dati salva il codice del catalogo
+     * (`mani_pulite`, `caduta`, `protezione`, `contenimento`, `scalata`).
+     * Finivano tutti nel `default => null`: cinque agende su dodici non
+     * potevano chiudersi in nessun modo.
+     *
+     * E I CONTATORI SI CONFRONTANO CON L'ASSEGNAZIONE. `cambi_irregolari`,
+     * `cambi_esecutivo` e `scandali_subiti` crescono dall'inizio del mondo:
+     * confrontarli con zero voleva dire che un'agenda assegnata oggi falliva
+     * per un colpo di Stato di tre anni prima.
      */
     private function valuta(string $codice, array $a, array $s, int $tick): ?bool
     {
@@ -165,24 +235,57 @@ final class Agende
             ? $this->db->esegui('SELECT * FROM sdb_nazione_stato WHERE nazione_id = ? ORDER BY tick DESC LIMIT 1',
                 [$bersaglio])->fetch()
             : false;
+        $assegnata = (int) $a['assegnata_tick'];
+        $mio  = (int) $a['nazione_id'];
+        $base = fn (int $nazione, string $campo): int => $this->contatoreAl($nazione, $campo, $assegnata);
 
         return match ($codice) {
-            'influenza' => (float) $s['influenza_totale'] >= (float) $a['soglia'] ? true : null,
-            'benessere' => (int) $s['qualita_vita'] >= (int) $a['soglia'] ? true : null,
-            'riarmo'    => (float) $s['quota_militare'] * 100 >= (float) $a['soglia'] ? true : null,
-            'pace'      => (int) $s['net_peace'] >= 6 ? false : null,
-            'stabilita_interna' => (int) $s['cambi_irregolari'] > 0 ? false : null,
-            'nessuno_scandalo'  => (int) $s['scandali_subiti'] > 0 ? false : null,
-            'prima_poltrona'    => $this->primaPoltrona($a),
-            'governo_caduto'    => $statoBersaglio !== false
-                && (int) $statoBersaglio['cambi_esecutivo'] > 0 ? true : null,
-            'governo_in_piedi'  => $statoBersaglio !== false
-                && (int) $statoBersaglio['cambi_irregolari'] > 0 ? false : null,
-            'influenza_altrui_sotto' => $statoBersaglio !== false
+            // --- da raggiungere --------------------------------------------
+            'influenza'  => (float) $s['influenza_totale'] >= (float) $a['soglia'] ? true : null,
+            'benessere'  => (int) $s['qualita_vita'] >= (int) $a['soglia'] ? true : null,
+            'riarmo'     => (float) $s['quota_militare'] * 100 >= (float) $a['soglia'] ? true : null,
+            'caduta'     => $statoBersaglio !== false
+                && (int) $statoBersaglio['cambi_esecutivo'] > $base((int) $bersaglio, 'cambi_esecutivo') ? true : null,
+            'scalata'    => $this->primaPoltrona($a),
+            'discredito' => $this->attribuzioneOttenuta($mio, $bersaglio) ? true : null,
+
+            // --- da difendere fino a fine era -------------------------------
+            'pace'              => (int) $s['net_peace'] >= 6 ? false : null,
+            'stabilita_interna' => (int) $s['cambi_irregolari'] > $base($mio, 'cambi_irregolari') ? false : null,
+            'mani_pulite'       => (int) $s['scandali_subiti'] > $base($mio, 'scandali_subiti') ? false : null,
+            // «Il governo di X deve arrivare IN PIEDI»: cade in qualunque modo,
+            // anche alle urne, e l'agenda e' persa. Prima guardava solo i cambi
+            // irregolari.
+            'protezione'        => $statoBersaglio !== false
+                && (int) $statoBersaglio['cambi_esecutivo'] > $base((int) $bersaglio, 'cambi_esecutivo') ? false : null,
+            'contenimento'      => $statoBersaglio !== false
                 && (float) $statoBersaglio['influenza_totale'] >= 3.0 ? false : null,
-            'amicizia'  => $this->affinita((int) $a['nazione_id'], $bersaglio) > 80.0 ? true : null,
-            'discredito' => $this->attribuzioneOttenuta((int) $a['nazione_id'], $bersaglio) ? true : null,
-            default     => null,
+
+            // --- da mantenere: si giudica a fine era ------------------------
+            'amicizia'   => null,
+            default      => null,
+        };
+    }
+
+    /** Il valore di un contatore cumulativo della nazione al tick dell'assegnazione. */
+    private function contatoreAl(int $nazione, string $campo, int $tick): int
+    {
+        if (!in_array($campo, ['cambi_esecutivo', 'cambi_irregolari', 'scandali_subiti'], true)) {
+            return 0;
+        }
+        $v = $this->db->esegui(
+            "SELECT $campo FROM sdb_nazione_stato WHERE nazione_id = ? AND tick >= ? ORDER BY tick ASC LIMIT 1",
+            [$nazione, $tick])->fetchColumn();
+        return $v === false ? 0 : (int) $v;
+    }
+
+    /** @param array<string,mixed> $a */
+    private function mantenuta(array $a): bool
+    {
+        return match ((string) $a['codice']) {
+            'amicizia' => $this->affinita((int) $a['nazione_id'],
+                $a['bersaglio_id'] !== null ? (int) $a['bersaglio_id'] : null) > 80.0,
+            default    => false,
         };
     }
 

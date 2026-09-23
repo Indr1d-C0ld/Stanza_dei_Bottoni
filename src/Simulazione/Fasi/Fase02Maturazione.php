@@ -99,12 +99,15 @@ final class Fase02Maturazione implements Fase
             case 'emissario':
                 break;   // conta solo per il contraccolpo, che qui è positivo
             case 'trattato':
-                if ($r !== null) {
-                    $r->obbligo = max($r->obbligo, 64);
-                }
-                $rb = $c->mondo->relazioni->fra($e->bersaglio, $e->mandante);
-                if ($rb !== null) {
-                    $rb->obbligo = max($rb->obbligo, 64);
+                // Un trattato e' un obbligo MESSO PER ISCRITTO: va anche nella
+                // firma, o la fase 06 lo riporta all'obbligo che l'affinita'
+                // giustifica con la probabilita' del due per cento a tick, e
+                // un patto appena concluso evaporava in un anno.
+                foreach ([$r, $c->mondo->relazioni->fra($e->bersaglio, $e->mandante)] as $lato) {
+                    if ($lato !== null) {
+                        $lato->obbligo        = max($lato->obbligo, 64);
+                        $lato->obbligoFirmato = max($lato->obbligoFirmato, 64);
+                    }
                 }
                 break;
             case 'condanna_pubblica':
@@ -141,7 +144,8 @@ final class Fase02Maturazione implements Fase
                 $mondo->strozzature[] = [
                     'fornitore' => $a->iso3,
                     'cliente'   => $b->iso3,
-                    'quota'     => $pieno ? 1.0 : min(1.0, 0.30 * $i),
+                    // in centesimi, come la salva sdb_strozzatura (tests/13)
+                    'quota'     => $pieno ? 1.0 : round(min(1.0, 0.30 * $i), 2),
                     'dal'       => $c->tick,
                     'fine'      => $c->tick + (int) round($durata * (0.6 + 0.4 * $i)),
                 ];
@@ -161,7 +165,7 @@ final class Fase02Maturazione implements Fase
                 // costruisce in casa propria. Chi arriva in fondo sale di un
                 // gradino, e superata la soglia entra nel club.
                 $a->posturaNucleare = min(7, $a->posturaNucleare + 1);
-                $sogliaClub = (int) $cal->numero('nucleare.soglia_armato', 3);
+                $sogliaClub = (int) $cal->numero('nucleare.soglia_armato', 4);
                 if ($a->posturaNucleare === $sogliaClub) {
                     $c->annota('bomba_ottenuta', ['paese' => $a->nome]);
                 }
@@ -227,6 +231,7 @@ final class Fase02Maturazione implements Fase
                 $b->equipaggiamento *= 1.0 - 0.07 * $i;
                 $b->legittimita = max(0.0, $b->legittimita - 4.0 * $i);
                 $b->netPeace = max($b->netPeace, 4);
+                $b->scossaEsterna = max($b->scossaEsterna, 4);
                 $b->ansiaMilitare = min(100.0, $b->ansiaMilitare + 30.0 * $i);
                 $c->annota('attacco', ['da' => $a->nome, 'contro' => $b->nome]);
                 break;

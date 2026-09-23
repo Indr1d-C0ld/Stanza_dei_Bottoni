@@ -1,3 +1,4 @@
+<?php defined('BASE') || exit; // si include da index.php, non si apre dal browser ?>
 <?php
 /** @var list<array<string,mixed>> $cronaca */
 
@@ -30,6 +31,21 @@ $racconta = static function (string $genere, array $d) use ($tensioni): array {
                               '; la rivelazione è di ' . $n('chi') . '.'],
         'operazione_sventata' => ['Operazione sventata', $n('bersaglio') . ' blocca un\'operazione di ' .
                               str_replace('_', ' ', $n('verbo')) . ' attribuita a ' . $n('mandante') . '.'],
+        'talpa_scoperta'  => ['Talpa scoperta', $n('chi') . ', ' . mb_strtolower($n('ruolo')) . ' di ' .
+                              $n('paese') . ', lavorava per ' . $n('per_conto') . '.'],
+        'reclutamento_denunciato' => ['Reclutamento denunciato', $n('paese') . ' accusa ' . $n('accusa') .
+                              ' di aver tentato di comprare il suo ' . mb_strtolower($n('poltrona')) . '.'],
+        'epoca_chiusa'    => ['Fine di un\'epoca', $n('racconto')],
+        'incidente'       => ['Incidente', 'La crisi fra ' . $n('fra') . ' e ' . $n('e') .
+                              ' sfugge di mano: ' . $n('gradino') . '.'],
+        'bomba_ottenuta'  => ['Test nucleare', $n('paese') . ' ha provato il suo primo ordigno.'],
+        'bomba_posata'    => ['Disarmo nucleare', $n('paese') . ' rinuncia all\'arsenale.'],
+        'garanzia_onorata'=> ['Garanzia onorata', $n('garante') . ' si schiera con ' . $n('protetto') . '.'],
+        'garanzia_tradita'=> ['Garanzia tradita', $n('garante') . ' non muove un dito per ' . $n('protetto') .
+                              ', che aveva promesso di difendere.'],
+        'restrizioni'     => ['Sanzioni', $n('da') . ' restringe i commerci con ' . $n('contro') . '.'],
+        'dimissioni'      => ['Dimissioni', $n('chi') . ' lascia il ministero (' . mb_strtolower($n('ruolo')) .
+                              ') in ' . $n('nazione') . '.'],
         default           => [ucfirst(str_replace('_', ' ', $genere)),
                               implode(' · ', array_map('strval', $d))],
     };

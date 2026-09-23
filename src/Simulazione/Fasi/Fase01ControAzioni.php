@@ -125,7 +125,7 @@ final class Fase01ControAzioni implements Fase
                     $rb = $mondo->relazioni->fra($e->bersaglio, $e->mandante);
                     if ($rb !== null) {
                         $colpo = 20.0 * $e->intensita;
-                        $rb->ancora = ($rb->ancora ?? $rb->affinita) - $colpo;
+                        $rb->ancora = max(-127.0, ($rb->ancora ?? $rb->affinita) - $colpo);
                         $rb->affinita = max(-127.0, $rb->affinita - $colpo);
                         $rb->aggiornaUmore();
                     }
@@ -266,9 +266,25 @@ final class Fase01ControAzioni implements Fase
              JOIN sdb_nazione b ON b.id = k.sfidato_id
              WHERE k.stato = "aperta"')->fetchAll();
 
+        $rischio = (array) $cal->leggi('crisi.incidente_base', []);
+        $moltiplicatore = 1.0 + $cal->numero('crisi.peso_nastiness', 1.5) * $c->mondo->nastiness / 50.0;
+
         $mosse = 0;
         foreach ($aperte as $k) {
             $parte = (string) $k['tocca_a'];
+
+            // Chi e' salito dal sito dopo il tick scorso corre adesso il
+            // rischio che l'apparato corre prima di ogni passo (0030).
+            $salitoDaUmano = (int) ($k['da_provare'] ?? 0);
+            if ($salitoDaUmano >= 6) {
+                $c->db->esegui('UPDATE sdb_crisi SET da_provare = 0 WHERE id = ?', [(int) $k['id']]);
+                $p = (float) ($rischio[$salitoDaUmano] ?? 0.01) * $moltiplicatore;
+                if ($c->caso->prova('01_incidente_umano', (int) $k['id'], $c->tick, $p)) {
+                    $this->incidente($c, $servizio, $k, $salitoDaUmano);
+                    $mosse++;
+                    continue;
+                }
+            }
             $scaduta = (int) $k['scade_tick'] < $c->tick;
 
             // Una decisione non presa e' comunque una decisione: chi non
@@ -307,8 +323,9 @@ final class Fase01ControAzioni implements Fase
             // E sopra ci sta la paura dell'altra cosa, che non si divide per
             // niente e si sveglia solo in cima. Fra due potenze nucleari il
             // nono gradino e' quasi irraggiungibile, e deve esserlo.
+            $armato = (int) $cal->numero('nucleare.soglia_armato', 4);
             if ($io !== null && $lui !== null
-                && $io->posturaNucleare >= 3 && $lui->posturaNucleare >= 3) {
+                && $io->posturaNucleare >= $armato && $lui->posturaNucleare >= $armato) {
                 $paura += ($livello / 9.0) ** $cal->numero('crisi.esponente_nucleare', 4.0)
                     * $cal->numero('crisi.peso_nucleare', 45.0)
                     * min(7, min($io->posturaNucleare, $lui->posturaNucleare)) / 7.0;
@@ -329,19 +346,12 @@ final class Fase01ControAzioni implements Fase
 
             // Da meta' scala in su, ogni passo puo' sfuggire di mano.
             if ($azione === 'scala' && $livello >= 5) {
-                $rischio = (array) $cal->leggi('crisi.incidente_base', []);
-                $p = (float) ($rischio[$livello + 1] ?? 0.01)
-                    * (1.0 + $c->mondo->nastiness / 50.0)
-                    * $cal->numero('crisi.peso_nastiness', 1.5);
+                // Il peso moltiplica la CATTIVERIA, non il rischio intero: in
+                // un mondo quieto (nastiness zero) vale la tavola di base.
+                // Prima la tavola era gonfiata di mezzo in ogni caso.
+                $p = (float) ($rischio[$livello + 1] ?? 0.01) * $moltiplicatore;
                 if ($c->caso->prova('01_incidente', (int) $k['id'], $c->tick, $p)) {
-                    $c->db->esegui('UPDATE sdb_crisi SET stato = "incidente", ultimo_tick = ? WHERE id = ?',
-                        [$c->tick, (int) $k['id']]);
-                    $c->annota('incidente', [
-                        'fra' => $c->mondo->nazioni[$k['iso_sfidante']]->nome ?? $k['iso_sfidante'],
-                        'e'   => $c->mondo->nazioni[$k['iso_sfidato']]->nome ?? $k['iso_sfidato'],
-                        'gradino' => $servizio->gradino($livello),
-                    ]);
-                    $this->ricadute($c, (string) $k['iso_sfidante'], (string) $k['iso_sfidato']);
+                    $this->incidente($c, $servizio, $k, $livello);
                     $mosse++;
                     continue;
                 }
@@ -365,6 +375,23 @@ final class Fase01ControAzioni implements Fase
         return $mosse;
     }
 
+    /**
+     * La crisi sfugge di mano.
+     *
+     * @param array<string,mixed> $k
+     */
+    private function incidente(ContestoTick $c, \App\Gioco\Crisi $servizio, array $k, int $livello): void
+    {
+        $c->db->esegui('UPDATE sdb_crisi SET stato = "incidente", ultimo_tick = ? WHERE id = ?',
+            [$c->tick, (int) $k['id']]);
+        $c->annota('incidente', [
+            'fra' => $c->mondo->nazioni[$k['iso_sfidante']]->nome ?? $k['iso_sfidante'],
+            'e'   => $c->mondo->nazioni[$k['iso_sfidato']]->nome ?? $k['iso_sfidato'],
+            'gradino' => $servizio->gradino($livello),
+        ]);
+        $this->ricadute($c, (string) $k['iso_sfidante'], (string) $k['iso_sfidato']);
+    }
+
     /** Un incidente non uccide nessuno per conto suo: avvelena tutto il resto. */
     private function ricadute(ContestoTick $c, string $a, string $b): void
     {
@@ -379,6 +406,7 @@ final class Fase01ControAzioni implements Fase
             if ($n !== null) {
                 $n->ansiaMilitare = min(100.0, $n->ansiaMilitare + 35.0);
                 $n->netPeace = max($n->netPeace, 4);
+                $n->scossaEsterna = max($n->scossaEsterna, 4);
             }
         }
         $c->mondo->nastiness += 12.0;

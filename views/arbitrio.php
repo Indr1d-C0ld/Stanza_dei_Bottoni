@@ -1,3 +1,4 @@
+<?php defined('BASE') || exit; // si include da index.php, non si apre dal browser ?>
 <?php
 /** @var array<string,mixed> $conteggi $salute */
 /** @var list<array<string,mixed>> $arrivi $atti $conversazioni */
@@ -81,20 +82,20 @@ $adesso = time();
         </td>
         <td>
           <?php
-            $atti = [];
+            $azioniGiocatore = [];
             if ((int) $g['email_verificata'] === 0) {
-                $atti['verifica'] = 'dai per buono';
-                $atti['rimanda']  = 'riscrivigli';
+                $azioniGiocatore['verifica'] = 'dai per buono';
+                $azioniGiocatore['rimanda']  = 'riscrivigli';
             }
-            $atti[$sospeso ? 'riattiva' : 'sospendi'] = $sospeso ? 'togli sospensione' : 'sospendi 7 giorni';
-            $atti[(int) $g['attivo'] === 1 ? 'chiudi' : 'riapri'] = (int) $g['attivo'] === 1 ? 'chiudi' : 'riapri';
+            $azioniGiocatore[$sospeso ? 'riattiva' : 'sospendi'] = $sospeso ? 'togli sospensione' : 'sospendi 7 giorni';
+            $azioniGiocatore[(int) $g['attivo'] === 1 ? 'chiudi' : 'riapri'] = (int) $g['attivo'] === 1 ? 'chiudi' : 'riapri';
             if ($g['poltrona_id'] !== null) {
-                $atti['libera'] = 'libera la poltrona';
+                $azioniGiocatore['libera'] = 'libera la poltrona';
             }
-            $atti[(string) $g['ruolo'] === 'arbitro' ? 'degrada' : 'promuovi'] =
+            $azioniGiocatore[(string) $g['ruolo'] === 'arbitro' ? 'degrada' : 'promuovi'] =
                 (string) $g['ruolo'] === 'arbitro' ? 'togli il banco' : 'fallo arbitro';
           ?>
-          <?php foreach ($atti as $a => $et): ?>
+          <?php foreach ($azioniGiocatore as $a => $et): ?>
             <form method="post" action="" class="in-linea">
               <input type="hidden" name="gettone" value="<?= htmlspecialchars($sessione->gettone()) ?>">
               <input type="hidden" name="azione" value="arbitrio_account">

@@ -154,7 +154,11 @@ final class Fase07Conflitto implements Fase
      */
     private function metteAllaProvaLeGaranzie(array $g, $mondo, ContestoTick $c): int
     {
-        $messe = 0;
+        $aggressore = $mondo->nazioni[$g['aggressore']];
+        $protetto   = $mondo->nazioni[$g['difensore']];
+
+        // Prima si vede chi e' chiamato e chi ci tiene davvero.
+        $chiamati = [];
         foreach ($mondo->elenco() as $garante) {
             if ($garante->iso3 === $g['difensore'] || $garante->iso3 === $g['aggressore']) {
                 continue;
@@ -163,19 +167,35 @@ final class Fase07Conflitto implements Fase
             if ($r === null || $r->obbligo < 64) {
                 continue;
             }
-            $messe++;
+            $chiamati[] = [$garante, $r, $r->affinita > 75.0 || $r->obbligo >= 96];
+        }
 
-            // Si onora un impegno se si è forti abbastanza e se ci si tiene
-            // abbastanza. Altrimenti si guarda altrove, e si paga.
-            $capace = $garante->potenzaGoverno() > $mondo->nazioni[$g['aggressore']]->potenzaGoverno() * 0.4;
-            $volenteroso = $r->affinita > 75.0 || $r->obbligo >= 96;
+        // La capacita' e' della COALIZIONE, non del singolo. La prima stesura
+        // misurava ogni garante da solo contro l'aggressore, e in un'alleanza
+        // vera quasi nessuno la passa: trenta garanti su trentuno tradivano,
+        // compreso il Belgio che dentro la NATO non e' chiamato a fermare
+        // nessuno da solo. Si somma la forza di chi e' disposto a entrare,
+        // e il difensore ci mette la sua.
+        $forzaCoalizione = $protetto->potenzaGoverno();
+        foreach ($chiamati as [$garante, , $volenteroso]) {
+            if ($volenteroso) {
+                $forzaCoalizione += $garante->potenzaGoverno();
+            }
+        }
+        $capace = $forzaCoalizione > $aggressore->potenzaGoverno() * 0.4;
 
+        foreach ($chiamati as [$garante, $r, $volenteroso]) {
             if ($capace && $volenteroso) {
-                $mondo->nazioni[$g['difensore']]->equipaggiamento += $garante->pil * 0.02;
+                // Gli aiuti escono dagli arsenali di chi li manda: prima
+                // comparivano dal nulla. Nessuno si spoglia per un alleato,
+                // quindi al piu' un quarto di quel che ha.
+                $aiuto = min($garante->pil * 0.02, $garante->equipaggiamento * 0.25);
+                $garante->equipaggiamento -= $aiuto;
+                $protetto->equipaggiamento += $aiuto;
                 $garante->netPeace = max($garante->netPeace, 4);
                 $c->annota('garanzia_onorata', [
                     'garante'  => $garante->nome,
-                    'protetto' => $mondo->nazioni[$g['difensore']]->nome,
+                    'protetto' => $protetto->nome,
                 ]);
             } else {
                 // La formula di Crawford: l'integrità cala in proporzione
@@ -183,13 +203,13 @@ final class Fase07Conflitto implements Fase
                 $garante->integrita *= 1.0 - ($r->obbligo / 128.0);
                 $c->annota('garanzia_tradita', [
                     'garante'  => $garante->nome,
-                    'protetto' => $mondo->nazioni[$g['difensore']]->nome,
+                    'protetto' => $protetto->nome,
                     'obbligo'  => $r->obbligo,
                     'residuo'  => (int) round($garante->integrita),
                 ]);
             }
         }
-        return $messe;
+        return count($chiamati);
     }
 
     /** @param array<string,mixed> $g */

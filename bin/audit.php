@@ -39,7 +39,7 @@ echo "Stanza dei Bottoni — audit del motore\n";
 printf("  %d anni · semi %s\n\n", $anni, implode(',', $semi));
 
 // ---------------------------------------------------------------- calibrazione
-echo "1/6  Le chiavi di calibrazione\n";
+echo "1/7  Le chiavi di calibrazione\n";
 $sorgente = '';
 foreach (array_merge(glob($radice . '/src/**/*.php') ?: [], glob($radice . '/src/**/**/*.php') ?: [],
                      glob($radice . '/src/*.php') ?: [], glob($radice . '/bin/*.php') ?: []) as $f) {
@@ -75,8 +75,38 @@ foreach ($morte as $k) {
     $segnala('chiavi di calibrazione mai lette', $k);
 }
 
+// E il valore di riserva scritto accanto a ogni lettura: se la chiave manca
+// nei file e' quello che vale, e l'audit di settembre 2026 ne ha trovati nove
+// lontani dalla calibrazione — il rischio di colpo di Stato 0,9 contro 0,10,
+// il reclutamento insurrezionale 2,5 contro 0,001. Qui si confrontano con
+// base.php, solo quelli scritti come numero letterale.
+$base = (array) (require $radice . '/calibrazione/base.php');
+$valoreDi = static function (array $a, string $k): mixed {
+    foreach (explode('.', $k) as $pezzo) {
+        if (!is_array($a) || !array_key_exists($pezzo, $a)) {
+            return null;
+        }
+        $a = $a[$pezzo];
+    }
+    return $a;
+};
+$riserve = 0;
+if (preg_match_all("/numero\('([a-z_.]+)',\s*(-?[0-9][0-9.eE+-]*)\)/", $sorgente, $mm, PREG_SET_ORDER)) {
+    foreach ($mm as [, $k, $v]) {
+        $b = $valoreDi($base, $k);
+        if (!is_int($b) && !is_float($b)) {
+            continue;
+        }
+        $riserve++;
+        if (abs((float) $v - (float) $b) > 1e-9 * max(1.0, abs((float) $b))) {
+            $segnala('valori di riserva diversi dalla calibrazione', "$k: $v nel codice, $b in base.php");
+        }
+    }
+}
+printf("  %d valori di riserva confrontati con base.php\n", $riserve);
+
 // ---------------------------------------------------------------- i semi
-echo "2/6  I file del seme\n";
+echo "2/7  I file del seme\n";
 $attesi = ['nazioni.csv', 'democrazia.php', 'disuguaglianza.php', 'esclusione.php',
            'alleanze.php', 'politica-nota.php', 'commercio-noto.php',
            'nomi-italiani.php', 'nomi-personaggi.php', 'confini.csv'];
@@ -98,7 +128,7 @@ printf("  %d file attesi, %d presenti e leggibili\n", count($attesi),
                    - count($problemi['file del seme vuoti o illeggibili'] ?? []));
 
 // ---------------------------------------------------------------- la corsa
-echo "3/6  Il mondo gira: fasi, verbi, annotazioni\n";
+echo "3/7  Il mondo gira: fasi, verbi, annotazioni\n";
 $catalogo = array_keys((array) (require $radice . '/calibrazione/verbi.php'));
 $verbiVisti = [];
 $generiVisti = [];
@@ -177,11 +207,17 @@ foreach ((array) $campiFermi as $campo) {
                           'alfabetizzazione', 'maturita'], true)) {
         continue;
     }
+    // Ne' quelli transitori: la scossa esterna nasce e muore dentro lo stesso
+    // tick (la scrivono le fasi 01 e 02, la consuma la 05), e fra un tick e
+    // l'altro vale zero per costruzione.
+    if ($campo === 'scossaEsterna') {
+        continue;
+    }
     $segnala('campi che non si muovono mai', $campo);
 }
 
 // ---------------------------------------------------------------- le viste
-echo "4/6  Le viste e le rotte\n";
+echo "4/7  Le viste e le rotte\n";
 $rotte = [];
 if (preg_match_all("/case '([a-z0-9\-]+)':/", (string) file_get_contents($radice . '/index.php'), $mm)) {
     $rotte = array_unique($mm[1]);
@@ -197,12 +233,12 @@ foreach ($viste as $v) {
 }
 
 // ---------------------------------------------------------------- migrazioni
-echo "5/6  Le migrazioni\n";
+echo "5/7  Le migrazioni\n";
 $file = glob($radice . '/db/migrations/*.sql') ?: [];
 printf("  %d migrazioni sul disco\n", count($file));
 
 // ---------------------------------------------------------------- documenti
-echo "6/6  I rimandi dei documenti\n";
+echo "6/7  I rimandi dei documenti\n";
 $rotti = 0;
 foreach (array_merge(glob($radice . '/docs/*.md') ?: [], [$radice . '/README.md']) as $d) {
     if (preg_match_all('/`(docs\/[a-z0-9\-]+\.md|bin\/[a-z_]+\.php|db\/seed\/[a-z\-]+\.(php|csv))`/',
@@ -216,6 +252,43 @@ foreach (array_merge(glob($radice . '/docs/*.md') ?: [], [$radice . '/README.md'
     }
 }
 printf("  rimandi verificati, %d rotti\n", $rotti);
+
+// ---------------------------------------------------------------- colonne
+echo "7/7  Le colonne dello schema\n";
+// Una colonna che nessun sorgente nomina e' uno stato che nessuno scrive ne'
+// legge: l'audit di settembre 2026 ne ha trovate una ventina, residui di un
+// modello economico (debito, riserve, bilancio) e di ansie mai implementate.
+// Si cerca il nome come parola intera in src/, bin/, views/ e index.php; le
+// chiavi tecniche (id, creato, aggiornato) non contano.
+try {
+    $dbAudit = new \App\Nucleo\Basedati((array) \App\Nucleo\Configurazione::leggi('db', []));
+    $colonne = $dbAudit->esegui(
+        'SELECT table_name AS t, column_name AS c FROM information_schema.columns
+          WHERE table_schema = DATABASE() AND table_name LIKE "sdb\\_%"
+          ORDER BY table_name, ordinal_position')->fetchAll();
+    $sorgente = '';
+    foreach (array_merge(glob($radice . '/src/*/*.php') ?: [], glob($radice . '/src/*/*/*.php') ?: [],
+                         glob($radice . '/bin/*.php') ?: [], glob($radice . '/views/*.php') ?: [],
+                         glob($radice . '/views/*/*.php') ?: [], [$radice . '/index.php']) as $f) {
+        if (!str_ends_with($f, '/bin/audit.php')) {
+            $sorgente .= (string) file_get_contents($f);
+        }
+    }
+    $mute = 0;
+    foreach ($colonne as $col) {
+        $c = (string) $col['c'];
+        if (in_array($c, ['id', 'creato', 'aggiornato'], true)) {
+            continue;
+        }
+        if (!preg_match('/\b' . preg_quote($c, '/') . '\b/', $sorgente)) {
+            $segnala('colonne che nessuno nomina', $col['t'] . '.' . $c);
+            $mute++;
+        }
+    }
+    printf("  %d colonne · %d mai nominate dal codice\n", count($colonne), $mute);
+} catch (\Throwable $e) {
+    printf("  (saltato: nessuna base dati — %s)\n", $e->getMessage());
+}
 
 // ---------------------------------------------------------------- esito
 echo "\n";

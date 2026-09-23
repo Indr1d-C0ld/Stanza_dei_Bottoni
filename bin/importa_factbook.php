@@ -166,7 +166,17 @@ function mediaPercentuale(?array $blocco): ?float
 /** "0.7% (2024 est.)" -> 0.007 ; "2% of GDP" -> 0.02. */
 function percentuale(?string $testo): ?float
 {
-    if ($testo === null || !preg_match('/(-?[\d.]+)\s*%/', $testo, $m)) {
+    if ($testo === null) {
+        return null;
+    }
+    // Un intervallo, «20-30%», vale il suo punto medio. Prima il trattino si
+    // leggeva come un segno meno: la Corea del Nord, per cui il Factbook stima
+    // «20-30% of GDP», entrava nel seme con una spesa militare di -30%, e il
+    // reclutamento che la inseguiva le dava quindici milioni di soldati.
+    if (preg_match('/(\d[\d.]*)\s*[-\x{2013}]\s*(\d[\d.]*)\s*%/u', $testo, $m)) {
+        return ((float) $m[1] + (float) $m[2]) / 200.0;
+    }
+    if (!preg_match('/(-?[\d.]+)\s*%/', $testo, $m)) {
         return null;
     }
     return ((float) $m[1]) / 100.0;

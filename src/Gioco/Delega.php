@@ -45,8 +45,14 @@ final class Delega
     public static function sqlPresidiata(string $alias, int $tick): string
     {
         $soglia = $tick - self::TICK_PRIMA_DELL_APPARATO;
-        return "($alias.giocatore_id IS NOT NULL AND ($alias.delega_a IS NOT NULL"
-            . " OR $alias.ultimo_tick_attivo >= $soglia))";
+        // «Dopo sei tick senza che NESSUNO tocchi la poltrona» (docs/20):
+        // nessuno vuol dire ne' il titolare ne' il delegato, e ciascuno dei
+        // due la «tocca» quando agisce (index.php chiama tocca() sulla
+        // poltrona in uso). Prima c'era anche «OR delega_a IS NOT NULL», e una
+        // poltrona delegata restava presidiata PER SEMPRE: se titolare e
+        // delegato sparivano, l'apparato non subentrava mai e le crisi
+        // scadevano cedute.
+        return "($alias.giocatore_id IS NOT NULL AND $alias.ultimo_tick_attivo >= $soglia)";
     }
 
     /** Segna che qualcuno ha davvero toccato questa poltrona, adesso. */

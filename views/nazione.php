@@ -1,3 +1,4 @@
+<?php defined('BASE') || exit; // si include da index.php, non si apre dal browser ?>
 <?php
 /** @var array<string,mixed> $n */
 /** @var list<array<string,mixed>> $relazioni $gabinetto $fazioni */

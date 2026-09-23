@@ -32,7 +32,10 @@ final class Scrivania
     /** I verbi che, pur nel loro dominio, restano alla sola firma di chi li propone. */
     private const SENZA_CONTROFIRMA = ['emissario', 'condanna_pubblica', 'mediazione', 'investimenti'];
 
-    public function __construct(private readonly Basedati $db) {}
+    public function __construct(
+        private readonly Basedati $db,
+        private readonly int $ordiniPerTick = 2,
+    ) {}
 
     // ------------------------------------------------------------- poltrone
 
@@ -58,6 +61,10 @@ final class Scrivania
                 [$scelta, $giocatore, $giocatore])->fetch();
             if ($r !== false) {
                 $r['per_delega'] = (int) $r['giocatore_id'] !== $giocatore;
+                // Chi siede davvero: e' il titolare, o il delegato. Serve per
+                // lasciare la SUA firma negli atti, che e' quel che docs/20
+                // promette («la firma resta sua accanto alla tua»).
+                $r['agente_id'] = $giocatore;
                 return $r;
             }
         }
@@ -69,6 +76,7 @@ final class Scrivania
             return null;
         }
         $r['per_delega'] = false;
+        $r['agente_id'] = $giocatore;
         return $r;
     }
 
@@ -101,8 +109,17 @@ final class Scrivania
         if ($r['giocatore_id'] !== null) {
             return [false, 'Qualcuno è arrivato prima.'];
         }
-        $this->db->esegui('UPDATE sdb_poltrona SET giocatore_id = ? WHERE id = ? AND giocatore_id IS NULL',
-            [$giocatore, $poltrona]);
+        $preso = $this->db->esegui(
+            'UPDATE sdb_poltrona SET giocatore_id = ?, delega_a = NULL, delega_dal_tick = NULL,
+                    reclutata_da = NULL, reclutata_tick = NULL, sospettata = 0, ultimo_tick_attivo = ?
+             WHERE id = ? AND giocatore_id IS NULL',
+            [$giocatore, $tick, $poltrona])->rowCount();
+        // Due richieste che arrivano insieme sulla stessa poltrona: prima la
+        // seconda si sentiva dire «hai preso posto» e riceveva perfino le
+        // agende, anche se l'UPDATE non aveva toccato niente.
+        if ($preso === 0) {
+            return [false, 'Qualcuno è arrivato prima.'];
+        }
 
         // Due agende private, che nessuno conosce tranne chi le riceve.
         $catalogo = @include dirname(__DIR__, 2) . '/calibrazione/agende.php';
@@ -117,9 +134,36 @@ final class Scrivania
             Gabinetto::RUOLI[$r['ruolo']] ?? $r['ruolo'], $r['nazione'], $r['nome'])];
     }
 
+    /**
+     * Chi lascia la poltrona chiude i propri conti.
+     *
+     * Prima si azzerava soltanto il titolare, e tre cose restavano appese.
+     * La DELEGA: il delegato continuava a sedere su una poltrona senza
+     * titolare, e il giocatore successivo se lo trovava in casa senza averlo
+     * mai scelto. La TALPA: `reclutata_da` restava sulla poltrona, e il nuovo
+     * arrivato era una spia straniera senza aver mai accettato niente. Gli
+     * ORDINI in volo, che partivano al giro successivo a nome di chi non c'era
+     * piu'. Le agende aperte si chiudono come fallite: sono sue, e se ne va.
+     */
     public function lascia(int $giocatore): void
     {
-        $this->db->esegui('UPDATE sdb_poltrona SET giocatore_id = NULL WHERE giocatore_id = ?', [$giocatore]);
+        $mie = $this->db->esegui('SELECT id FROM sdb_poltrona WHERE giocatore_id = ?', [$giocatore])->fetchAll();
+        foreach ($mie as $p) {
+            $id = (int) $p['id'];
+            $this->db->esegui(
+                'UPDATE sdb_ordine SET stato = "annullato"
+                 WHERE poltrona_id = ? AND giocatore_id = ? AND stato IN ("in_attesa","firmato")',
+                [$id, $giocatore]);
+            $this->db->esegui(
+                'UPDATE sdb_agenda SET stato = "fallita", chiusa_tick = COALESCE(
+                    (SELECT MAX(tick) FROM sdb_mondo_stato), 0)
+                 WHERE poltrona_id = ? AND giocatore_id = ? AND stato = "aperta"',
+                [$id, $giocatore]);
+        }
+        $this->db->esegui(
+            'UPDATE sdb_poltrona SET giocatore_id = NULL, delega_a = NULL, delega_dal_tick = NULL,
+                    reclutata_da = NULL, reclutata_tick = NULL, sospettata = 0
+             WHERE giocatore_id = ?', [$giocatore]);
     }
 
     /** @return list<array<string,mixed>> i colleghi di gabinetto */
@@ -177,17 +221,32 @@ final class Scrivania
     public function ordina(array $poltrona, array $definizione, string $verbo,
         int $bersaglio, int $intensita, int $copertura, int $tick): array
     {
+        $giaDati = (int) $this->db->esegui(
+            'SELECT COUNT(*) FROM sdb_ordine
+             WHERE poltrona_id = ? AND creato_tick = ? AND stato <> "annullato"',
+            [(int) $poltrona['id'], $tick])->fetchColumn();
+        if ($giaDati >= $this->ordiniPerTick) {
+            return [false, sprintf('Hai già impartito %d ordini in questo giro: il prossimo al giro d\'orologio.',
+                $giaDati)];
+        }
+
         $controfirma = $this->controfirmaRichiesta((string) $poltrona['ruolo'], $verbo, $definizione);
         $this->db->esegui(
             'INSERT INTO sdb_ordine
                 (giocatore_id, poltrona_id, nazione_id, verbo, bersaglio_id, intensita, copertura,
-                 richiede_controfirma, stato, creato_tick, scade_tick, creato)
-             VALUES (?,?,?,?,?,?,?,?,?,?,?,NOW())',
+                 richiede_controfirma, stato, creato_tick, scade_tick, creato, firmato_per_delega_da)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,NOW(),?)',
             [
                 (int) $poltrona['giocatore_id'], (int) $poltrona['id'], (int) $poltrona['nazione_id'],
-                $verbo, $bersaglio, max(1, min(100, $intensita)), max(0, min(100, $copertura)),
+                // Il modulo arriva fino a 90: il servizio si allinea, invece di
+                // lasciar passare un 100 che il gioco non prevede.
+                $verbo, $bersaglio, max(1, min(100, $intensita)), max(0, min(90, $copertura)),
                 $controfirma, $controfirma === null ? 'firmato' : 'in_attesa',
                 $tick, $tick + 4,
+                // La colonna esiste dalla migrazione 0013 e nessuno la
+                // scriveva: il delegato agiva e negli atti restava solo il
+                // titolare, contro quel che docs/20 promette.
+                ($poltrona['per_delega'] ?? false) ? (int) ($poltrona['agente_id'] ?? 0) : null,
             ],
         );
         return [true, $controfirma === null
@@ -214,16 +273,26 @@ final class Scrivania
         return $this->db->esegui(
             'SELECT o.*, b.nome AS bersaglio FROM sdb_ordine o
              JOIN sdb_nazione b ON b.id = o.bersaglio_id
-             WHERE o.giocatore_id = ? AND o.stato IN ("in_attesa","firmato")
-             ORDER BY o.id DESC LIMIT 12', [$giocatore])->fetchAll();
+             WHERE (o.giocatore_id = ? OR o.firmato_per_delega_da = ?)
+               AND o.stato IN ("in_attesa","firmato")
+             ORDER BY o.id DESC LIMIT 12', [$giocatore, $giocatore])->fetchAll();
     }
 
+    /**
+     * Controfirma. «Nessuno puo' controfirmarsi da solo» (docs/15) — e con la
+     * delega si poteva: chi aveva in mano il Capo per delega e sedeva lui
+     * stesso all'Informazione proponeva da una poltrona e firmava dall'altra.
+     * Adesso chi firma davvero non puo' essere chi ha proposto, in nessuna
+     * delle due vesti; e negli atti resta chi ha firmato davvero.
+     */
     public function firma(int $ordine, array $poltrona): bool
     {
+        $chi = (int) ($poltrona['agente_id'] ?? $poltrona['giocatore_id']);
         $s = $this->db->esegui(
             'UPDATE sdb_ordine SET stato = "firmato", controfirmato_da = ?, controfirmato_il = NOW()
-             WHERE id = ? AND stato = "in_attesa" AND nazione_id = ? AND richiede_controfirma = ?',
-            [(int) $poltrona['giocatore_id'], $ordine, (int) $poltrona['nazione_id'], (string) $poltrona['ruolo']],
+             WHERE id = ? AND stato = "in_attesa" AND nazione_id = ? AND richiede_controfirma = ?
+               AND giocatore_id <> ? AND COALESCE(firmato_per_delega_da, 0) <> ?',
+            [$chi, $ordine, (int) $poltrona['nazione_id'], (string) $poltrona['ruolo'], $chi, $chi],
         );
         return $s->rowCount() > 0;
     }
@@ -232,8 +301,9 @@ final class Scrivania
     {
         $s = $this->db->esegui(
             'UPDATE sdb_ordine SET stato = "annullato"
-             WHERE id = ? AND giocatore_id = ? AND stato IN ("in_attesa","firmato")',
-            [$ordine, $giocatore]);
+             WHERE id = ? AND (giocatore_id = ? OR firmato_per_delega_da = ?)
+               AND stato IN ("in_attesa","firmato")',
+            [$ordine, $giocatore, $giocatore]);
         return $s->rowCount() > 0;
     }
 }

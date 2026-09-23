@@ -23,6 +23,19 @@ use App\Simulazione\EsecutoreTick;
 $opzioni = getopt('', ['tick::', 'a-vuoto', 'profilo::', 'silenzioso']);
 
 $aVuoto     = array_key_exists('a-vuoto', $opzioni);
+
+// UN TICK ALLA VOLTA. Senza lucchetto, un tick lanciato a mano che si
+// sovrapponeva a quello del cron — ed e' successo, durante le osservazioni del
+// mondo nuovo — poteva applicare due volte una fase prima che il vincolo
+// d'unicita' del registro se ne accorgesse. Il lucchetto e' un file: lo
+// rilascia il sistema anche se il processo muore.
+if (!array_key_exists('a-vuoto', $opzioni)) {
+    $lucchetto = fopen($radice . '/storage/tick.lock', 'c');
+    if ($lucchetto === false || !flock($lucchetto, LOCK_EX | LOCK_NB)) {
+        fwrite(STDERR, date('Y-m-d H:i:s') . "  un altro tick e' in corso: questo non parte.\n");
+        exit(0);
+    }
+}
 $silenzioso = array_key_exists('silenzioso', $opzioni);
 $profilo    = (string) ($opzioni['profilo'] ?? Configurazione::leggi('mondo.profilo', 'gioco'));
 $tick       = isset($opzioni['tick']) ? (int) $opzioni['tick'] : 1;
@@ -81,27 +94,46 @@ if (is_file($seme)) {
 $avvio = hrtime(true);
 $esecutore = new EsecutoreTick($calibrazione, $db, $aVuoto, $mondo);
 
-try {
-    $resoconto = $esecutore->esegui(
-        $tick,
-        $semeRadice,
-        $silenzioso ? null : static function (array $riga): void {
-            printf(
-                "  %s  %s %7.2f ms  %s\n",
-                $riga['codice'],
-                mb_str_pad((string) $riga['nome'], 34),
-                $riga['durata'],
-                $riga['saltata'] ? '· ' . $riga['esito'] : $riga['esito'],
-            );
-        },
+$stampa = $silenzioso ? null : static function (array $riga): void {
+    printf(
+        "  %s  %s %7.2f ms  %s\n",
+        $riga['codice'],
+        mb_str_pad((string) $riga['nome'], 34),
+        $riga['durata'],
+        $riga['saltata'] ? '· ' . $riga['esito'] : $riga['esito'],
     );
-} catch (\Throwable $e) {
-    fwrite(STDERR, "\nTick interrotto: " . $e->getMessage() . "\n");
-    exit(2);
-}
+};
 
-if ($deposito !== null && $mondo !== null) {
-    $deposito->salva($mondo, $tick, Calendario::tickIso($tick));
+// UN TICK E' TUTTO O NIENTE.
+//
+// Prima ogni fase confermava da se' le proprie scritture e il proprio rigo nel
+// registro, e il mondo in memoria si salvava una volta sola, alla fine. Se una
+// fase cadeva a meta', il nuovo tentativo ripartiva dal tick precedente e
+// SALTAVA le fasi gia' registrate: i loro effetti in memoria — economia,
+// societa', insurrezioni, gli eventi nati nella fase 00 — erano persi per
+// sempre, e gli ordini gia' marcati «eseguito» dei giocatori non diventavano
+// mai eventi. Adesso le dodici fasi, il salvataggio e il registro stanno in una
+// transazione sola: se qualcosa cade si annulla tutto, e il giro successivo
+// rifa' il tick da capo. Le transazioni che le fasi aprono al loro interno si
+// uniscono a questa (Basedati::inTransazione).
+try {
+    if ($db !== null && !$aVuoto) {
+        $resoconto = $db->inTransazione(
+            static function () use ($esecutore, $tick, $semeRadice, $stampa, $deposito, $mondo): array {
+                $r = $esecutore->esegui($tick, $semeRadice, $stampa);
+                if ($deposito !== null && $mondo !== null) {
+                    $deposito->salva($mondo, $tick, Calendario::tickIso($tick));
+                }
+                return $r;
+            });
+    } else {
+        $resoconto = $esecutore->esegui($tick, $semeRadice, $stampa);
+    }
+} catch (\Throwable $e) {
+    fwrite(STDERR, sprintf("%s  tick %d interrotto e annullato per intero: %s (%s:%d)\n",
+        date('Y-m-d H:i:s'), $tick, $e->getMessage(),
+        str_replace($radice . '/', '', $e->getFile()), $e->getLine()));
+    exit(2);
 }
 
 $eseguite = count(array_filter($resoconto, static fn(array $r): bool => !$r['saltata']));

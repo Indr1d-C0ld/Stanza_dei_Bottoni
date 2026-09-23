@@ -283,7 +283,10 @@ switch ($pezzi[0] ?? '') {
                                 ? $reclutamento->nostriUomini((int) $poltrona['nazione_id']) : null,
             'rubrica'        => in_array($poltrona['ruolo'], Reclutamento::RUOLI_AMMESSI, true)
                                 ? $canale->rubrica((int) $poltrona['id']) : null,
-            'mentreNonCEri'  => $delega->mentreNonCEri((int) $poltrona['id']),
+            // Il resoconto «mentre non c'eri» e' del titolare: se lo apre il
+            // delegato, si segnava come letto e il titolare non lo vedeva mai.
+            'mentreNonCEri'  => ($poltrona['per_delega'] ?? false)
+                                ? [] : $delega->mentreNonCEri((int) $poltrona['id']),
             'poltroneAffidate' => $delega->affidateA($sessione->id()),
             'altriGiocatori' => $delega->altriGiocatori($sessione->id()),
             'silenzio'       => $delega->silenzio($poltrona, $tick),
@@ -471,11 +474,7 @@ function azione(array $post, Servizi $s, ?array $poltrona, int $tick): array
             }
             return [$esitoAccesso, null];
 
-        case 'guida':
-        mostra('guida', $comune + ['titolo' => 'Come si gioca']);
-        break;
-
-    case 'dimenticata':
+        case 'dimenticata':
             return [$sessione->dimenticata((string) ($post['chi'] ?? '')), null];
 
         case 'reimposta':
@@ -561,8 +560,15 @@ function azione(array $post, Servizi $s, ?array $poltrona, int $tick): array
             if ($poltrona === null) {
                 return [[false, 'Non occupi alcuna poltrona.'], '/poltrone'];
             }
-            return [$crisi->rispondi((int) ($post['crisi'] ?? 0), (string) ($post['parte'] ?? ''),
-                (string) ($post['mossa'] ?? ''), $tick), '/scrivania'];
+            // La parte non si chiede al modulo: si ricava dalla nazione della
+            // poltrona. Prima arrivava come campo nascosto, e chiunque poteva
+            // muovere una crisi fra due altri paesi fino alla guerra.
+            $idCrisi = (int) ($post['crisi'] ?? 0);
+            $parte = $crisi->parteDi($idCrisi, (int) $poltrona['nazione_id']);
+            if ($parte === null) {
+                return [[false, 'Non è una crisi che vi riguardi.'], '/scrivania'];
+            }
+            return [$crisi->rispondi($idCrisi, $parte, (string) ($post['mossa'] ?? ''), $tick), '/scrivania'];
 
         case 'avvisi':
             return [$sessione->avvisi((string) ($post['acceso'] ?? '1') === '1'), '/scrivania'];

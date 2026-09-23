@@ -89,15 +89,20 @@ final class Inviti
     }
 
     /** Un codice si consuma quando qualcuno lo usa, e resta scritto chi. */
-    public function consuma(string $codice, int $giocatore): void
+    /**
+     * Consuma l'invito, e dice se ci e' riuscito. Prima non lo diceva: due
+     * iscrizioni simultanee con lo stesso codice passavano entrambe, perche'
+     * la seconda non toccava nessuna riga e nessuno se ne accorgeva.
+     */
+    public function consuma(string $codice, int $giocatore): bool
     {
         if ($this->modo() !== 'invito') {
-            return;
+            return true;
         }
-        $this->db->esegui(
+        return $this->db->esegui(
             'UPDATE sdb_invito SET usato_da = ?, usato_il = NOW()
              WHERE codice = ? AND usato_da IS NULL',
-            [$giocatore, strtoupper(trim($codice))]);
+            [$giocatore, strtoupper(trim($codice))])->rowCount() === 1;
     }
 
     /** @return array{0:bool,1:string} */

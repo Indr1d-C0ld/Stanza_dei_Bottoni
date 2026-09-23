@@ -142,13 +142,27 @@ final class Intelligence
             if ($a === null || $b === null) {
                 continue;
             }
-            $interesse = 0.10
-                + 0.45 * (abs($r->affinita) / 127.0)
-                + ($r->confinanti ? 0.25 : 0.0)
-                + 0.30 * min(1.0, $b->valorePrestigio / 400.0);
-            $i->presenza[$da][$verso] = min(1.0, $interesse * (0.4 + 0.9 * min(1.0, $a->influenzaTotale / 10.0)));
+            $i->presenza[$da][$verso] = self::presenzaColtivata($a, $b, $r);
         }
 
         return $i;
+    }
+
+    /**
+     * La presenza che un servizio mantiene in un paese quando la coltiva:
+     * l'interesse (rapporto intenso, confine, peso del bersaglio) per i mezzi
+     * di chi osserva. Serve al seme e, a ogni tick, alla fase 08, che vi
+     * riconduce la presenza reale — prima la faceva solo decadere, e senza
+     * niente che la ricostituisse l'intelligence mondiale si spegneva in
+     * pochi anni verso il pavimento del 2%.
+     */
+    public static function presenzaColtivata(Nazione $a, Nazione $b, Relazione $r): float
+    {
+        $interesse = 0.10
+            + 0.45 * (abs($r->affinita) / 127.0)
+            + ($r->confinanti ? 0.25 : 0.0)
+            + 0.30 * min(1.0, $b->valorePrestigio / 400.0);
+
+        return min(1.0, $interesse * (0.4 + 0.9 * min(1.0, $a->influenzaTotale / 10.0)));
     }
 }

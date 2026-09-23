@@ -83,6 +83,19 @@ final class Posta
             return ['ok' => false, 'errore' => 'tetto giornaliero raggiunto'];
         }
 
+        // Si PRENDE il messaggio prima di spedirlo: un aggiornamento solo, che
+        // riesce a uno solo. Senza, un giro di bin/posta.php che si
+        // sovrapponeva al precedente (o all'invio immediato dal sito) leggeva
+        // la stessa riga ancora da spedire, e la stessa mail partiva due volte.
+        // La presa scade da sola fra dieci minuti, se il processo muore.
+        $preso = $this->db->esegui(
+            'UPDATE sdb_posta SET prossimo_il = DATE_ADD(NOW(), INTERVAL 10 MINUTE)
+              WHERE id = ? AND inviato_il IS NULL AND rinunciato_il IS NULL AND prossimo_il <= NOW()',
+            [$id])->rowCount();
+        if ($preso !== 1) {
+            return ['ok' => false, 'errore' => 'già in lavorazione'];
+        }
+
         $r = self::$finzione !== null
             ? (self::$finzione)((string) $m['destinatario'], (string) $m['oggetto'], (string) $m['corpo'])
             : Postino::manda((string) $m['destinatario'], (string) $m['oggetto'], (string) $m['corpo']);

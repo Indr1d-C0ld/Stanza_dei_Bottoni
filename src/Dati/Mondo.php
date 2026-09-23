@@ -113,8 +113,18 @@ final class Mondo
                 disuguaglianza:       $gini[$d['iso3']] ?? 0.352,
                 esclusioneEtnica:     (float) ($epr[$d['iso3']]['esclusa'] ?? 0.0),
                 gruppiEsclusi:        (int) ($epr[$d['iso3']]['gruppi'] ?? 0),
-                pilProCapite:        (float) $d['pil_pro_capite'],
-                consumoProCapite:    (float) $d['pil_pro_capite'] * $quotaCons,
+                // Il reddito pro capite e' PIL/popolazione fin dall'inizio: e'
+                // la definizione che la fase 03 usa a ogni tick. Prima partiva
+                // dalla cifra del Factbook, che non coincide col rapporto dei
+                // due campi (da 0,34 volte a Cuba a 2,71 nello Yemen: le voci
+                // hanno anni diversi). Al primo tick la fase 03 ricalcolava, il
+                // consumo «saltava», e la fase 04 leggeva il salto come
+                // variazione di UNA settimana moltiplicata per 52: la
+                // legittimita' di Cuba passava da 51,7 a zero, quella dello
+                // Yemen da 18 a 100, e 107 paesi su 189 si muovevano di piu' di
+                // cinque punti. Ogni mondo nuovo nasceva con uno shock.
+                pilProCapite:        $pil * 1_000_000.0 / max(1.0, $popolazione),
+                consumoProCapite:    $pil * 1_000_000.0 / max(1.0, $popolazione) * $quotaCons,
                 quotaConsumi:        $quotaCons,
                 quotaInvestimenti:   $quotaInv,
                 quotaMilitare:       $quotaMil,
@@ -164,6 +174,26 @@ final class Mondo
 
         $mondo->relazioni = new Relazioni();
         $mondo->relazioni->caricaConfini(dirname($percorsoCsv) . '/confini.csv');
+        // --- l'ultimo cambio di governo sta nel passato ------------------
+        //
+        // Era a zero per tutti, cioe' «il governo si e' appena insediato»,
+        // in 189 paesi insieme. E la tregua che segue un cambio (0,8-2,6 anni
+        // contro i colpi di Stato, due anni contro la vittoria degli insorti)
+        // bloccava il mondo intero all'avvio: due cambi di governo nei primi
+        // 26 tick, contro i 15-24 di ogni semestre successivo. Si colloca fra
+        // uno e cinque anni prima della divergenza, diverso per ogni paese e
+        // uguale in ogni corsa.
+        foreach ($mondo->nazioni as $n) {
+            $n->annoUltimoCambio = -(52 + (int) (crc32('ultimo_cambio|' . $n->iso3) % 208));
+            // Lo stesso vale per la deriva politica: a zero per tutti, ogni
+            // paese riposerebbe esattamente a 50 finche' il primo cambio di
+            // governo non la riscrive. Si estrae dalla sua distribuzione a
+            // regime (uniforme, deviazione tipica 2 punti come
+            // societa.ampiezza_deriva), diversa per paese e uguale in ogni corsa.
+            $u = (crc32('deriva|' . $n->iso3) % 100000) / 100000.0;
+            $n->derivaPolitica = (2.0 * $u - 1.0) * sqrt(3.0) * 2.0;
+        }
+
         // --- le insurrezioni in corso al momento della divergenza -------
         //
         // Le insurrezioni nascevano da ZERO per tutti, e siccome il

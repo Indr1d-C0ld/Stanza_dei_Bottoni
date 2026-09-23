@@ -54,7 +54,12 @@ final class Avvisi
         $scritti = 0;
 
         foreach ($giocatori as $g) {
-            if ($tick - (int) $g['ultimo_avviso_tick'] < $ogni) {
+            // Zero vuol dire «mai avvisato», non «avvisato al tick zero»: prima
+            // la pausa valeva anche per chi non aveva ricevuto niente, e in un
+            // mondo appena riavviato nessuno riceveva avvisi per i primi dodici
+            // tick — un giorno vero — nemmeno per una crisi in scadenza.
+            $ultimo = (int) $g['ultimo_avviso_tick'];
+            if ($ultimo > 0 && $tick - $ultimo < $ogni) {
                 continue;
             }
             $cose = $this->sospesi($g, $tick);

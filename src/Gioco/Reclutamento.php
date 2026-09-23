@@ -116,7 +116,12 @@ final class Reclutamento
                 // Denunciare costa al proponente in rapporti, e paga in
                 // reputazione a chi denuncia.
                 $this->db->esegui(
-                    'UPDATE sdb_relazione SET affinita = GREATEST(-127, affinita - 25)
+                    // Anche l'ancora, come fa la fase 10 per la stessa
+                    // denuncia: se no la memoria del rapporto se ne scorda.
+                    // L'ancora prima, perche' legge l'affinita' vecchia.
+                    'UPDATE sdb_relazione
+                        SET ancora   = GREATEST(-127, COALESCE(ancora, affinita) - 25),
+                            affinita = GREATEST(-127, affinita - 25)
                      WHERE da_nazione_id = ? AND a_nazione_id = ?',
                     [(int) $poltrona['nazione_id'], (int) $o['da_nazione_id']]);
                 $this->db->esegui(

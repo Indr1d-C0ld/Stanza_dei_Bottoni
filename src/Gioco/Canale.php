@@ -61,10 +61,13 @@ final class Canale
         }
 
         // La linea diretta non pesa sul contingente dei canali riservati: è
-        // infrastruttura costruita apposta, ed è tutto il suo senso.
-        if ($sicurezza === 3) {
+        // infrastruttura costruita apposta, ed è tutto il suo senso. Il
+        // contingente copre il cifrato E il corriere: prima valeva solo per il
+        // cifrato — il corriere, piu' sicuro ancora, era illimitato — e
+        // contava contro il cifrato anche i messaggi sulla linea diretta.
+        if ($sicurezza === 3 || $sicurezza === 4) {
             $usati = (int) $this->db->esegui(
-                'SELECT COUNT(*) FROM sdb_messaggio WHERE da_poltrona = ? AND sicurezza >= 3 AND tick_invio = ?',
+                'SELECT COUNT(*) FROM sdb_messaggio WHERE da_poltrona = ? AND sicurezza IN (3,4) AND tick_invio = ?',
                 [(int) $poltrona['id'], $tick])->fetchColumn();
             if ($usati >= self::TETTO_RISERVATI) {
                 return [false, 'Hai esaurito i canali riservati di questo giro: ne restano di ordinari.'];

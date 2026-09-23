@@ -180,6 +180,14 @@ final class Nazione
         public int   $mandatoTick = 0,
         public int   $scandaliSubiti = 0,
         public int   $annoUltimoCambio = 0,
+        /**
+         * Uno shock esterno di QUESTO tick (un incidente in crisi, un attacco
+         * mirato), sulla scala di netPeace. E' volutamente transitorio: lo
+         * scrivono le fasi 01 e 02, lo consuma la fase 05 prendendone il
+         * massimo con la componente interna, e lo rimette a zero. Non si salva,
+         * perche' finito il tick non esiste piu'.
+         */
+        public int   $scossaEsterna = 0,
         public int   $vittorieInsorti = 0,
     ) {}
 
@@ -296,6 +304,18 @@ final class Nazione
              / ((((($b[0] * $r + $b[1]) * $r + $b[2]) * $r + $b[3]) * $r + $b[4]) * $r + 1.0);
     }
 
+    /**
+     * C'e' un'insurrezione, o solo il suo residuo? La forza degli insorti
+     * decade per moltiplicazione e non arriva mai a zero esatto: con «> 0»
+     * un millesimo di uomo bastava a rendere un paese fragile per la
+     * dottrina e minacciato per la sua polizia, mentre la fase 05 — che
+     * decide la pace — lo contava in pace. Una soglia sola per tutti.
+     */
+    public function haInsorti(): bool
+    {
+        return $this->forzaInsorti >= 1.0;
+    }
+
     public function aperturaIstituzionale(): float
     {
         // La base e' il dato V-Dem, che e' una misura vera e aggiornata.
@@ -305,7 +325,7 @@ final class Nazione
         // 0..100: normalizzarla a cento la faceva contare zero, ed e' l'errore
         // che ha fatto risultare il mondo senza nemmeno un'autocrazia.
         $strettaInfo    = max(0.0, ($this->controlloInfo - 50.0) / 50.0);
-        $strettaPolizia = max(0.0, ($this->statoPolizia - 2.0) / 6.0);
+        $strettaPolizia = max(0.0, ($this->statoPolizia - 2.0) / 3.0);   // 5 = morsa piena
         $chiusura = 0.35 * $strettaInfo + 0.25 * min(1.0, $strettaPolizia);
 
         return max(0.0, min(1.0, $this->democrazia - $chiusura));

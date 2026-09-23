@@ -61,6 +61,27 @@ const AGGIORNAMENTI = [
     ['SWE', ['NATO'], 'Svezia nella NATO, 07/03/2024'],
 ];
 
+/**
+ * Gli scioglimenti: i legami che il dataset porta ancora e che non esistono
+ * piu'. Si tolgono in entrambe le direzioni, a ogni gradino.
+ *
+ * Il caso che li ha fatti nascere: COW al 2012 tiene la rete della CSI del
+ * 1991 come patto di difesa, e il seme rendeva la Russia GARANTE della
+ * difesa dell'Ucraina — e con lei Bielorussia, Kazakistan e altri sette. Al
+ * primo tick di una guerra russo-ucraina dieci «garanti» tradivano l'impegno.
+ *
+ * @var array<int, array{0:string, 1:list<string>, 2:string}>
+ *      [chi esce, da chi si separa, perche' e quando]
+ */
+const SCIOGLIMENTI = [
+    ['UKR', ['RUS', 'BLR', 'ARM', 'AZE', 'GEO', 'KAZ', 'KGZ', 'MDA', 'TJK', 'TKM', 'UZB'],
+        'Ucraina fuori dagli accordi della CSI (decreto del 19/05/2018), annessione della '
+        . 'Crimea 2014, trattato di amicizia con la Russia cessato il 01/04/2019, invasione '
+        . 'russa dal 24/02/2022'],
+    ['GEO', ['RUS', 'BLR', 'ARM', 'AZE', 'KAZ', 'KGZ', 'MDA', 'TJK', 'TKM', 'UZB'],
+        'Georgia fuori dalla CSI dal 18/08/2009, dopo la guerra con la Russia del 2008'],
+];
+
 /** I membri NATO al 2012 secondo COW, piu' quelli aggiunti sopra. */
 const NATO_2012 = [
     'USA', 'CAN', 'GBR', 'FRA', 'DEU', 'ITA', 'ESP', 'PRT', 'NLD', 'BEL',
@@ -212,6 +233,18 @@ foreach ($nato as $a) {
         $obblighi[$a . '|' . $b] = max($obblighi[$a . '|' . $b] ?? 0, 96);
     }
 }
+// --- gli scioglimenti posteriori (o sfuggiti) al dataset -------------------
+$sciolti = 0;
+foreach (SCIOGLIMENTI as [$chi, $altri, $perche]) {
+    foreach ($altri as $altro) {
+        foreach ([$chi . '|' . $altro, $altro . '|' . $chi] as $k) {
+            if (isset($obblighi[$k])) {
+                unset($obblighi[$k]);
+                $sciolti++;
+            }
+        }
+    }
+}
 ksort($obblighi);
 
 // --- uscita -----------------------------------------------------------------
@@ -230,7 +263,9 @@ $out = "<?php\n\ndeclare(strict_types=1);\n\n"
      . " * IL DATASET FINISCE NEL $ultimoAnno e il nostro seme e' del 2024-25. Gli\n"
      . " * allargamenti successivi sono aggiunti a mano nell'importatore, con la\n"
      . " * data accanto: Montenegro 2017, Macedonia del Nord 2020, Finlandia 2023,\n"
-     . " * Svezia 2024. Prendere un dataset autorevole e applicarlo a un mondo di\n"
+     . " * Svezia 2024. E gli scioglimenti: l'Ucraina e la Georgia fuori dalla CSI,\n"
+     . " * che COW tiene ancora come patto di difesa. Prendere un dataset\n"
+     . " * autorevole e applicarlo a un mondo di\n"
      . " * un'altra epoca e' l'errore che questo progetto ha gia' fatto una volta.\n"
      . " *\n"
      . " * Il gradino 128 (difesa nucleare) NON sta qui: lo assegna Mondo, che sa\n"

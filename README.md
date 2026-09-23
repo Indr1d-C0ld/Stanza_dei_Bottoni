@@ -114,7 +114,9 @@ A ogni mossa si sale o si cede — non c'è una terza scelta, e chi non risponde
 tempo ha ceduto.
 
 Cedere costa la faccia, e la faccia il mondo la misura. Salire costa di più a
-ogni gradino, e dal quinto in su ogni passo può sfuggire di mano da solo. Fra
+ogni gradino, e dal quinto in su ogni passo può sfuggire di mano da solo — anche
+quello di un giocatore dalla scrivania, che corre lo stesso rischio
+dell'apparato. Chi non risponde entro tre giri ha ceduto. Fra
 due potenze nucleari il nono gradino è praticamente irraggiungibile: la
 deterrenza non è una regola scritta a parte, è il risultato dei numeri.
 
@@ -176,16 +178,19 @@ taratura. Il profilo `gioco` è tarato perché succedano cose; il profilo
 non succede niente.
 
 ```
-php bin/simula.php        quindici anni di mondo in sette secondi
+php bin/simula.php        quindici anni di mondo in un paio di minuti
 ```
 
 Serve a due cose: a collaudare il profilo di gioco, e a guardare un mondo
 geopolitico che evolve da solo.
 
-I riferimenti storici presi da Crawford — circa dieci cambi di esecutivo
-irregolari l'anno nel mondo, una quindicina di rivoluzioni in quindici anni —
-sono la banda entro cui il motore deve restare, e una prova automatica lo
-verifica.
+I riferimenti storici sono quelli del mondo da cui il seme parte, non quelli di
+Crawford: i suoi ~10 cambi di esecutivo irregolari l'anno erano giusti per il
+1948-77. Oggi il Cline Center e Powell & Thyne contano 2,2-3,8 colpi riusciti
+l'anno, a cui si aggiungono una o due rivoluzioni; UCDP conta 36 paesi in
+conflitto armato e 11 in guerra. Il profilo `osservazione` fa 5,3-6,0 cambi
+irregolari l'anno, 39-44 paesi in conflitto e 11-22 in guerra, e le prove
+automatiche lo verificano.
 
 ---
 
@@ -229,7 +234,10 @@ attribuita costa molte volte una identica ma anonima.
 **Le sei discipline di intelligence** — umint, sigint, imint, osint, cyber,
 finint — ciascuna con una presenza per paese, e una tabella che dice quali
 servono per quale dominio. Una potenza cieca su una disciplina è cieca su
-un'intera classe di operazioni.
+un'intera classe di operazioni. La presenza si coltiva dove c'è interesse — un
+vicino, un rivale, un paese che pesa — e si allarga o si sfalda con lentezza
+quando l'interesse cambia. Uno scandalo scoppia una volta: il secondo servizio
+che fa lo stesso nome non è una notizia nuova.
 
 **Le crisi.** Una scala di escalation a nove gradini fra due potenze, dalla nota
 diplomatica alla guerra aperta. Chi cede perde faccia; chi non cede rischia il
@@ -255,10 +263,40 @@ chiude un rubinetto smette di essere pagato per l'acqua.
 
 **L'integrità e le garanzie.** Chi ha firmato un trattato di difesa col paese
 invaso deve scegliere: entrare in guerra o perdere credibilità. È il meccanismo
-con cui Crawford rende costose le promesse, e morde su **alleanze vere**.
+con cui Crawford rende costose le promesse, e morde su **alleanze vere**. La
+forza si misura sulla coalizione di chi è disposto a entrare, non sul singolo
+alleato, e gli aiuti escono davvero dagli arsenali di chi li manda.
+L'integrità la perde chi aveva promesso protezione — basi o difesa — a un
+governo caduto per colpo di Stato o rivoluzione, non chi aveva solo un
+trattato commerciale.
 
-**La delega e l'epoca.** Un giocatore assente lascia il posto all'apparato; a
-fine epoca si contano i punti.
+**La guerriglia cronica.** Un governo che vede crescere i ribelli sposta su di
+loro truppe, bilancio e polizia: la controinsurrezione cresce con la minaccia,
+fino a sette volte. È ciò che permette al mondo di avere, come quello vero,
+molti conflitti a bassa intensità che durano decenni e pochi che arrivano alla
+guerra civile. Senza, un'insurrezione poteva solo spegnersi o crescere senza
+freni.
+
+**La deriva politica.** Accanto alla legittimità che l'economia e la società
+spiegano c'è una parte che nessun dato cattura — qualità di governo, coesione,
+fortuna — che vaga di un paio di punti e si riconduce piano allo zero. Un nuovo
+governo la riscrive: alcuni consolidano per un decennio, altri cadono in sei
+mesi.
+
+**La cronaca.** Colpi di Stato, elezioni, guerre, incidenti armati, test
+atomici, disarmi, garanzie onorate e tradite, sanzioni, talpe scoperte,
+reclutamenti denunciati, dimissioni, la fine di un'epoca: tutto ciò che nessuno
+riesce a nascondere arriva in cronaca, raccontato. Un'operazione coperta ci
+arriva solo quando qualcuno la dimostra.
+
+**La delega e l'epoca.** Un giocatore assente lascia il posto all'apparato; chi
+delega a un altro giocatore gli presta la poltrona, e negli atti restano tutte e
+due le firme. A fine epoca si contano i punti, e le agende difensive arrivate
+fino in fondo sono riuscite.
+
+**I limiti del giocatore.** Due ordini per poltrona a ogni giro, tre messaggi
+sui canali riservati (cifrato e corriere), e nessuno può controfirmare ciò che
+ha proposto — nemmeno con la poltrona di un altro in mano per delega.
 
 **Il banco dell'arbitro.** Leve di calibrazione imponibili a mondo acceso.
 
@@ -284,11 +322,11 @@ scaduto.
 
 | fonte | che cosa dà | vintage |
 |---|---|---|
-| **CIA World Factbook** (via `factbook.json`) | popolazione, prodotto, crescita, alfabetizzazione, effettivi, quota militare, area | clone dell'11/09/2026, voci «2024 est.» e «2025 est.» |
+| **CIA World Factbook** (via `factbook.json`) | popolazione, prodotto, crescita, alfabetizzazione, effettivi, quota militare, area | clone dell'11/09/2026, voci «2024 est.» e «2025 est.»; un intervallo («20-30%») vale il suo punto medio |
 | **V-Dem Institute**, Università di Göteborg — *Liberal Democracy Index* | l'asse democrazia-autocrazia: chi vota, quando un ricambio è irregolare, chi si disarma, quanto un regime stringe sull'informazione | 2025 |
 | **Banca Mondiale** (PIP/WDI) — *indice di Gini* | la disuguaglianza verticale, da cui il consumo mediano | anno mediano 2021 |
 | **Ethnic Power Relations (EPR) Core**, ETH Zurigo | la disuguaglianza orizzontale: quanta popolazione è esclusa dal potere esecutivo, e in quanti gruppi | 2021 |
-| **Correlates of War** — *Formal Alliances v4.1* | gli obblighi di trattato veri, per diade direzionata | 2012, con gli allargamenti NATO successivi aggiunti a mano e datati |
+| **Correlates of War** — *Formal Alliances v4.1* | gli obblighi di trattato veri, per diade direzionata | 2012, con gli allargamenti NATO successivi aggiunti a mano e datati, e gli scioglimenti che il dataset non sa: l'Ucraina fuori dalla CSI (2018), la Georgia (2009) |
 | **UCDP/PRIO** — *Armed Conflict Dataset* | i conflitti armati in corso al momento della divergenza | 2024 |
 | **Freedom House** — *Freedom in the World* | i sedici micro-Stati che V-Dem non copre | stima dichiarata |
 
@@ -303,7 +341,7 @@ scaduto.
 | **Archigos** (Goemans, Gleditsch, Chiozza) | la quota di uscite irregolari dal potere: circa un quinto |
 | **Cline Center Coup d'État Project** e **Powell & Thyne** | i colpi di Stato riusciti per decennio — e la scoperta che i «~10 l'anno» di Crawford sono gli anni Sessanta, non il presente |
 | **SIPRI** — *Military Expenditure* e *Yearbook* | l'onere militare mondiale e gli Stati dotati di nucleare |
-| **IISS** — *The Military Balance* | gli effettivi sotto le armi |
+| **IISS** — *The Military Balance* | gli effettivi sotto le armi, e il tetto del 5% della popolazione (la Corea del Nord, il paese più militarizzato del mondo) |
 | **ONU** — *World Population Prospects* | la crescita della popolazione |
 | **Eckhardt**, ripreso dal **CICR** | la quota civile dei morti di guerra: circa metà, da tre secoli |
 | **Acklam** | l'inversa della normale, per ricavare dal Gini il rapporto fra consumo mediano e medio |
@@ -313,7 +351,7 @@ scaduto.
 ```bash
 php bin/realismo.php --anni=15      # diciannove grandezze contro la loro fascia
 php bin/audit.php                   # che cosa è dichiarato e mai usato
-php bin/prova.php                   # trecentodue prove
+php bin/prova.php                   # trecentottantaquattro prove
 ```
 
 `bin/realismo.php` confronta diciannove grandezze con la fascia in cui il mondo
@@ -324,8 +362,15 @@ sulla corsa, perché è lì che vive il comportamento del motore.
 
 `bin/audit.php` cerca l'altra classe di difetti — quella che le prove non
 vedono: una chiave di calibrazione che nessuno legge, un verbo che la dottrina
-non sceglie mai, una tabella nello schema che nessuna riga di codice tocca. È la
+non sceglie mai, una tabella o una colonna dello schema che nessuna riga di
+codice nomina, un valore di riserva nel codice diverso dalla taratura. È la
 forma di guasto che questo progetto ha trovato più spesso.
+
+E una prova, `tests/13`, tiene onesto il cruscotto stesso: fa girare lo stesso
+mondo in memoria — come fa `bin/realismo.php` — e attraverso la base dati a
+ogni tick — come fa il server — e pretende che coincidano fino all'ultima
+cifra. Fino al settembre 2026 non coincidevano, e tutte le misure descrivevano
+un mondo diverso da quello che girava davvero.
 
 ---
 
@@ -370,13 +415,30 @@ sessanta che non voleva dire niente e faceva sessantaquattro milioni di morti in
 una guerra bilaterale, le tre pompe nell'economia, la variabile che nessuno
 leggeva, la riscrittura che abbiamo **deciso di non fare** e perché.
 
+**`docs/27-audit-totale.md`** è il terzo, e il più largo: motore, gioco, sito e
+seme. Il reperto centrale è che il mondo vivo non era il mondo misurato — quel
+che la base dati non salvava, o salvava arrotondato, tornava al seme ogni due
+ore. E poi: la guerra fra Stati che una fase cancellava, i servizi segreti che
+diventavano ciechi, le garanzie tradite trenta volte su trentuna, la Corea del
+Nord con una spesa militare di -30% e quindici milioni di soldati, la Russia
+garante della difesa dell'Ucraina, e la guerriglia cronica che il modello non
+sapeva produrre.
+
 ### Quel che oggi non funziona come dovrebbe
 
 - **Il mondo apre con un picco.** Parte coi conflitti veri di UCDP — trentaquattro
-  paesi — ma nei primi due anni sale a una sessantina prima di riscendere ai
-  trentadue di regime verso l'ottavo. Il reclutamento insurrezionale eccede
-  finché l'attrito non lo riordina: i primi anni di un mondo nuovo sono un
-  periodo di assestamento, non il mondo.
+  paesi — ma nel primo anno sale a una cinquantina (a livello di guerra da venti
+  a una trentina) prima di riscendere verso i quaranta del regime. Era una
+  sessantina prima della guerriglia cronica: i primi anni di un mondo nuovo
+  restano un periodo di assestamento, e qualche paese che nel mondo vero è in
+  pace — la Tanzania, Timor Est — ci finisce dentro.
+- **La guerra russo-ucraina non è nel seme.** Il seme ha le guerre civili di
+  UCDP ma non l'unica grande guerra fra Stati alla data di divergenza. Seminarla
+  non basta: il motore la chiude con una conquista russa in poco più di un anno,
+  perché non modella gli aiuti militari occidentali.
+- **Le guerre fra Stati quasi non nascono.** È giusto che un'invasione sia rara,
+  ma il mondo vero dal 2014 ne ha avute più di quante il motore ne produca in
+  quindici anni.
 - **Metà dei conflitti seminati si spegne in quindici anni**, e altrettanti ne
   nascono altrove. In parte è giusto — i conflitti veri finiscono — ma il
   modello non sa *quali* devono durare.
@@ -427,7 +489,9 @@ struttura senza valori.
 php bin/tick.php              un passo del mondo
 php bin/simula.php            quindici anni a vuoto, con le statistiche
 php bin/diagnostica.php       la salute del modello
-php bin/prova.php             le prove automatiche (169, cinque secondi)
+php bin/prova.php             le prove automatiche (384, circa due minuti)
+php bin/realismo.php          diciannove grandezze contro le fonti
+php bin/audit.php             che cosa è dichiarato e mai usato
 php bin/migra.php             applica le migrazioni non ancora applicate
 php bin/epoca.php             apre e chiude le epoche, e conta
 php bin/costruisci_mappa.php  scarica i confini e li converte in tracciati SVG

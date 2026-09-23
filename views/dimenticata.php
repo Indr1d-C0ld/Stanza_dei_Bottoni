@@ -1,3 +1,4 @@
+<?php defined('BASE') || exit; // si include da index.php, non si apre dal browser ?>
 <h1>Parola d'ordine dimenticata</h1>
 <p class="tenue">Scrivi il tuo indirizzo o il tuo nome in gioco: ti mandiamo un
    collegamento per sceglierne una nuova. Vale un'ora.</p>

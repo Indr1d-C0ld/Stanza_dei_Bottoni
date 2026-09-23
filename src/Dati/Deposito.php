@@ -99,20 +99,149 @@ final class Deposito
 
     // ---------------------------------------------------------------- scrive
 
+    /**
+     * Cancella il mondo vissuto, lasciando l'anagrafica e i giocatori.
+     *
+     * Lo usano bin/avvia_mondo.php --ricomincia e la prova di fedelta' della
+     * persistenza (tests/13), che deve partire da un mondo pulito come il
+     * cron: una lista sola, cosi' le due non possono divergere.
+     *
+     * L'ORDINE CONTA, e prima non contava: sdb_conoscenza ha una chiave
+     * esterna su sdb_evento, e cancellare gli eventi per primi faceva fallire
+     * l'intero riavvio con una violazione di vincolo. Lo strumento non aveva
+     * mai funzionato su un mondo che avesse prodotto anche un solo evento —
+     * cioe' su qualunque mondo vissuto. Trovato riavviando il mondo vero.
+     *
+     * Si cancella dai FIGLI verso i PADRI. Le dipendenze vere, lette dallo
+     * schema:
+     *
+     *   sdb_evento   ← sdb_conoscenza
+     *   sdb_nazione  ← sdb_capacita_intel, sdb_gabinetto, sdb_nazione_stato,
+     *                  sdb_relazione
+     *
+     * L'anagrafica (sdb_nazione, sdb_regione, sdb_ideologia) NON si tocca: la
+     * ricostruisce preparaAnagrafica() subito dopo, e le poltrone vi si
+     * appoggiano.
+     */
+    public function azzeraMondo(): void
+    {
+        $ordine = [
+            // prima i figli
+            'sdb_conoscenza',
+            // poi il resto dello stato del mondo
+            'sdb_evento',
+            'sdb_nazione_stato',
+            'sdb_mondo_stato',
+            'sdb_relazione',
+            'sdb_notizia',
+            'sdb_guerra',
+            'sdb_poltrona',
+            'sdb_fazione',
+            'sdb_gabinetto',
+            'sdb_tick_log',
+            'sdb_capacita_intel',
+            'sdb_presenza_intel',
+            'sdb_assenza_fatto',
+            'sdb_ordine',
+            'sdb_punteggio',
+            // Tutto cio' che il GIOCO accumula sopra il mondo. Mancava, e dopo il
+            // riavvio del 22/09/2026 il mondo nuovo si portava dietro quello
+            // vecchio: un'epoca «in corso» cominciata al tick 118 di un mondo al
+            // tick 0, messaggi e offerte fra poltrone che non esistevano piu',
+            // intercettazioni e rivelazioni. E siccome gli eventi ripartono da 1,
+            // una crisi vecchia poteva puntare a un evento nuovo che non c'entrava.
+            'sdb_crisi_passo',
+            'sdb_crisi',
+            'sdb_intercettazione',
+            'sdb_manipolazione',
+            'sdb_messaggio',
+            'sdb_offerta',
+            'sdb_linea',
+            'sdb_agenda',
+            'sdb_rivelazione',
+            'sdb_epoca',
+            'sdb_strozzatura',
+            'sdb_memoria_azioni',
+            // Restano di proposito: i giocatori e i loro inviti, la posta, le
+            // leve dell'arbitro (sono configurazione, non storia) e il registro
+            // degli atti dell'arbitro, che e' la traccia di chi ha fatto cosa.
+        ];
+        foreach ($ordine as $t) {
+            try {
+                $this->db->esegui("DELETE FROM $t");
+            } catch (\Throwable $e) {
+                // Una tabella che non c'e' piu' non e' un motivo per non
+                // ripartire: si dice e si tira avanti.
+                fwrite(STDERR, "  (salto $t: " . $e->getMessage() . ")\n");
+            }
+        }
+        // I giocatori restano, ma la loro reputazione e il segno dell'ultimo
+        // avviso appartenevano al mondo vecchio: un avviso «gia' mandato al
+        // tick 118» zittirebbe gli avvisi fino al tick 118 del mondo nuovo.
+        $this->db->esegui('UPDATE sdb_giocatore SET integrita = 128, ultimo_avviso_tick = 0');
+        $this->idPerIso = [];
+    }
+
+    /**
+     * Scrive il mondo. TUTTO O NIENTE.
+     *
+     * Prima erano nove scritture separate senza transazione, e `sdb_mondo_stato`
+     * era la seconda: se la connessione cadeva dopo, ultimoTick() diceva gia'
+     * «N» e il giro successivo girava su nazioni del tick N e relazioni,
+     * eventi, gabinetti, guerre del tick N-1 — un mondo cucito male che niente
+     * avrebbe mai riparato. `salvaStrozzature` cancella e reinserisce, e in
+     * mezzo il sito vedeva le tabelle vuote. Adesso si scrive tutto insieme, o
+     * niente; e se il tick intero e' gia' dentro una transazione — come fa
+     * bin/tick.php — ci si unisce a quella.
+     */
     public function salva(Mondo $mondo, int $tick, string $dataGioco): void
     {
         if ($this->idPerIso === []) {
             $this->caricaIdentificatori();
         }
-        $this->salvaNazioni($mondo, $tick);
-        $this->salvaMondo($mondo, $tick, $dataGioco);
-        $this->salvaRelazioni($mondo);
-        $this->salvaEventi($mondo);
-        $this->salvaPalazzo($mondo);
-        $this->salvaGuerre($mondo, $tick);
-        $this->salvaStrozzature($mondo);
-        $this->salvaNotizie($mondo);
-        $this->salvaServizi($mondo, $tick);
+        $this->db->inTransazione(function () use ($mondo, $tick, $dataGioco): void {
+            $this->salvaNazioni($mondo, $tick);
+            $this->salvaMondo($mondo, $tick, $dataGioco);
+            $this->salvaRelazioni($mondo);
+            $this->salvaEventi($mondo);
+            $this->salvaPalazzo($mondo);
+            $this->salvaGuerre($mondo, $tick);
+            $this->salvaStrozzature($mondo);
+            $this->salvaNotizie($mondo);
+            $this->salvaServizi($mondo, $tick);
+            $this->salvaMemoria($mondo, $tick);
+        });
+    }
+
+    /**
+     * La memoria della dottrina: quando ciascun paese ha fatto l'ultima volta
+     * una certa mossa contro un certo bersaglio. Prima non si salvava, e
+     * l'attesa fra due mosse uguali si azzerava a ogni tick del mondo vivo.
+     * Si pota oltre l'attesa piu' lunga del catalogo (l'invasione, 260 tick):
+     * piu' in la' non puo' piu' fermare niente.
+     */
+    private function salvaMemoria(Mondo $mondo, int $tick): void
+    {
+        $this->db->esegui('DELETE FROM sdb_memoria_azioni WHERE tick < ?', [$tick - 300]);
+        $blocchi = [];
+        $valori = [];
+        foreach ($mondo->azioniRecenti as $chiave => $quando) {
+            if ((int) $quando < $tick - 300) {
+                continue;
+            }
+            $blocchi[] = '(?,?)';
+            array_push($valori, mb_substr((string) $chiave, 0, 96), (int) $quando);
+            if (count($blocchi) >= 500) {
+                $this->db->esegui('REPLACE INTO sdb_memoria_azioni (chiave, tick) VALUES '
+                    . implode(',', $blocchi), $valori);
+                $blocchi = [];
+                $valori = [];
+            }
+        }
+        if ($blocchi !== []) {
+            $this->db->esegui('REPLACE INTO sdb_memoria_azioni (chiave, tick) VALUES '
+                . implode(',', $blocchi), $valori);
+        }
     }
 
     private function salvaNazioni(Mondo $mondo, int $tick): void
@@ -140,13 +269,13 @@ final class Deposito
             }
             $blocchi[] = $segnaposti;
             array_push($valori, $id, $tick,
-                (int) $n->popolazione, $n->pil, $n->crescitaPil, $n->pilProCapite,
+                $n->popolazione, $n->pil, $n->crescitaPil, $n->pilProCapite,
                 $n->consumoProCapite, $n->quotaConsumi, $n->quotaInvestimenti, $n->quotaMilitare,
                 $n->democrazia,
                 $n->influenzaTotale, $n->etica, $n->ambizione, $n->qualitaVita, $n->statoPolizia,
                 $n->netPeace, $n->legittimita, $n->aspettativa, $n->clamoreSociale, $n->orientamento,
                 $n->ansiaMilitare, $n->controlloInfo, $n->cyberDifesa,
-                (int) $n->soldati, $n->equipaggiamento, $n->potenzaGoverno(), $n->posturaNucleare,
+                $n->soldati, $n->equipaggiamento, $n->potenzaGoverno(), $n->posturaNucleare,
                 $n->forzaInsorti,
                 $n->derivaPolitica, $n->integrita, $n->crescitaStrutturale, $n->pressioneEsterna,
                 $n->reputazioneSporca, $n->consumoProCapitePrec, $n->azioniInVolo,
@@ -182,9 +311,9 @@ final class Deposito
             if ($ia === null || $ib === null) {
                 continue;
             }
-            $blocchi[] = '(?,?,?,?,?,?,?,?)';
+            $blocchi[] = '(?,?,?,?,?,?,?,?,?,?)';
             array_push($valori, $ia, $ib, $r->umore, $r->affinita, $r->obbligo,
-                $r->sfera, $r->spintaSfera, $mondo->tick);
+                $r->sfera, $r->spintaSfera, $mondo->tick, $r->ancora ?? $r->affinita, $r->obbligoFirmato);
             if (count($blocchi) >= 800) {
                 $this->scaricaRelazioni($blocchi, $valori);
             }
@@ -200,7 +329,8 @@ final class Deposito
         }
         $this->db->esegui(
             'REPLACE INTO sdb_relazione
-                (da_nazione_id, a_nazione_id, umore, affinita, obbligo, sfera, spinta_sfera, aggiornata_tick)
+                (da_nazione_id, a_nazione_id, umore, affinita, obbligo, sfera, spinta_sfera, aggiornata_tick,
+                 ancora, obbligo_firmato)
              VALUES ' . implode(', ', $blocchi),
             $valori,
         );
@@ -248,12 +378,22 @@ final class Deposito
                 [$id, $g->coesione, $g->ultimoRimpasto],
             );
             foreach ($g->poltrone as $ruolo => $p) {
+                // Quando al posto arriva un altro ministro (insediato_tick
+                // cambia), la talpa e il sospetto restano col vecchio: prima
+                // il nuovo li ereditava, e un ministro appena nominato era una
+                // spia straniera senza aver mai accettato niente. ATTENZIONE
+                // all'ordine: MariaDB assegna da sinistra a destra, e i tre IF
+                // devono vedere il VECCHIO insediato_tick — che quindi si
+                // aggiorna per ultimo.
                 $this->db->esegui(
                     'INSERT INTO sdb_poltrona
                         (nazione_id, ruolo, nome, eta, etica, ambizione, competenza,
                          vulnerabilita, potere, lealta, insediato_tick)
                      VALUES (?,?,?,?,?,?,?,?,?,?,?)
                      ON DUPLICATE KEY UPDATE
+                        reclutata_da   = IF(VALUES(insediato_tick) <> insediato_tick, NULL, reclutata_da),
+                        reclutata_tick = IF(VALUES(insediato_tick) <> insediato_tick, NULL, reclutata_tick),
+                        sospettata     = IF(VALUES(insediato_tick) <> insediato_tick, 0, sospettata),
                         nome = VALUES(nome), eta = VALUES(eta), etica = VALUES(etica),
                         ambizione = VALUES(ambizione), competenza = VALUES(competenza),
                         vulnerabilita = VALUES(vulnerabilita), potere = VALUES(potere),
@@ -511,8 +651,18 @@ final class Deposito
             }
             $rel->umore    = (int) $r['umore'];
             $rel->affinita = (float) $r['affinita'];
-            $rel->ancora ??= (float) $r['affinita'];
             $rel->obbligo  = (int) $r['obbligo'];
+            // L'ancora e il trattato sulla carta si rileggono. Prima c'era
+            // `$rel->ancora ??= ...`, che non scattava mai perche' il seme
+            // l'ancora la mette sempre: tornava al valore del seme a ogni tick.
+            // Una riga con l'ancora a NULL non e' mai stata scritta dal codice
+            // che la salva (e' anteriore alla migrazione 0029): li' valgono
+            // ancora i valori del seme, obbligo firmato compreso — altrimenti
+            // lo zero di una colonna appena nata passerebbe per una denuncia.
+            if ($r['ancora'] !== null) {
+                $rel->ancora         = (float) $r['ancora'];
+                $rel->obbligoFirmato = (int) $r['obbligo_firmato'];
+            }
             $rel->sfera       = (int) $r['sfera'];
             $rel->spintaSfera = (float) ($r['spinta_sfera'] ?? 0.0);
         }
@@ -529,6 +679,11 @@ final class Deposito
         if ($m !== false) {
             $mondo->livelloPace = (int) $m['livello_pace'];
             $mondo->nastiness   = (float) $m['nastiness'];
+        }
+        $mondo->azioniRecenti = [];
+        foreach ($this->db->esegui('SELECT chiave, tick FROM sdb_memoria_azioni WHERE tick <= ?', [$tick])
+                     ->fetchAll() as $x) {
+            $mondo->azioniRecenti[(string) $x['chiave']] = (int) $x['tick'];
         }
         return true;
     }

@@ -66,6 +66,11 @@ final class Fase11GlobaliScadenze implements Fase
             if ($epoca->restano($contesto->tick) === 0) {
                 [, $epocaChiusa] = $epoca->chiudi($contesto->tick);
                 $contesto->annota('epoca_chiusa', ['racconto' => $epocaChiusa]);
+                // La fine di un'epoca e' pubblica, e la fase 09 ha gia'
+                // chiuso il giornale: la notizia va in cronaca da qui. Prima
+                // si annotava soltanto, e nessuno la leggeva mai.
+                $mondo->notizie[] = ['tick' => $contesto->tick, 'genere' => 'epoca_chiusa',
+                    'dati' => ['racconto' => $epocaChiusa]];
             }
         }
 

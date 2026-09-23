@@ -38,7 +38,11 @@ try {
         $db->esegui('DELETE FROM sdb_posta WHERE destinatario = "avvisi@example.invalid"');
     };
 
-    $tick = (int) $db->esegui('SELECT COALESCE(MAX(tick), 0) FROM sdb_mondo_stato')->fetchColumn();
+    // Un tick fittizio abbastanza avanzato: le prove sottraggono giri (una
+    // poltrona silenziosa da N tick, una scadenza passata) e su un mondo
+    // appena riavviato scendevano sotto zero. Avvisi lavora solo sulle righe
+    // che le prove scrivono qui, al tick che gli si passa.
+    $tick = max(500, (int) $db->esegui('SELECT COALESCE(MAX(tick), 0) FROM sdb_mondo_stato')->fetchColumn());
 
     // Un giocatore finto su una poltrona libera.
     $db->esegui(
@@ -73,6 +77,13 @@ try {
                                 ultimo_tick, scade_tick)
          VALUES (?,?,NULL,NULL,4,10,12,"sfidato","aperta",?,?,?)',
         [$altro, $nazione, $tick, $tick, $tick + 2]);
+
+    // Chi non e' mai stato avvisato lo e' anche nei primi giri di un mondo
+    // nuovo: la pausa fra due avvisi non vale per il primo.
+    $db->esegui('UPDATE sdb_giocatore SET ultimo_avviso_tick = 0 WHERE id = ?', [$giocatore]);
+    $svuota();
+    $avvisi->manda(3);
+    Prove::uguale('anche al terzo tick di un mondo appena nato', 1, count($inCoda()));
 
     $db->esegui('UPDATE sdb_giocatore SET ultimo_avviso_tick = 0 WHERE id = ?', [$giocatore]);
     $svuota();

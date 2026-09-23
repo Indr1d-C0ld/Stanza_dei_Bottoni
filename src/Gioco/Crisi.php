@@ -105,7 +105,7 @@ final class Crisi
              VALUES (?,?,?,?,?, "sfidato", "aperta", ?,?,?,?,?)',
             [$evento, (int) $poltrona['nazione_id'], (int) $e['mandante_id'],
              $e['bersaglio_id'] !== null ? (int) $e['bersaglio_id'] : null, 1,
-             $postaSfidante, $postaSfidato, $tick, $tick, $tick + $this->pazienza],
+             $postaSfidante, $postaSfidato, $tick, $tick, $this->scadenza($tick)],
         );
         $id = (int) $this->db->pdo()->lastInsertId();
         $this->passo($id, $tick, 'sfidante', 'apre', 1, null);
@@ -163,8 +163,48 @@ final class Crisi
      *
      * @return array{0:bool,1:string}
      */
+    /**
+     * Quale parte tiene, in questa crisi, la nazione data: «sfidante»,
+     * «sfidato», o null se la crisi non la riguarda.
+     *
+     * ESISTE PER UN DIFETTO TROVATO DALL'AUDIT. La parte arrivava dal modulo
+     * web come campo nascosto, e rispondi() controllava soltanto che fosse il
+     * suo turno: qualunque giocatore seduto, di qualunque paese, poteva
+     * rispondere a una crisi fra due ALTRE nazioni — cedere per conto loro, o
+     * salire alternando la parte fino al nono gradino, che apre una guerra
+     * vera. La parte non si dichiara: si ricava da chi si e'.
+     */
+    public function parteDi(int $crisi, int $nazione): ?string
+    {
+        $c = $this->db->esegui('SELECT sfidante_id, sfidato_id FROM sdb_crisi WHERE id = ?', [$crisi])->fetch();
+        if ($c === false) {
+            return null;
+        }
+        return match ($nazione) {
+            (int) $c['sfidante_id'] => 'sfidante',
+            (int) $c['sfidato_id']  => 'sfidato',
+            default                 => null,
+        };
+    }
+
+    /**
+     * L'ultimo tick in cui si puo' ancora rispondere. La scadenza e'
+     * INCLUSIVA come ogni altra del gioco («entro il…», e la fase 01 fa
+     * cedere solo quando scade_tick < tick): con tick + pazienza le finestre
+     * per rispondere erano quattro, non le tre di crisi.pazienza_tick.
+     */
+    private function scadenza(int $tick): int
+    {
+        return $tick + max(1, $this->pazienza) - 1;
+    }
+
     public function rispondi(int $crisi, string $parte, string $azione, int $tick): array
     {
+        // Due mosse e basta. Prima tutto cio' che non era «cede» saliva — anche
+        // un campo vuoto.
+        if ($azione !== 'scala' && $azione !== 'cede') {
+            return [false, 'Due mosse sole: si sale, o si cede.'];
+        }
         $c = $this->db->esegui('SELECT * FROM sdb_crisi WHERE id = ? AND stato = "aperta"', [$crisi])->fetch();
         if ($c === false) {
             return [false, 'Quella crisi è chiusa.'];
@@ -187,11 +227,15 @@ final class Crisi
             ?: ['danno_base' => 40, 'bersaglio_id' => $c['oggetto_id']];
         [$pa, $pb] = $this->poste((int) $c['sfidante_id'], (int) $c['sfidato_id'], $e, $livello);
 
+        // Dal sito il dado dell'incidente non si tira: lo tira la fase 01 al
+        // tick dopo, con le regole dell'apparato (migrazione 0030). Il motore,
+        // che ha il mondo collegato, l'ha gia' tirato prima di salire.
+        $daProvare = ($this->mondo === null && $livello >= 6) ? $livello : 0;
         $this->db->esegui(
             'UPDATE sdb_crisi SET livello = ?, tocca_a = ?, posta_sfidante = ?, posta_sfidato = ?,
-                    ultimo_tick = ?, scade_tick = ? WHERE id = ?',
+                    ultimo_tick = ?, scade_tick = ?, da_provare = ? WHERE id = ?',
             [$livello, $parte === 'sfidante' ? 'sfidato' : 'sfidante', $pa, $pb,
-             $tick, $tick + $this->pazienza, $crisi]);
+             $tick, $this->scadenza($tick), $daProvare, $crisi]);
         $this->passo($crisi, $tick, $parte, 'scala', $livello, null);
 
         return [true, sprintf('Si sale: %s. Ora la palla è dall\'altra parte.', $this->gradino($livello))];
@@ -252,6 +296,20 @@ final class Crisi
             $this->db->esegui(
                 'UPDATE sdb_evento SET stato = "fermato" WHERE id = ? AND stato IN ("in_volo","scoperto")',
                 [(int) $c['evento_id']]);
+            // E ANCHE IN MEMORIA, se si cede dentro un tick (l'apparato, o una
+            // scadenza nella fase 01). Scriverlo solo nella base dati non
+            // bastava: a fine tick Deposito::salvaEventi riscrive lo stato di
+            // ogni evento dalla memoria, dove era ancora «in volo» — e la fase
+            // 02, nello stesso tick, poteva perfino farlo maturare. Una crisi
+            // vinta non fermava l'operazione per cui era stata aperta.
+            if ($this->mondo !== null) {
+                foreach ($this->mondo->eventi as $e) {
+                    if ($e->id === (int) $c['evento_id']
+                        && in_array($e->stato, [\App\Dati\Evento::IN_VOLO, \App\Dati\Evento::SCOPERTO], true)) {
+                        $e->stato = \App\Dati\Evento::FERMATO;
+                    }
+                }
+            }
         }
 
         $this->annuncia($c, $tick, 'crisi_chiusa', [

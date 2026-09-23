@@ -44,7 +44,7 @@ final class Servizi
         $this->calibrazione = $cal;
         $this->lettura      = new Lettura($db);
         $this->sessione     = new Sessione($db);
-        $this->scrivania    = new Scrivania($db);
+        $this->scrivania    = new Scrivania($db, (int) $cal->numero('gioco.ordini_per_tick', 2));
         $this->canale       = new Canale($db);
         $this->reclutamento = new Reclutamento($db);
         $this->crisi        = new Crisi(

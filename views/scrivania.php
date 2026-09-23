@@ -1,3 +1,4 @@
+<?php defined('BASE') || exit; // si include da index.php, non si apre dal browser ?>
 <?php
 /** @var array<string,mixed> $poltrona $nazione */
 /** @var list<array<string,mixed>> $colleghi $daFirmare $mieiOrdini $paesi $relazioni */
@@ -197,7 +198,6 @@ $tensioni = [1=>'quiete',2=>'pace',3=>'tensione',4=>'conflitto aperto',5=>'guerr
         <input type="hidden" name="gettone" value="<?= htmlspecialchars($sessione->gettone()) ?>">
         <input type="hidden" name="azione" value="crisi">
         <input type="hidden" name="crisi" value="<?= (int) $k['id'] ?>">
-        <input type="hidden" name="parte" value="<?= $miaParte ?>">
         <button type="submit" name="mossa" value="scala" class="pericolo">Salgo di un gradino</button>
         <button type="submit" name="mossa" value="cede">Cedo</button>
       </form>

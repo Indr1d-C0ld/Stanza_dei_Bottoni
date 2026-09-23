@@ -43,12 +43,12 @@ final class Fase04Societa implements Fase
         $perTick    = 1.0 / $tickAnno;
         $finestra   = max(1.0, $cal->numero('societa.finestra_aspettativa', 5.0));
         $aspMin     = $cal->numero('societa.aspettativa_minima', 0.005);
-        $aspMax     = $cal->numero('societa.aspettativa_massima', 0.060);
+        $aspMax     = $cal->numero('societa.aspettativa_massima', 0.085);
         $inerzia    = $cal->numero('societa.inerzia_legittimita', 0.85);
         $bonusRad   = $cal->numero('societa.bonus_radicalita', 1.0);
         $rientro    = $cal->numero('societa.rientro_ansie', 0.10);
         $ritornoDeriva  = $cal->numero('societa.ritorno_deriva', 0.15);
-        $ampiezzaDeriva = $cal->numero('societa.ampiezza_deriva', 1.1);
+        $ampiezzaDeriva = $cal->numero('societa.ampiezza_deriva', 2.0);
 
         $fragili = 0;
 
@@ -78,10 +78,18 @@ final class Fase04Societa implements Fase
             // mondo e per sempre, e questo basta a rendere l'esito di ogni
             // paese identico in ogni corsa: la casualità sposta solo QUANDO
             // succede, mai SE succede.
-            $n->derivaPolitica += (
-                -$ritornoDeriva * $n->derivaPolitica
-                + $c->caso->rumore('04_deriva', crc32($n->iso3), $c->tick, $ampiezzaDeriva)
-            ) * $perTick * $tickAnno * $perTick;
+            //
+            // E' un Ornstein-Uhlenbeck discretizzato: il richiamo scala col
+            // passo di tempo, il rumore con la sua RADICE. La prima scrittura
+            // moltiplicava anche il rumore per il passo intero, e la deriva
+            // restava entro due decimi di punto: il paese riposava a 50 finche'
+            // un cambio di governo non la riscriveva. L'ampiezza e' la
+            // deviazione tipica a regime, in punti di legittimita'; il rumore
+            // uniforme su ±√3 ha varianza uno.
+            $sigma = $ampiezzaDeriva * sqrt(2.0 * $ritornoDeriva);
+            $n->derivaPolitica += -$ritornoDeriva * $n->derivaPolitica * $perTick
+                + $sigma * sqrt($perTick)
+                  * $c->caso->rumore('04_deriva', crc32($n->iso3), $c->tick, sqrt(3.0));
 
             // ATTENZIONE alle unità: l'inerzia di Crawford è ANNUA. Applicarla
             // per tick significa riportare ogni governo alla media in due mesi,

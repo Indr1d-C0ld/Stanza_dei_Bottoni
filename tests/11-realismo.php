@@ -306,7 +306,10 @@ Prove::gruppo('Il riavvio del mondo cancella nell\'ordine giusto');
 // solo evento — cioe' su qualunque mondo vissuto. Lo strumento di riavvio non
 // aveva mai funzionato, e se n'e' accorto solo chi ha provato a riavviare il
 // mondo vero.
-$sorgenteAvvio = (string) file_get_contents($radice . '/bin/avvia_mondo.php');
+// L'elenco sta in Deposito::azzeraMondo(), che avvia_mondo chiama.
+$sorgenteAvvio = (string) file_get_contents($radice . '/src/Dati/Deposito.php');
+Prove::che('avvia_mondo azzera dal Deposito',
+    str_contains((string) file_get_contents($radice . '/bin/avvia_mondo.php'), '$dep->azzeraMondo()'));
 $posConoscenza = strpos($sorgenteAvvio, "'sdb_conoscenza'");
 $posEvento     = strpos($sorgenteAvvio, "'sdb_evento'");
 Prove::che('sdb_conoscenza si cancella prima di sdb_evento',
@@ -322,7 +325,7 @@ Prove::gruppo('Nessuna tabella dello schema resta senza nessuno che la usi');
 // bin/audit.php incrociando lo schema col sorgente, e la migrazione 0028 le ha
 // tolte. Qui si impedisce che tornino.
 $morte = ['sdb_flusso_commerciale', 'sdb_relazione_variazione', 'sdb_copertura_intel',
-          'sdb_evento_accesso', 'sdb_scenario'];
+          'sdb_evento_accesso', 'sdb_scenario', 'sdb_rapporto'];   // l'ultima con la 0032
 $sorgenti = '';
 foreach (array_merge(glob($radice . '/src/*/*.php') ?: [], glob($radice . '/src/*/*/*.php') ?: [],
                      glob($radice . '/bin/*.php') ?: [], [$radice . '/index.php']) as $f) {

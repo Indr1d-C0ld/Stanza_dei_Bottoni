@@ -45,13 +45,13 @@ final class Basedati
         return $this->pdo;
     }
 
-    /** @param array<string|int,mixed> $parametri */
     /** L'identificativo dell'ultima riga inserita. */
     public function ultimoId(): int
     {
         return (int) $this->pdo()->lastInsertId();
     }
 
+    /** @param array<string|int,mixed> $parametri */
     public function esegui(string $sql, array $parametri = []): \PDOStatement
     {
         $stmt = $this->pdo()->prepare($sql);
@@ -59,9 +59,22 @@ final class Basedati
         return $stmt;
     }
 
+    /**
+     * Esegue il blocco in una transazione — o dentro quella gia' aperta.
+     *
+     * PDO non annida le transazioni: aprirne una mentre un'altra e' in corso
+     * lancia un'eccezione. Serve che si possano comporre — il tick intero sta
+     * in una transazione sola, e le fasi che dentro ne chiedono una devono
+     * semplicemente farne parte; le prove girano dentro una transazione che si
+     * annulla, e i servizi che ne aprono una devono unirsi a quella. Chi ha
+     * aperto la transazione esterna decide se confermare o annullare.
+     */
     public function inTransazione(callable $blocco): mixed
     {
         $pdo = $this->pdo();
+        if ($pdo->inTransaction()) {
+            return $blocco($this);
+        }
         $pdo->beginTransaction();
         try {
             $esito = $blocco($this);

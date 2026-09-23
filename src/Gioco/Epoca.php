@@ -73,6 +73,14 @@ final class Epoca
         $id = (int) $e['id'];
         $da = (int) $e['inizio_tick'];
 
+        // Prima di contare, si chiudono le agende rimaste aperte: le difensive
+        // arrivate fin qui sono riuscite, le altre no. Senza questo passo le
+        // agende difensive non potevano mai riuscire.
+        $catalogo = @include dirname(__DIR__, 2) . '/calibrazione/agende.php';
+        if (is_array($catalogo)) {
+            (new Agende($this->db, $catalogo))->chiudiEpoca($tick);
+        }
+
         $quanti = $this->conta($id, $da, $tick);
         $rivelati = $this->rivela($id, $da, $tick);
 
@@ -104,7 +112,7 @@ final class Epoca
         $quanti = 0;
         foreach ($poltrone as $p) {
             $voci  = $this->interesseNazionale((int) $p['nazione_id'], $da, $a);
-            $voci += $this->agende((int) $p['giocatore_id']);
+            $voci += $this->agende((int) $p['giocatore_id'], $da, $a);
             $voci += $this->ilConto((int) $p['nazione_id'], (int) $p['id'], $da, $a);
 
             if ($p['reclutata_da'] !== null) {
@@ -152,18 +160,39 @@ final class Epoca
     }
 
     /** @return array<string,float> */
-    private function agende(int $giocatore): array
+    /**
+     * Le agende private, pesate come dice il catalogo.
+     *
+     * Due correzioni dell'audit di settembre 2026. Si contano solo le agende
+     * chiuse DENTRO quest'epoca: prima la query non aveva filtri di tempo, e
+     * un'agenda vinta nella prima epoca fruttava venticinque punti anche nella
+     * seconda, nella terza, e cosi' via. E ogni agenda pesa il suo `peso` —
+     * «quanto conta nel bilancio finale», dice il catalogo — che prima veniva
+     * letto e ignorato: tutte valevano venticinque.
+     *
+     * @return array<string,float>
+     */
+    private function agende(int $giocatore, int $da, int $a): array
     {
-        $r = $this->db->esegui(
-            'SELECT stato, COUNT(*) AS n FROM sdb_agenda WHERE giocatore_id = ? GROUP BY stato',
-            [$giocatore])->fetchAll();
-        $per = [];
-        foreach ($r as $x) {
-            $per[(string) $x['stato']] = (int) $x['n'];
+        $catalogo = @include dirname(__DIR__, 2) . '/calibrazione/agende.php';
+        $catalogo = is_array($catalogo) ? $catalogo : [];
+        $righe = $this->db->esegui(
+            'SELECT codice, stato FROM sdb_agenda
+             WHERE giocatore_id = ? AND stato IN ("riuscita","fallita") AND chiusa_tick BETWEEN ? AND ?',
+            [$giocatore, $da, $a])->fetchAll();
+        $vinte = 0.0;
+        $perse = 0.0;
+        foreach ($righe as $r) {
+            $peso = (float) ($catalogo[(string) $r['codice']]['peso'] ?? 3);
+            if ($r['stato'] === 'riuscita') {
+                $vinte += 8.0 * $peso;      // peso 3 -> 24, peso 4 -> 32
+            } else {
+                $perse -= 2.0 * $peso;      // peso 3 -> -6, peso 4 -> -8
+            }
         }
         return [
-            'agende private portate a casa' => 25.0 * ($per['riuscita'] ?? 0),
-            'agende private fallite'        => -8.0 * ($per['fallita'] ?? 0),
+            'agende private portate a casa' => $vinte,
+            'agende private fallite'        => $perse,
         ];
     }
 
@@ -234,13 +263,16 @@ final class Epoca
             $n++;
         }
 
-        // Le talpe, col loro padrone.
+        // Le talpe, col loro padrone: quelle reclutate IN QUESTA epoca. Una
+        // talpa ancora in servizio dall'epoca prima e' gia' stata rivelata
+        // allora, e ricomparirebbe a ogni chiusura come una notizia nuova.
         foreach ($this->db->esegui(
             'SELECT p.nome, p.ruolo, p.reclutata_tick, n.nome AS paese, r.nome AS padrone
              FROM sdb_poltrona p
              JOIN sdb_nazione n ON n.id = p.nazione_id
              JOIN sdb_nazione r ON r.id = p.reclutata_da
-             WHERE p.reclutata_da IS NOT NULL')->fetchAll() as $t) {
+             WHERE p.reclutata_da IS NOT NULL AND p.reclutata_tick BETWEEN ? AND ?',
+            [$da, $a])->fetchAll() as $t) {
             $this->aggiungi($epoca, 'talpa', (int) ($t['reclutata_tick'] ?? $da),
                 sprintf('%s, %s di %s, lavorava per %s',
                     $t['nome'], Canale::etichettaRuolo((string) $t['ruolo']), $t['paese'], $t['padrone']),

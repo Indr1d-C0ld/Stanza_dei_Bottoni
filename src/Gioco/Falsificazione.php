@@ -124,6 +124,12 @@ final class Falsificazione
     /** @return array{0:bool,1:string} */
     public function revoca(int $operazione, array $poltrona): array
     {
+        // Le squadre sono dell'Intelligence: le richiama chi le ha mandate.
+        // Prima bastava essere dello stesso paese, e qualunque ministro poteva
+        // richiamare un'operazione di cui non doveva nemmeno sapere.
+        if ((string) $poltrona['ruolo'] !== 'intelligence') {
+            return [false, 'Solo l\'Intelligence richiama le proprie squadre.'];
+        }
         $n = $this->db->esegui(
             'UPDATE sdb_manipolazione SET stato = "scaduta"
              WHERE id = ? AND nazione_id = ? AND stato = "attiva"',

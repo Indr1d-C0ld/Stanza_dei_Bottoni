@@ -77,6 +77,23 @@ return [
         // effettivi ne recupera la maggior parte in tre-quattro anni, che e'
         // il ritmo con cui si addestra e si inquadra della gente vera.
         'recupero_uomini_anno'       => 0.35,
+        // Quanto gli effettivi seguono la spesa. Non uno a uno: un bilancio
+        // che raddoppia compra soprattutto mezzi, e gli uomini crescono di
+        // circa la radice (elasticita' 0,5). E comunque non oltre il triplo
+        // della taglia di partenza, ne' oltre il 5% della popolazione — la
+        // Corea del Nord, il paese piu' militarizzato del mondo, ne tiene
+        // ~5% (IISS, The Military Balance 2024: 1,28 milioni su 26). Con la
+        // proporzione diretta un paese che partiva da una quota minuscola la
+        // decuplicava e decuplicava l'esercito: la Corea del Nord arrivava a
+        // quindici milioni di soldati, e gli effettivi del mondo da 21 a 48
+        // milioni in quindici anni. [FABBRICATO l'elasticita', i tetti no]
+        'elasticita_uomini'          => 0.5,
+        'tetto_uomini_relativo'      => 3.0,
+        'tetto_uomini_popolazione'   => 0.05,
+        // Ammortamento annuo dello stock di equipaggiamento. Fissa l'equilibrio
+        // a «spesa / ammortamento»: con 0,25 sono quattro anni di spesa, che e'
+        // come il seme lo avvia. Era 0,08, e lo stock triplicava in dieci anni.
+        'ammortamento_equipaggiamento' => 0.25,
         // NOTA: qui c'erano 'peso_commercio' e 'peso_dipendenza'. Sono state
         // tolte, non dimenticate. Esprimevano un modello — il saldo
         // commerciale che muove la crescita — che e' stato provato e scartato:
@@ -104,10 +121,11 @@ return [
         'bonus_radicalita'      => 1.0,
         'rientro_ansie'         => 0.10,   // le ansie decadono verso la media
         // La deriva politica: quanto forte la si riconduce a zero (per anno) e
-        // con quanta ampiezza vaga. Insieme determinano quanto due corse dello
-        // stesso mondo possono divergere. [FABBRICATO]
+        // quanto vaga a regime (deviazione tipica, in punti di legittimita').
+        // Insieme determinano quanto due corse dello stesso mondo possono
+        // divergere. «Qualche punto» e' la richiesta di docs/08. [FABBRICATO]
         'ritorno_deriva'        => 0.15,
-        'ampiezza_deriva'       => 1.1,
+        'ampiezza_deriva'       => 2.0,
     ],
 
     // -------------------------------------------------- sicurezza interna
@@ -122,6 +140,11 @@ return [
         // Le armi consegnate agli insorti valgono il doppio: le usano meglio.
         'moltiplicatore_armi_insorti' => 2.0,
         'effetto_carrozzone' => 0.20,
+        // Di quanto un governo moltiplica la controinsurrezione quando gli
+        // insorti arrivano alla sua forza (a zero insorti: nessun aumento).
+        // Crea la guerriglia cronica che l'attrito fisso non permetteva; vedi
+        // Fase05 e docs/27. [FABBRICATO]
+        'risposta_governo'   => 6.0,   // a 3 i paesi in guerra erano 21-25
         // La disuguaglianza ORIZZONTALE di Cederman, Wimmer e Min: quanto
         // pesa l'esclusione etnica dal potere sul reclutamento insurrezionale.
         // E' il MOTIVO, che il modello non aveva: fin qui c'erano solo le
@@ -137,7 +160,11 @@ return [
         // finiscono la vittoria dei ribelli e' l'esito piu' raro. Prima era
         // implicitamente 1 — il governo cadeva lo stesso tick in cui il
         // rapporto di forze si ribaltava — e le guerre civili non duravano.
-        'vittoria_insorti_anno' => 0.22,
+        // 0,22 fino all'audit di settembre 2026, che l'ha trovata a quattro
+        // rivoluzioni l'anno: il mondo degli anni Venti ne ha una o due
+        // (Afghanistan 2021, Siria 2024). Abbassata insieme al reclutamento e
+        // alla risposta del governo qui sotto: vedi docs/27.
+        'vittoria_insorti_anno' => 0.18,
         // Quanta potenza insurrezionale genera il malcontento, per radice di
         // Quanta potenza insurrezionale genera il malcontento, PER ABITANTE e
         // per anno. E' il parametro che decide se il mondo ha guerre civili o
@@ -151,9 +178,8 @@ return [
         // contro 0% di quelli sopra i duecento milioni. Monotono e rovesciato.
         //
         // Adesso moltiplica la popolazione e il moltiplicatore di poverta' di
-        // Fearon & Laitin, e 3,0e-4 e' il valore che fa cadere il mondo sui
-        // riferimenti UCDP del 2024: 61 conflitti statali attivi in 36 paesi,
-        // di cui 11 arrivati al livello di guerra.
+        // Fearon & Laitin, tarato sui riferimenti UCDP del 2024: 61 conflitti
+        // statali attivi in 36 paesi, di cui 11 arrivati al livello di guerra.
         //
         // A 1,0e-3 il profilo osservazione ne fa 26 a livello >= 4 e 9 a >= 5,
         // il profilo gioco 27 e 11: le guerre cadono sul riferimento, i paesi
@@ -168,7 +194,12 @@ return [
         // arriva con reddito, popolazione, legittimita' e maturita'
         // istituzionale, che e' esattamente quel che Fearon e Laitin dicono
         // basti.
-        'reclutamento_k'     => 1.0e-3,
+        //
+        // 0,8e-3 dall'audit di settembre 2026, insieme a risposta_governo: con
+        // l'attrito fisso un'insurrezione o moriva o arrivava alla guerra
+        // civile, e i paesi a livello >= 5 erano 24-35 contro gli 11 veri.
+        // Adesso il profilo osservazione ne fa 11-19, e 39-44 a livello >= 4.
+        'reclutamento_k'     => 0.8e-3,
     ],
 
     // ------------------------------------------------------- guerre fra Stati
@@ -275,7 +306,12 @@ return [
         // cambia il tasso, non solo la distribuzione. A 0,10 i colpi stanno
         // intorno a 3-4 l'anno, dentro il riferimento 2,2-3,8 degli anni
         // Duemila-Venti, e le rivoluzioni a ~2,5, dentro quello di Crawford.
-        'rischio_massimo_anno'   => 0.10,
+        //
+        // Ritarato una terza volta con l'audit di settembre 2026: la deriva
+        // politica che finalmente vaga, la soglia unica dell'insurrezione e
+        // gli eserciti che non si gonfiano piu' (docs/27) avevano riportato i
+        // colpi a 5,3 l'anno. A 0,065 tornano nel riferimento.
+        'rischio_massimo_anno'   => 0.065,
         'pendenza'               => 7.0,
     ],
 
@@ -352,7 +388,11 @@ return [
     'nucleare' => [
         'rateo_proliferazione_anno' => 0.0022,
         'rateo_disarmo_anno'        => 0.0016,
-        'soglia_armato'             => 3,
+        // Sulla scala del seme (db/seed/politica-nota.php) 3 e' il programma
+        // avviato, 4 l'ordigno provato: armato e' chi l'ha provato. A 3
+        // l'Iran contava come potenza nucleare — ombrello, deterrenza, club —
+        // lo stesso errore che docs/26 §7.3 aveva corretto nel metro.
+        'soglia_armato'             => 4,
         // Sotto questa volonta' non si prova nemmeno: la capacita' da sola non
         // arma nessuno, o il modello produce la Svizzera atomica.
         'soglia_volonta'            => 0.14,
@@ -368,6 +408,11 @@ return [
 
     'gioco' => [
         'registrazioni' => 'invito',
+        // Quanti ordini una poltrona puo' impartire in un giro d'orologio.
+        // Nessun limite voleva dire cento operazioni coperte in una settimana
+        // da un solo ministro, contro l'unica mossa che la dottrina concede
+        // all'apparato. Due: una decisione e il suo ripensamento. [FABBRICATO]
+        'ordini_per_tick' => 2,
     ],
 
     'linee' => [
