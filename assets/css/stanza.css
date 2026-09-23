@@ -67,8 +67,13 @@ tr.in-crisi td { background: rgba(217, 99, 90, .07); }
 
 .cronaca { list-style: none; padding: 0; margin: .4rem 0; }
 .cronaca .voce { display: flex; gap: .8rem; padding: .3rem 0; border-bottom: 1px solid var(--bordo); }
-.cronaca .quando { color: var(--tenue); min-width: 3.5rem; }
-.cronaca .etichetta { color: var(--acceso); min-width: 11rem; }
+/* Data ed etichetta non si restringono: prima avevano solo una larghezza
+   MINIMA, e quando il fatto era lungo e andava a capo il browser le
+   comprimeva per fargli posto — la data si attaccava all'etichetta e la riga
+   usciva dall'allineamento delle altre. A capo va solo il fatto. */
+.cronaca .quando { color: var(--tenue); flex: none; }
+.cronaca .etichetta { color: var(--acceso); flex: none; width: 11rem; }
+.cronaca .corpo { flex: 1 1 0; min-width: 0; overflow-wrap: anywhere; }
 .cronaca .g-colpo_di_stato .etichetta,
 .cronaca .g-rivoluzione .etichetta,
 .cronaca .g-guerra .etichetta,
@@ -238,7 +243,7 @@ button.minuto { font-size: .82rem; padding: .18rem .5rem; }
   /* La cronaca aveva colonne a larghezza minima fissa: undici rem di etichetta
      su uno schermo da ventitre non lasciavano spazio al fatto. */
   .cronaca .voce { flex-direction: column; gap: .15rem; padding: .5rem 0; }
-  .cronaca .quando, .cronaca .etichetta { min-width: 0; }
+  .cronaca .quando, .cronaca .etichetta { min-width: 0; width: auto; }
   .cronaca .etichetta { font-size: .8rem; }
 
   /* I campi di modulo a sedici pixel: sotto quella soglia iOS ingrandisce la
