@@ -271,7 +271,10 @@ switch ($pezzi[0] ?? '') {
             'colleghi'       => $scrivania->colleghi((int) $poltrona['nazione_id']),
             'verbi'          => $scrivania->verbiPossibili((string) $poltrona['ruolo'], $catalogo),
             'daFirmare'      => $scrivania->daControfirmare($poltrona),
-            'mieiOrdini'     => $scrivania->mieiOrdini($sessione->id()),
+            'mieiOrdini'     => $scrivania->mieiOrdini($sessione->id(), $tick),
+            'registro'       => $s->operazioni->registro((int) $poltrona['id']),
+            'quadro'         => App\Gioco\Operazioni::vedeIlQuadro((string) $poltrona['ruolo'])
+                                ? $s->operazioni->quadro((int) $poltrona['nazione_id'], $tick) : [],
             'paesi'          => $lettura->nazioni($tick, 'nome'),
             'relazioni'      => $lettura->relazioni((string) $poltrona['codice'], 8),
             'agende'         => $agende->di($sessione->id()),
@@ -572,6 +575,13 @@ function azione(array $post, Servizi $s, ?array $poltrona, int $tick): array
                 return [[false, 'Non è una crisi che vi riguardi.'], '/scrivania'];
             }
             return [$crisi->rispondi($idCrisi, $parte, (string) ($post['mossa'] ?? ''), $tick), '/scrivania'];
+
+        case 'contromossa':
+            if ($poltrona === null) {
+                return [[false, 'Non occupi alcuna poltrona.'], '/poltrone'];
+            }
+            return [$s->contromosse->scegli($poltrona, (int) ($post['evento'] ?? 0),
+                (string) ($post['scelta'] ?? ''), $tick), '/scrivania'];
 
         case 'avvisi':
             return [$sessione->avvisi((string) ($post['acceso'] ?? '1') === '1'), '/scrivania'];

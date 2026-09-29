@@ -29,6 +29,13 @@ final class Gabinetto
     ];
 
     /** Quale poltrona risponde di quale dominio d'azione. */
+    /** Il ruolo col suo articolo, per le frasi: «la firma spetta al Capo». */
+    public const A_CHI = [
+        'capo' => 'al Capo', 'staff' => 'al Capo di Gabinetto', 'esteri' => 'agli Esteri',
+        'difesa' => 'alla Difesa', 'intelligence' => 'all\'Intelligence', 'interni' => 'alla Sicurezza interna',
+        'economia' => 'all\'Economia', 'informazione' => 'all\'Informazione',
+    ];
+
     public const DOMINIO_DI = [
         'soc' => 'esteri', 'eco' => 'economia', 'info' => 'informazione',
         'int' => 'intelligence', 'mil' => 'difesa', 'nuc' => 'difesa',

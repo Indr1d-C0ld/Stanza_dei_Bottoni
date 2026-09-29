@@ -536,6 +536,23 @@ return [
     // ---------------------------------------------------------- dottrina
     // Quanto e' intraprendente il mondo quando non ci sono giocatori. Con i
     // giocatori questa macchina governa solo le nazioni non presidiate.
+    // Le contromosse di un servizio con una persona al tavolo (docs/29).
+    // [FABBRICATO] tutte: sono le leve del gioco, non grandezze del mondo.
+    'contromosse' => [
+        // Concentrare i mezzi su un'operazione nota rende piu' probabile
+        // fermarla rispetto al lavoro ordinario dell'apparato.
+        'bonus_sventare'        => 1.6,
+        // Seguire un'operazione invece di fermarla: quanto piu' in fretta si
+        // arriva al nome di chi l'ha ordinata.
+        'bonus_sorveglianza'    => 2.0,
+        // Un'operazione in corso sbattuta sui giornali senza il nome del
+        // mandante: quanto spesso chi l'ha avviata la lascia cadere.
+        'abbandono_se_rivelata' => 0.6,
+        // Quanto guadagna il rapporto col paese che avvisiamo di
+        // un'operazione contro di lui.
+        'gratitudine_avviso'    => 8.0,
+    ],
+
     'dottrina' => [
         'attivita'             => 0.5,   // moltiplicatore generale [FABBRICATO]
         // Il peso dell'invasione fra vicini rivali nella scelta della

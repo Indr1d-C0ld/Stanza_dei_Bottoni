@@ -36,6 +36,9 @@ $racconta = static function (string $genere, array $d) use ($tensioni): array {
         'reclutamento_denunciato' => ['Reclutamento denunciato', $n('paese') . ' accusa ' . $n('accusa') .
                               ' di aver tentato di comprare il suo ' . mb_strtolower($n('poltrona')) . '.'],
         'epoca_chiusa'    => ['Fine di un\'epoca', $n('racconto')],
+        'operazione_rivelata' => ['Operazione rivelata', $n('chi') . ' rivela un\'operazione di ' .
+                              str_replace('_', ' ', $n('verbo')) . ' in corso contro ' . $n('contro') .
+                              ', di mano ancora ignota.'],
         'incidente'       => ['Incidente', 'La crisi fra ' . $n('fra') . ' e ' . $n('e') .
                               ' sfugge di mano: ' . $n('gradino') . '.'],
         'bomba_ottenuta'  => ['Test nucleare', $n('paese') . ' ha provato il suo primo ordigno.'],

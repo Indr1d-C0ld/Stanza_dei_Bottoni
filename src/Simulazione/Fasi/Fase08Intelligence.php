@@ -49,6 +49,28 @@ final class Fase08Intelligence implements Fase
         $difficolta = $cal->leggi('intelligence.difficolta_livello', [1 => 6.0, 2 => 5.0, 3 => 3.5, 4 => 3.0]);
         $decadimento = $cal->numero('intelligence.decadimento_copertura', 0.01);
 
+        // I servizi con una persona al tavolo (Intelligence o Capo): quel che
+        // scoprono non va in stampa da solo, lo decide la persona con le
+        // contromosse; e quel che hanno scelto di seguire si scopre prima.
+        $servizioUmano = [];
+        $sorvegliate = [];
+        if ($c->db !== null && !$c->aVuoto) {
+            foreach ($c->db->esegui(
+                'SELECT DISTINCT n.codice FROM sdb_poltrona p JOIN sdb_nazione n ON n.id = p.nazione_id
+                 WHERE p.ruolo IN ("intelligence", "capo")
+                   AND ' . \App\Gioco\Delega::sqlPresidiata('p', $c->tick))->fetchAll() as $r) {
+                $servizioUmano[(string) $r['codice']] = true;
+            }
+            foreach (\App\Gioco\Contromosse::attive($c->db) as $isoC => $perEvento) {
+                foreach ($perEvento as $idC => $k) {
+                    if ($k['scelta'] === 'sorveglia') {
+                        $sorvegliate[$isoC . '|' . $idC] = true;
+                    }
+                }
+            }
+        }
+        $bonusSorveglia = $cal->numero('contromosse.bonus_sorveglianza', 2.0);
+
         // Le grandi potenze guardano ovunque: sono osservatori per default.
         $potenze = $mondo->elenco();
         usort($potenze, static fn($a, $b) => $b->influenzaTotale <=> $a->influenzaTotale);
@@ -107,7 +129,8 @@ final class Fase08Intelligence implements Fase
 
                 $probabilita = min(0.9, $e->impronta * $migliore
                     * (float) ($difficolta[$prossimo] ?? 0.05)
-                    / (1.0 + 2.0 * $e->copertura));
+                    / (1.0 + 2.0 * $e->copertura)
+                    * (isset($sorvegliate[$iso . '|' . $e->id]) ? $bonusSorveglia : 1.0));
 
                 if (!$c->caso->prova('08_scoperta', crc32($e->id . '|' . $iso),
                         $c->tick * 4 + $avanzamenti, $probabilita)) {
@@ -170,14 +193,21 @@ final class Fase08Intelligence implements Fase
                     // notizia c'e' gia': prima ogni conferma era uno scandalo
                     // nuovo, con la sua legittimita' persa, e un'operazione
                     // vista da sei servizi costava sei volte.
-                    $giaDetto = in_array($accusato, $intel->accusa[$e->id] ?? [], true);
+                    // (Contano solo i servizi che pubblicano da soli: quel che
+                    // sa un servizio con una persona al tavolo resta suo
+                    // finche' lei non lo fa trapelare.)
+                    $giaDetto = in_array($accusato, array_diff_key($intel->accusa[$e->id] ?? [], $servizioUmano), true);
                     $intel->accusa[$e->id][$iso] = $accusato;
-                    if (!$giaDetto && ($e->dominio === 'int' || $e->dominio === 'info')) {
+                    if (!$giaDetto && !isset($servizioUmano[$iso])
+                        && ($e->dominio === 'int' || $e->dominio === 'info')) {
                         $c->annota('attribuzione', [
                             'chi'      => $mondo->nazioni[$iso]->nome,
                             'mandante' => $mondo->nazioni[$accusato]->nome,
                             'verbo'    => $e->verbo,
                             'contro'   => $mondo->nazioni[$e->bersaglio]->nome,
+                            // quale operazione: il registro del mandante vero
+                            // la ritrova nella cronaca (docs/29)
+                            'evento'   => $e->id,
                         ]);
                     }
                 }

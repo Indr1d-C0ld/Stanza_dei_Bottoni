@@ -151,6 +151,16 @@ final class Avvisi
                     . 'Se stai via, puoi affidare la poltrona a qualcuno.', $soglia - $silenzio)];
         }
 
+        // Le nostre operazioni arrivate in fondo dall'ultimo avviso: chi non
+        // era alla scrivania deve sapere com'e' andata (docs/29). Bastano da
+        // sole a far partire un messaggio — chi gioca da solo non ha altro —
+        // e la pausa fra due avvisi impedisce che diventino una pioggia.
+        foreach ((new Operazioni($this->db))->concluseDopo($poltrona, (int) $g['ultimo_avviso_tick']) as $op) {
+            $cose[] = ['urgente' => false, 'testo' => sprintf('La nostra operazione di %s contro %s %s.',
+                str_replace('_', ' ', (string) $op['verbo']), (string) $op['bersaglio'],
+                $op['esito'] === 'realizzato' ? 'e\' arrivata a segno' : 'e\' stata fermata')];
+        }
+
         return $cose;
     }
 

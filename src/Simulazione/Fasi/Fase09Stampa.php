@@ -39,6 +39,9 @@ final class Fase09Stampa implements Fase
         // in guerra o si volta dall'altra parte, sanzioni dichiarate.
         'incidente', 'bomba_ottenuta', 'bomba_posata',
         'garanzia_onorata', 'garanzia_tradita', 'restrizioni',
+        // un servizio che fa trapelare un'operazione in corso senza poterne
+        // dire il mandante (le contromosse, docs/29)
+        'operazione_rivelata',
     ];
 
     public function codice(): string { return '09'; }

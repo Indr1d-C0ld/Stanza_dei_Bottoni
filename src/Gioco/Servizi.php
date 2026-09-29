@@ -32,6 +32,8 @@ final class Servizi
     public readonly Linea $linea;
     public readonly Delega $delega;
     public readonly Epoca $epoca;
+    public readonly Operazioni $operazioni;
+    public readonly Contromosse $contromosse;
     public readonly Mercato $mercato;
     public readonly Arbitrio $arbitrio;
     public readonly Inviti $inviti;
@@ -58,6 +60,8 @@ final class Servizi
         $this->linea  = new Linea($db);
         $this->delega = new Delega($db);
         $this->epoca  = new Epoca($db);
+        $this->operazioni  = new Operazioni($db);
+        $this->contromosse = new Contromosse($db);
         $this->mercato = new Mercato($db, $cal, $radice);
         $this->arbitrio = new Arbitrio($db);
         $this->inviti   = new Inviti($db);

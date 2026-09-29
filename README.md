@@ -106,6 +106,20 @@ che il mittente non ha mai detto.
 
 La sola difesa strutturale è che *chi ha scritto sa cosa ha scritto*.
 
+Chi dirige un servizio vede il suo lavoro: le operazioni altrui scoperte,
+ciascuna al suo gradino di conoscenza, e dal terzo gradino in su sceglie cosa
+farne. Può **sventarla**, concentrandoci i mezzi; **lasciarla correre e
+seguirla** fino al nome di chi l'ha ordinata; **farla trapelare**, e se sa chi è
+stato è uno scandalo, anche quando il nome è quello sbagliato; oppure
+**avvisare** il paese colpito, che saprà quel che sappiamo noi. Il silenzio è
+una scelta: dove c'è una persona al tavolo, la macchina non sventa e non
+denuncia al posto suo.
+
+E ogni ordine si segue fino in fondo nel registro delle operazioni: chi l'ha
+firmato — una persona o l'apparato, che firma al posto dei ministri assenti —,
+se è partito, se è arrivato a segno o è stato fermato, e se il mondo l'ha
+attribuito a qualcuno. Per questo si può giocare anche da soli.
+
 ### Le crisi
 
 Quando si può **dimostrare** chi ha colpito, lo si può contestare apertamente.
@@ -381,7 +395,7 @@ scaduto.
 ```bash
 php bin/realismo.php --anni=15      # diciannove grandezze contro la loro fascia
 php bin/audit.php                   # che cosa è dichiarato e mai usato
-php bin/prova.php                   # quattrocentodue prove
+php bin/prova.php                   # quattrocentoventi prove
 ```
 
 `bin/realismo.php` confronta diciannove grandezze con la fascia in cui il mondo
@@ -444,6 +458,10 @@ diciotto che l'apparato non sceglie mai, quindici manopole di taratura scollegat
 sessanta che non voleva dire niente e faceva sessantaquattro milioni di morti in
 una guerra bilaterale, le tre pompe nell'economia, la variabile che nessuno
 leggeva, la riscrittura che abbiamo **deciso di non fare** e perché.
+
+**`docs/29-il-registro-e-le-contromosse.md`** racconta una partita in
+solitario che ha trovato il buco più grande del lato giocatore: il motore
+sapeva tutto delle operazioni, e la scrivania non ne diceva niente.
 
 **`docs/28-la-guerra-fra-stati.md`** è il seguito del terzo: la guerra
 russo-ucraina nel seme, le guerre fra vicini, la deterrenza, l'armistizio,
@@ -523,7 +541,7 @@ struttura senza valori.
 php bin/tick.php              un passo del mondo
 php bin/simula.php            quindici anni a vuoto, con le statistiche
 php bin/diagnostica.php       la salute del modello
-php bin/prova.php             le prove automatiche (402, circa due minuti)
+php bin/prova.php             le prove automatiche (420, circa due minuti)
 php bin/realismo.php          diciannove grandezze contro le fonti
 php bin/audit.php             che cosa è dichiarato e mai usato
 php bin/migra.php             applica le migrazioni non ancora applicate

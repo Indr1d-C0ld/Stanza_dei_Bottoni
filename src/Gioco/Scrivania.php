@@ -249,9 +249,19 @@ final class Scrivania
                 ($poltrona['per_delega'] ?? false) ? (int) ($poltrona['agente_id'] ?? 0) : null,
             ],
         );
-        return [true, $controfirma === null
-            ? 'Ordine impartito: partirà al prossimo giro d\'orologio.'
-            : 'Ordine predisposto: manca la firma di ' . (Gabinetto::RUOLI[$controfirma] ?? $controfirma) . '.'];
+        if ($controfirma === null) {
+            return [true, 'Ordine impartito: partirà al prossimo giro d\'orologio.'];
+        }
+        $presente = (int) $this->db->esegui(
+            'SELECT COUNT(*) FROM sdb_poltrona p WHERE p.nazione_id = ? AND p.ruolo = ?
+               AND ' . Delega::sqlPresidiata('p', $tick),
+            [(int) $poltrona['nazione_id'], $controfirma])->fetchColumn() > 0;
+        $chi = Gabinetto::RUOLI[$controfirma] ?? $controfirma;
+        return [true, $presente
+            ? 'Ordine predisposto: manca la firma di ' . $chi . '.'
+            : 'Ordine predisposto. La firma spetta ' . (Gabinetto::A_CHI[$controfirma] ?? 'a ' . $chi)
+              . ', che non è una persona al tavolo: '
+              . 'al prossimo giro decide l\'apparato. Il destino dell\'ordine lo segui nel registro delle operazioni.'];
     }
 
     /** @return list<array<string,mixed>> gli ordini che aspettano la MIA firma */
@@ -268,10 +278,17 @@ final class Scrivania
     }
 
     /** @return list<array<string,mixed>> i miei ordini in corso */
-    public function mieiOrdini(int $giocatore): array
+    public function mieiOrdini(int $giocatore, int $tick = 0): array
     {
+        // Se chi deve controfirmare non e' una persona presente, firma
+        // l'apparato al prossimo giro: la scrivania deve dirlo, o «aspetta la
+        // firma del Capo» sembra un blocco (docs/29).
         return $this->db->esegui(
-            'SELECT o.*, b.nome AS bersaglio FROM sdb_ordine o
+            'SELECT o.*, b.nome AS bersaglio,
+                    (SELECT COUNT(*) FROM sdb_poltrona p
+                      WHERE p.nazione_id = o.nazione_id AND p.ruolo = o.richiede_controfirma
+                        AND ' . Delega::sqlPresidiata('p', $tick) . ') AS firmatario_presente
+             FROM sdb_ordine o
              JOIN sdb_nazione b ON b.id = o.bersaglio_id
              WHERE (o.giocatore_id = ? OR o.firmato_per_delega_da = ?)
                AND o.stato IN ("in_attesa","firmato")

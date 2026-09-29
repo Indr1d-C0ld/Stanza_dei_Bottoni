@@ -203,7 +203,7 @@ final class Deposito
             $this->salvaNazioni($mondo, $tick);
             $this->salvaMondo($mondo, $tick, $dataGioco);
             $this->salvaRelazioni($mondo);
-            $this->salvaEventi($mondo);
+            $this->salvaEventi($mondo, $tick);
             $this->salvaPalazzo($mondo);
             $this->salvaGuerre($mondo, $tick);
             $this->salvaStrozzature($mondo);
@@ -338,11 +338,16 @@ final class Deposito
         $valori = [];
     }
 
-    private function salvaEventi(Mondo $mondo): void
+    private function salvaEventi(Mondo $mondo, int $tick): void
     {
         foreach ($mondo->eventi as $e) {
             if (isset($this->eventiScritti[$e->id])) {
-                $this->db->esegui('UPDATE sdb_evento SET stato = ? WHERE id = ?', [$e->stato, $e->id]);
+                // La prima volta che non e' piu' in volo, si segna quando: il
+                // registro delle operazioni e gli avvisi lo leggono.
+                $this->db->esegui(
+                    'UPDATE sdb_evento SET stato = ?,
+                            chiuso_tick = IF(? <> "in_volo" AND chiuso_tick IS NULL, ?, chiuso_tick)
+                     WHERE id = ?', [$e->stato, $e->stato, $tick, $e->id]);
                 continue;
             }
             $this->db->esegui(
@@ -568,10 +573,18 @@ final class Deposito
                 continue;
             }
             $accusato = $mondo->intelligence->accusa[(int) $idEvento][$iso] ?? null;
+            // Non piu' REPLACE: riscriveva primo_tick a ogni giro. La settimana
+            // in cui il servizio se n'e' accorto resta quella; aggiornata_tick
+            // si muove solo se il servizio ha saputo qualcosa di nuovo (va
+            // prima di livello, perche' MariaDB assegna da sinistra a destra).
             $this->db->esegui(
-                'REPLACE INTO sdb_conoscenza
+                'INSERT INTO sdb_conoscenza
                     (osservatore_id, evento_id, livello, primo_tick, confidenza, accusato_id, aggiornata_tick)
-                 VALUES (?,?,?,?,?,?,?)',
+                 VALUES (?,?,?,?,?,?,?)
+                 ON DUPLICATE KEY UPDATE
+                    aggiornata_tick = IF(VALUES(livello) <> livello OR NOT (accusato_id <=> VALUES(accusato_id)),
+                                         VALUES(aggiornata_tick), aggiornata_tick),
+                    livello = VALUES(livello), accusato_id = VALUES(accusato_id)',
                 [$osservatore, (int) $idEvento, $livello, $tick, 60,
                  $accusato !== null ? ($this->idPerIso[$accusato] ?? null) : null, $tick],
             );

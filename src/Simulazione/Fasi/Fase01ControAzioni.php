@@ -47,6 +47,23 @@ final class Fase01ControAzioni implements Fase
         $crisi     = $this->gestisciCrisi($c);
         $linee     = $this->rispondiAlleLinee($c);
 
+        // Le contromosse dei giocatori (docs/29), e chi ha una persona al
+        // tavolo della propria sicurezza: li' la macchina non sventa piu' da
+        // sola, decide la persona.
+        $contromosse = [];
+        $servizioUmano = [];
+        if ($c->db !== null && !$c->aVuoto) {
+            $contromosse = \App\Gioco\Contromosse::attive($c->db);
+            foreach ($c->db->esegui(
+                'SELECT DISTINCT n.codice FROM sdb_poltrona p JOIN sdb_nazione n ON n.id = p.nazione_id
+                 WHERE p.ruolo IN ("intelligence", "capo")
+                   AND ' . \App\Gioco\Delega::sqlPresidiata('p', $c->tick))->fetchAll() as $r) {
+                $servizioUmano[(string) $r['codice']] = true;
+            }
+            $this->chiudiContromosseScadute($c, $contromosse);
+        }
+        $bonusSventa = $c->calibrazione->numero('contromosse.bonus_sventare', 1.6);
+
         foreach ($mondo->eventi as $e) {
             if (!$e->inVolo()) {
                 continue;
@@ -111,18 +128,37 @@ final class Fase01ControAzioni implements Fase
             $probabilita = 0.55 * $reversibilita * $capacita * ($livello >= 4 ? 1.35 : 1.0)
                 * min(1.0, $normale / $durata);
 
+            // Chi siede alla sicurezza del paese colpito decide lui: senza
+            // una sua scelta di sventare, l'operazione non si tenta di fermarla.
+            // Con la scelta, i mezzi concentrati la rendono piu' probabile.
+            $scelta = $contromosse[$e->bersaglio][$e->id] ?? null;
+            if (isset($servizioUmano[$e->bersaglio]) && ($scelta['scelta'] ?? '') !== 'sventa') {
+                continue;
+            }
+            if (($scelta['scelta'] ?? '') === 'sventa') {
+                $probabilita = min(0.95, $probabilita * $bonusSventa);
+            }
+
             if ($c->caso->prova('01_intercettazione', $e->id, $c->tick, $probabilita)) {
                 $e->stato = Evento::FERMATO;
                 $mandante->azioniInVolo = max(0, $mandante->azioniInVolo - 1);
                 $sventati++;
+                if ($scelta !== null && $c->db !== null) {
+                    \App\Gioco\Contromosse::concludi($c->db, (int) $scelta['id'], 'sventata', $c->tick);
+                }
+                // Il nome e' quello che il servizio del bersaglio CREDE: se una
+                // falsa bandiera l'ha ingannato, la notizia e la rappresaglia
+                // colpiscono l'innocente. Prima colpivano il mandante vero,
+                // come se il bersaglio sapesse la verita'.
+                $accusato = $intel->accusato($e->bersaglio, $e->id, $e->mandante);
                 $c->annota('operazione_sventata', [
                     'bersaglio' => $bersaglio->nome,
-                    'mandante'  => $livello >= 4 ? $mandante->nome : 'ignoti',
+                    'mandante'  => $livello >= 4 ? ($mondo->nazioni[$accusato]->nome ?? $mandante->nome) : 'ignoti',
                     'verbo'     => $e->verbo,
                 ]);
                 // Il rapporto peggiora solo se si puo' DIMOSTRARE chi e' stato.
                 if ($livello >= 4) {
-                    $rb = $mondo->relazioni->fra($e->bersaglio, $e->mandante);
+                    $rb = $mondo->relazioni->fra($e->bersaglio, $accusato);
                     if ($rb !== null) {
                         $colpo = 20.0 * $e->intensita;
                         $rb->ancora = max(-127.0, ($rb->ancora ?? $rb->affinita) - $colpo);
@@ -133,7 +169,155 @@ final class Fase01ControAzioni implements Fase
             }
         }
 
-        return new EsitoFase(['annullati' => $annullati, 'sventati' => $sventati, 'crisi' => $crisi]);
+        $rivelate = $this->contromosseIstantanee($c, $contromosse);
+
+        return new EsitoFase(['annullati' => $annullati, 'sventati' => $sventati, 'crisi' => $crisi,
+            'contromosse' => $rivelate]);
+    }
+
+    /**
+     * Le contromosse su operazioni che non volano piu' si chiudono, col loro
+     * esito: la sorveglianza e il tentativo di sventare finiscono con
+     * l'operazione.
+     *
+     * @param array<string,array<int,array<string,mixed>>> $contromosse
+     */
+    private function chiudiContromosseScadute(ContestoTick $c, array &$contromosse): void
+    {
+        $inVolo = [];
+        foreach ($c->mondo->eventi as $e) {
+            if ($e->inVolo()) {
+                $inVolo[$e->id] = true;
+            }
+        }
+        foreach ($contromosse as $iso => $perEvento) {
+            foreach ($perEvento as $id => $k) {
+                if (isset($inVolo[$id]) || !in_array($k['scelta'], ['sventa', 'sorveglia'], true)) {
+                    continue;
+                }
+                $stato = (string) $c->db->esegui('SELECT stato FROM sdb_evento WHERE id = ?', [$id])->fetchColumn();
+                \App\Gioco\Contromosse::concludi($c->db, (int) $k['id'], match ($stato) {
+                    'realizzato' => 'è arrivata a segno',
+                    'fermato'    => 'si è fermata',
+                    default      => 'si è chiusa',
+                }, $c->tick);
+                unset($contromosse[$iso][$id]);
+            }
+        }
+    }
+
+    /**
+     * Le contromosse che si compiono in un colpo: far trapelare, avvisare.
+     *
+     * @param array<string,array<int,array<string,mixed>>> $contromosse
+     */
+    private function contromosseIstantanee(ContestoTick $c, array $contromosse): int
+    {
+        $mondo = $c->mondo;
+        $intel = $mondo->intelligence ?? null;
+        if ($c->db === null || $intel === null) {
+            return 0;
+        }
+        $cal = $c->calibrazione;
+        $fatte = 0;
+        foreach ($contromosse as $iso => $perEvento) {
+            foreach ($perEvento as $id => $k) {
+                if (!in_array($k['scelta'], ['trapela', 'avvisa'], true)) {
+                    continue;
+                }
+                $e = null;
+                foreach ($mondo->eventi as $x) {
+                    if ($x->id === $id) {
+                        $e = $x;
+                    }
+                }
+                $riga = $e === null ? $c->db->esegui(
+                    'SELECT e.verbo, m.codice AS mandante, b.codice AS bersaglio, c.livello, a.codice AS accusato
+                     FROM sdb_evento e JOIN sdb_nazione m ON m.id = e.mandante_id
+                     JOIN sdb_nazione b ON b.id = e.bersaglio_id
+                     LEFT JOIN sdb_conoscenza c ON c.evento_id = e.id AND c.osservatore_id = ?
+                     LEFT JOIN sdb_nazione a ON a.id = c.accusato_id
+                     WHERE e.id = ?', [(int) $k['nazione_id'], $id])->fetch() : null;
+                $verbo     = $e?->verbo ?? (string) ($riga['verbo'] ?? '');
+                $bersaglio = $e?->bersaglio ?? (string) ($riga['bersaglio'] ?? '');
+                $mandante  = $e?->mandante ?? (string) ($riga['mandante'] ?? '');
+                $livello   = $e !== null ? $intel->livello($iso, $id) : (int) ($riga['livello'] ?? 0);
+                $accusato  = $e !== null ? $intel->accusato($iso, $id, $mandante)
+                                         : (string) ($riga['accusato'] ?? $mandante);
+                $noi = $mondo->nazioni[$iso] ?? null;
+                if ($noi === null || $verbo === '' || !isset($mondo->nazioni[$bersaglio])) {
+                    \App\Gioco\Contromosse::concludi($c->db, (int) $k['id'], 'non più possibile', $c->tick);
+                    continue;
+                }
+
+                if ($k['scelta'] === 'avvisa') {
+                    if ($e === null || !$e->inVolo()) {
+                        \App\Gioco\Contromosse::concludi($c->db, (int) $k['id'], 'troppo tardi: si era già chiusa', $c->tick);
+                        continue;
+                    }
+                    // Il paese colpito sa quel che sappiamo noi, compreso il
+                    // nome che facciamo — giusto o sbagliato.
+                    $intel->imponiLivello($bersaglio, $id, $livello);
+                    if ($livello >= 4 && !isset($intel->accusa[$id][$bersaglio])) {
+                        $intel->accusa[$id][$bersaglio] = $accusato;
+                    }
+                    $r = $mondo->relazioni->fra($bersaglio, $iso);
+                    if ($r !== null) {
+                        $grazie = $cal->numero('contromosse.gratitudine_avviso', 8.0);
+                        $r->affinita = min(127.0, $r->affinita + $grazie);
+                        $r->ancora = min(127.0, ($r->ancora ?? $r->affinita) + $grazie / 2.0);
+                        $r->aggiornaUmore();
+                    }
+                    \App\Gioco\Contromosse::concludi($c->db, (int) $k['id'],
+                        'avvisato: ' . $mondo->nazioni[$bersaglio]->nome . ' ora sa', $c->tick);
+                    $fatte++;
+                    continue;
+                }
+
+                // --- trapela ------------------------------------------------
+                if ($livello >= 4) {
+                    // Lo scandalo, come quando lo dimostra un servizio: la
+                    // fase 09 lo pubblica e lo fa pagare a chi e' accusato.
+                    $c->annota('attribuzione', [
+                        'chi'      => $noi->nome,
+                        'mandante' => $mondo->nazioni[$accusato]->nome ?? $accusato,
+                        'verbo'    => $verbo,
+                        'contro'   => $mondo->nazioni[$bersaglio]->nome,
+                        'evento'   => $id,
+                    ]);
+                    $r = $mondo->relazioni->fra($accusato, $iso);
+                    if ($r !== null) {
+                        $r->affinita = max(-127.0, $r->affinita - 10.0);
+                        $r->ancora = max(-127.0, ($r->ancora ?? $r->affinita) - 5.0);
+                        $r->aggiornaUmore();
+                    }
+                    \App\Gioco\Contromosse::concludi($c->db, (int) $k['id'],
+                        'scandalo: accusato ' . ($mondo->nazioni[$accusato]->nome ?? $accusato), $c->tick);
+                } else {
+                    // Si sa che c'e' e contro chi, non di chi e': la notizia
+                    // brucia l'operazione, e chi l'ha avviata spesso la lascia.
+                    $c->annota('operazione_rivelata', [
+                        'chi'    => $noi->nome,
+                        'verbo'  => $verbo,
+                        'contro' => $mondo->nazioni[$bersaglio]->nome,
+                    ]);
+                    $abbandonata = $e !== null && $e->inVolo() && $c->caso->prova('01_bruciata', $id, $c->tick,
+                        $cal->numero('contromosse.abbandono_se_rivelata', 0.6));
+                    if ($abbandonata) {
+                        $e->stato = Evento::FERMATO;
+                        $m = $mondo->nazioni[$mandante] ?? null;
+                        if ($m !== null) {
+                            $m->azioniInVolo = max(0, $m->azioniInVolo - 1);
+                        }
+                    }
+                    \App\Gioco\Contromosse::concludi($c->db, (int) $k['id'],
+                        $abbandonata ? 'rivelata: chi l\'aveva avviata l\'ha abbandonata' : 'rivelata: prosegue',
+                        $c->tick);
+                }
+                $fatte++;
+            }
+        }
+        return $fatte;
     }
 
     /**

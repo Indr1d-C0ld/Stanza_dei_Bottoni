@@ -63,6 +63,11 @@ final class Fase00Chiusura implements Fase
             $evento = $this->confeziona($n, $b->iso3, $ordine['verbo'], $d,
                 $ordine['intensita'], $ordine['copertura'], $mondo, $c);
             $mondo->eventi[] = $evento;
+            // L'ordine sa quale operazione ha fatto partire: e' da qui che il
+            // registro ne segue il destino fino in fondo.
+            if ($c->db !== null && isset($ordine['id'])) {
+                $c->db->esegui('UPDATE sdb_ordine SET evento_id = ? WHERE id = ?', [$evento->id, $ordine['id']]);
+            }
             $n->azioniInVolo++;
             $presidiate[$n->iso3] = true;
             $nuovi++;
@@ -262,7 +267,10 @@ final class Fase00Chiusura implements Fase
                      + ($poltrona->lealta - 60.0) / 300.0));
 
             $firma = $c->caso->prova('00_controfirma', (int) $r['id'], $c->tick, $probabilita);
-            $c->db->esegui('UPDATE sdb_ordine SET stato = ?, controfirmato_il = NOW() WHERE id = ?',
+            // Si segna che la firma e' della macchina: il registro delle
+            // operazioni lo dice a chi ha dato l'ordine (docs/29).
+            $c->db->esegui('UPDATE sdb_ordine SET stato = ?, controfirmato_il = NOW(), firmato_da_apparato = 1
+                            WHERE id = ?',
                 [$firma ? 'firmato' : 'annullato', (int) $r['id']]);
             $c->annota($firma ? 'controfirma' : 'firma_negata', [
                 'nazione' => $n->nome,
@@ -294,6 +302,7 @@ final class Fase00Chiusura implements Fase
         $ordini = [];
         foreach ($righe as $r) {
             $ordini[] = [
+                'id'        => (int) $r['id'],
                 'iso'       => (string) $r['iso'],
                 'bersaglio' => (string) $r['bersaglio'],
                 'verbo'     => (string) $r['verbo'],

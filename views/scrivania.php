@@ -1,7 +1,7 @@
 <?php defined('BASE') || exit; // si include da index.php, non si apre dal browser ?>
 <?php
 /** @var array<string,mixed> $poltrona $nazione */
-/** @var list<array<string,mixed>> $colleghi $daFirmare $mieiOrdini $paesi $relazioni */
+/** @var list<array<string,mixed>> $colleghi $daFirmare $mieiOrdini $paesi $relazioni $registro $quadro */
 /** @var array<string,array<string,mixed>> $verbi */
 $ruoli = App\Dati\Gabinetto::RUOLI;
 $domini = ['soc'=>'diplomazia','eco'=>'economia','info'=>'informazione',
@@ -154,7 +154,11 @@ $tensioni = [1=>'quiete',2=>'pace',3=>'tensione',4=>'conflitto aperto',5=>'guerr
          contro <?= htmlspecialchars((string) $o['bersaglio']) ?>, intensità <?= (int) $o['intensita'] ?>%.</p>
       <p class="riga-due"><?= $o['stato'] === 'firmato'
           ? 'Firmato: parte al prossimo giro d\'orologio.'
-          : 'Aspetta la firma di ' . htmlspecialchars($ruoli[$o['richiede_controfirma']] ?? '?') . '.' ?></p>
+          : ((int) ($o['firmatario_presente'] ?? 0) > 0
+              ? 'Aspetta la firma di ' . htmlspecialchars($ruoli[$o['richiede_controfirma']] ?? '?') . '.'
+              : 'La firma spetta ' . htmlspecialchars(App\Dati\Gabinetto::A_CHI[$o['richiede_controfirma']] ?? '?')
+                . ', che non è una persona al tavolo: al prossimo giro decide l\'apparato. '
+                . 'Firma più volentieri quel che è coerente con la linea del governo.') ?></p>
       <p class="riga-tre tenue">Se nessuno firma, decade il <?= App\Nucleo\Calendario::tick((int) $o['scade_tick']) ?>.</p>
       <form method="post" action="" class="in-linea">
         <input type="hidden" name="gettone" value="<?= htmlspecialchars($sessione->gettone()) ?>">
@@ -165,6 +169,109 @@ $tensioni = [1=>'quiete',2=>'pace',3=>'tensione',4=>'conflitto aperto',5=>'guerr
     </article>
   <?php endforeach; ?>
 </section>
+
+<!-- ─────────────────────  IL REGISTRO DELLE OPERAZIONI  ───────────────────── -->
+<?php if (!empty($registro)): ?>
+<section class="cartella registro">
+  <h2>Il registro delle operazioni</h2>
+  <p class="tenue">Gli ordini di questa poltrona e il loro destino, per quel che se ne può sapere:
+     se sono partiti, se sono arrivati a segno, e se il mondo li ha attribuiti a qualcuno.
+     Chi li ha visti passare non si sa: è affare dei servizi altrui.</p>
+  <?php foreach ($registro as $o):
+    $verbo = htmlspecialchars(str_replace('_', ' ', (string) $o['verbo']));
+    $firma = (int) $o['firmato_da_apparato'] === 1 ? 'dall\'apparato' : ($o['firmatario'] !== null
+        ? 'da ' . htmlspecialchars((string) $o['firmatario']) : '');
+    [$classe, $destino] = match (true) {
+        $o['stato'] === 'in_attesa' => ['in-sospeso', 'Aspetta la seconda firma ('
+            . htmlspecialchars($ruoli[$o['richiede_controfirma']] ?? '?') . ').'],
+        $o['stato'] === 'firmato'   => ['', 'Firmato' . ($firma !== '' ? " $firma" : '') . ': parte al prossimo giro.'],
+        $o['stato'] === 'scaduto'   => ['tenue', 'Nessuno l\'ha firmato in tempo: non è partito.'],
+        $o['stato'] === 'annullato' && (int) $o['firmato_da_apparato'] === 1
+                                    => ['ostile', 'L\'apparato ha negato la seconda firma: non è partito.'],
+        $o['stato'] === 'annullato' => ['tenue', 'Ritirato.'],
+        $o['esito'] === 'in_volo'   => ['in-sospeso', 'Partito' . ($firma !== '' ? " (firmato $firma)" : '')
+            . '. In corso: arriva a destinazione verso il '
+            . App\Nucleo\Calendario::tick((int) $o['maturazione_tick']) . '.'],
+        $o['esito'] === 'realizzato' => ['', 'Arrivato a segno il ' . App\Nucleo\Calendario::tick((int) ($o['chiuso_tick'] ?? $o['maturazione_tick'])) . '.'],
+        $o['esito'] === 'fermato'    => ['ostile', 'Fermato' . ($o['chiuso_tick'] !== null
+            ? ' il ' . App\Nucleo\Calendario::tick((int) $o['chiuso_tick']) : '')
+            . ': non è arrivato a segno. Qualcuno l\'ha visto in tempo, o il governo ci ha ripensato.'],
+        default => ['tenue', 'Partito; l\'esito non è registrato.'],
+    };
+  ?>
+    <article class="voce-cartella <?= $classe === 'in-sospeso' ? 'in-sospeso' : '' ?>">
+      <p class="riga-uno"><strong><?= $verbo ?></strong> contro <?= htmlspecialchars((string) $o['bersaglio']) ?>,
+         intensità <?= (int) $o['intensita'] ?>%<?= (int) $o['copertura'] > 0 ? ', copertura ' . (int) $o['copertura'] . '%' : '' ?>
+         <span class="tenue">— ordinato il <?= App\Nucleo\Calendario::tick((int) $o['creato_tick']) ?></span></p>
+      <p class="riga-due <?= $classe === 'ostile' ? 'ostile' : ($classe === 'tenue' ? 'tenue' : '') ?>"><?= $destino ?></p>
+      <?php foreach ($o['attribuzioni'] as $a): ?>
+        <p class="riga-tre <?= $a['accusato'] === $o['nazione'] ? 'ostile' : '' ?>">
+          <?= App\Nucleo\Calendario::tick((int) $a['tick']) ?>: <?= htmlspecialchars($a['chi']) ?>
+          l'ha attribuito pubblicamente a <strong><?= htmlspecialchars($a['accusato']) ?></strong><?=
+          $a['accusato'] === $o['nazione'] ? ' — lo scandalo è nostro.'
+          : ' — la colpa è caduta su altri.' ?></p>
+      <?php endforeach; ?>
+    </article>
+  <?php endforeach; ?>
+</section>
+<?php endif; ?>
+
+<!-- ───────────────────────  IL QUADRO DEL SERVIZIO  ───────────────────────── -->
+<?php if (App\Gioco\Operazioni::vedeIlQuadro((string) $poltrona['ruolo'])): ?>
+<section class="cartella quadro-servizio">
+  <h2>Il quadro del servizio</h2>
+  <p class="tenue">Le operazioni altrui che il nostro servizio ha scoperto, in corso o chiuse di recente.
+     Se ne sa per gradi: che qualcosa si muove; di che genere e dove; contro chi; chi l'ha ordinata.
+     Il quarto gradino è il più difficile, e il nome che fa può essere quello sbagliato: chi opera
+     sa anche far ricadere la colpa su un altro.</p>
+  <?php if ($quadro === []): ?>
+    <p class="tenue">Per ora il servizio non ha niente da riferire.</p>
+  <?php endif; ?>
+  <?php foreach ($quadro as $k):
+    $liv = (int) $k['livello'];
+    $controNoi = (int) $k['bersaglio_id'] === (int) $poltrona['nazione_id'];
+    $inVolo = $k['stato'] === 'in_volo';
+    $verbo = htmlspecialchars(str_replace('_', ' ', (string) $k['verbo']));
+    $dominio = App\Gioco\Operazioni::DOMINI[$k['dominio']] ?? '';
+    $regione = App\Gioco\Operazioni::REGIONI[$k['regione']] ?? '';
+    $testo = match (true) {
+        $liv <= 1 => 'Qualcosa si muove: un\'attività insolita che il servizio non sa ancora leggere.',
+        $liv === 2 => ucfirst($dominio) . ": {$verbo}, in " . htmlspecialchars($regione) . '. Contro chi, ancora non si sa.',
+        default    => ucfirst($dominio) . ": {$verbo} contro "
+                      . ($controNoi ? '<strong>di noi</strong>' : htmlspecialchars((string) $k['bersaglio'])) . '.',
+    };
+  ?>
+    <article class="voce-cartella <?= $inVolo && $controNoi ? 'in-sospeso' : '' ?>">
+      <p class="riga-uno"><span class="etichetta-livello">gradino <?= $liv ?> di 4</span> <?= $testo ?></p>
+      <?php if ($liv >= 4): ?>
+        <p class="riga-due">Il servizio fa il nome di <strong><?= htmlspecialchars((string) $k['accusato']) ?></strong>.</p>
+      <?php endif; ?>
+      <p class="riga-tre tenue">Segnalata il <?= App\Nucleo\Calendario::tick((int) $k['primo_tick']) ?> ·
+        <?php if ($inVolo): ?>in corso<?php
+        elseif ($controNoi && $k['stato'] === 'realizzato'): ?>è arrivata a segno<?php
+        elseif ($controNoi && $k['stato'] === 'fermato'): ?>non è arrivata a segno<?php
+        else: ?>conclusa<?php endif; ?>
+        <?php if ($k['scelta'] !== null): ?>
+          · la nostra scelta: <strong><?= htmlspecialchars(App\Gioco\Contromosse::SCELTE[$k['scelta']] ?? $k['scelta']) ?></strong>
+          <?= $k['contromossa_esito'] !== null ? '— ' . htmlspecialchars((string) $k['contromossa_esito']) : '' ?>
+        <?php endif; ?></p>
+      <?php $possibili = App\Gioco\Contromosse::possibili($k, (int) $poltrona['nazione_id']);
+        if ($possibili !== [] && ($k['contromossa_stato'] ?? '') !== 'conclusa'): ?>
+      <form method="post" action="" class="in-linea">
+        <input type="hidden" name="gettone" value="<?= htmlspecialchars($sessione->gettone()) ?>">
+        <input type="hidden" name="azione" value="contromossa">
+        <input type="hidden" name="evento" value="<?= (int) $k['evento'] ?>">
+        <?php foreach ($possibili as $s): ?>
+          <button type="submit" name="scelta" value="<?= $s ?>"
+                  title="<?= htmlspecialchars(App\Gioco\Contromosse::SPIEGAZIONI[$s]) ?>"
+                  <?= $k['scelta'] === $s ? 'disabled' : '' ?>><?= htmlspecialchars(App\Gioco\Contromosse::SCELTE[$s]) ?></button>
+        <?php endforeach; ?>
+      </form>
+      <?php endif; ?>
+    </article>
+  <?php endforeach; ?>
+</section>
+<?php endif; ?>
 
 <!-- ─────────────────────────────  LE CRISI  ─────────────────────────────── -->
 <?php if (!empty($crisiAperte)): ?>

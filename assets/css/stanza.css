@@ -120,6 +120,11 @@ button.pericolo { border-color: #6b3a36; color: var(--ostile); }
 .cartella { border: 1px solid var(--bordo); border-radius: 4px; padding: .3rem 1rem 1rem; background: var(--pannello); }
 .voce-cartella { border-bottom: 1px solid var(--bordo); padding: .7rem 0; }
 .voce-cartella:last-child { border-bottom: 0; }
+/* Il quadro del servizio: il gradino di conoscenza, prima del fatto. */
+.etichetta-livello {
+  display: inline-block; margin-right: .5rem; padding: 0 .4rem;
+  font-size: .75rem; color: var(--tenue); border: 1px solid var(--bordo); border-radius: 3px;
+}
 .voce-cartella p { margin: .15rem 0; }
 .voce-cartella .riga-uno { color: var(--testo); }
 .voce-cartella .riga-due { color: var(--acceso); font-size: .9rem; }
