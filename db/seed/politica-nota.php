@@ -25,6 +25,10 @@ declare(strict_types=1);
  * variabile le ho provate (OpenSanctions, la mappa delle sanzioni dell'UE) e
  * spiegano mezzo punto in piu': i loro bersagli sono gia' le rivalita' e i
  * paesi ostili alla Russia (docs/37).
+ *
+ * In fondo, gli EVENTI RECENTI: le ostilita' nate dopo il 2020 senza
+ * combattimenti fra Stati, che vincono come i rapporti ma restano fuori dalla
+ * stima dei pesi (docs/38).
  */
 
 return [
@@ -173,5 +177,44 @@ return [
         // 1983), libera circolazione delle persone, l'ANZUS; i dati vedono
         // solo un patto e danno +54.
         ['IDN', 'MYS',   70], ['AUS', 'NZL',  115], ['MEX', 'CAN',   75],
+    ],
+
+    /**
+     * Le ostilita' nate dopo il 2020 senza combattimenti fra Stati, che
+     * nessuna fonte strutturale vede: le dispute dell'UCDP contano solo i
+     * conflitti armati (e arrivano al 2025: India-Pakistan, Cambogia-
+     * Thailandia, Iran-Israele ci sono gia'), le rivalita' strategiche si
+     * fermano al 2020. Vincono come i rapporti, ma NON entrano nella stima dei
+     * pesi di bin/importa_onu.php: insegnerebbero alla regressione dei fatti
+     * che la struttura non puo' spiegare (docs/38). Ognuno con la sua data.
+     */
+    'eventi_recenti' => [
+        // La sentenza arbitrale del 2016 ignorata da Pechino; gli scontri alla
+        // secca di Second Thomas con idranti e speronamenti (2023-2024), fino
+        // all'abbordaggio del 17/06/2024.
+        ['CHN', 'PHL',  -40], ['PHL', 'CHN',  -45],
+        // La Turchia sospende ogni commercio con Israele il 02/05/2024.
+        ['TUR', 'ISR',  -50], ['ISR', 'TUR',  -40],
+        // L'Algeria abbatte un drone maliano a Tinzaouaten nella notte del
+        // 01/04/2025; Mali, Niger e Burkina Faso richiamano gli ambasciatori,
+        // gli spazi aerei si chiudono a vicenda.
+        ['DZA', 'MLI',  -40], ['MLI', 'DZA',  -45],
+        // Le giunte del Sahel cacciano la Francia: Barkhane lascia il Mali il
+        // 15/08/2022, il Burkina Faso a febbraio 2023, il Niger a dicembre
+        // 2023 dopo aver espulso l'ambasciatore.
+        ['MLI', 'FRA',  -50], ['BFA', 'FRA',  -45], ['NER', 'FRA',  -55],
+        // Il Niger tiene chiuso il confine col Benin dal colpo del 2023, anche
+        // dopo la fine delle sanzioni ECOWAS; la lite sull'oleodotto del 2024.
+        ['NER', 'BEN',  -25],
+        // L'Ufficio di rappresentanza di Taiwan a Vilnius (18/11/2021): la
+        // Cina declassa le relazioni e blocca le merci lituane.
+        ['CHN', 'LTU',  -30],
+        // Il Sudafrica porta Israele davanti alla Corte internazionale di
+        // giustizia per genocidio (29/12/2023), dopo aver richiamato i suoi
+        // diplomatici a novembre.
+        ['ZAF', 'ISR',  -45], ['ISR', 'ZAF',  -35],
+        // Il volo AZAL 8243 abbattuto dalla contraerea russa il 25/12/2024; le
+        // morti di due azeri nelle retate di Ekaterinburg (giugno 2025).
+        ['AZE', 'RUS',  -15],
     ],
 ];

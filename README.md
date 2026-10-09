@@ -420,7 +420,7 @@ scaduto.
 ```bash
 php bin/realismo.php --anni=15      # ventidue grandezze contro la loro fascia
 php bin/audit.php                   # che cosa è dichiarato e mai usato
-php bin/prova.php                   # cinquecentodiciannove prove
+php bin/prova.php                   # cinquecentoventi prove
 ```
 
 `bin/realismo.php` confronta ventidue grandezze con la fascia in cui il mondo
@@ -492,6 +492,13 @@ legittimità che tornava a 50 per tutti, le guerre civili nei paesi piccoli e
 poveri sbagliati. Adesso il seme legge il FMI e la Banca Mondiale, e le guerre
 civili seguono i coefficienti stimati da Fearon. Ventuno grandezze su ventuno in
 fascia, su otto mondi.
+
+**`docs/38-quel-che-resta.md`** chiude gli ultimi due punti. Lo scarto residuo
+dei colpi di Stato sta in un errore standard e mezzo da un dato di 35 colpi, e
+inseguirlo vorrebbe dire tarare sul rumore. Le ostilità nate dopo il 2020 senza
+combattimenti (la Cina e le Filippine, la Turchia e Israele, la Francia cacciata
+dal Sahel) hanno un posto loro, gli «eventi recenti», ciascuno con la sua data,
+che corregge le affinità senza entrare nella stima dei pesi.
 
 **`docs/37-la-trappola-del-colpo.md`** aggiunge un meccanismo che mancava: chi
 ha appena avuto un colpo di Stato ne ha altri, tre volte tanto per dieci anni
@@ -566,10 +573,10 @@ sapeva produrre.
   sono fatti politici datati — il Giappone e la Corea del Nord, Israele e il
   Libano dopo il 2023, l'Ungheria di Orban — che restano scritti a mano, con
   la loro ragione accanto (`docs/37`).
-- **Le rivalità strategiche sono ferme al 2020**: quel che è cambiato dopo lo
-  portano le dispute e i rapporti dichiarati (`docs/36`).
-- **Fra 0,15 e 0,25 di democrazia liberale** i colpi stanno ancora nella parte
-  alta dell'intervallo del dato, anche con la trappola del colpo (`docs/37`).
+- **Le ostilità dopo il 2020 senza combattimenti** non le vede nessuna fonte
+  strutturale: le rivalità strategiche si fermano al 2020, l'UCDP conta solo
+  le armi. Si scrivono a mano, con la loro data, negli «eventi recenti»
+  (`docs/38`).
 
 Sono difetti noti e scritti, non nascosti.
 
@@ -605,7 +612,7 @@ struttura senza valori.
 php bin/tick.php              un passo del mondo
 php bin/simula.php            quindici anni a vuoto, con le statistiche
 php bin/diagnostica.php       la salute del modello
-php bin/prova.php             le prove automatiche (519, qualche minuto)
+php bin/prova.php             le prove automatiche (520, qualche minuto)
 php bin/realismo.php          ventidue grandezze contro le fonti
 php bin/audit.php             che cosa è dichiarato e mai usato
 php bin/migra.php             applica le migrazioni non ancora applicate

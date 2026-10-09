@@ -126,3 +126,16 @@ Prove::che('e di chi non ne ha avuti: l\'Iraq e il Pakistan',
     && $m->nazioni['PAK']->ultimoColpo === \App\Dati\Nazione::MAI_COLPO);
 Prove::vicino('un colpo nei dieci anni prima triplica il rischio (3,1: Powell e Thyne, a parita\' di stabilita\')',
     3.1, $calGP->numero('colpo_di_stato.trappola'), 0.001);
+
+// ------------------------------------------------------------ eventi recenti
+Prove::gruppo('Le ostilita\' nate dopo il 2020 senza sparare ci sono, ma non insegnano niente ai pesi');
+
+$m = Mondo::daSeme($semeGP);
+$aff = static fn(string $a, string $b): float => (float) ($m->relazioni->fra($a, $b)?->affinita ?? 0.0);
+Prove::che('la Francia e le giunte del Sahel, la Turchia e Israele, la Cina e le Filippine sono ostili',
+    $aff('NER', 'FRA') < -30.0 && $aff('TUR', 'ISR') < -30.0 && $aff('CHN', 'PHL') < -30.0,
+    sprintf('%d %d %d', $aff('NER', 'FRA'), $aff('TUR', 'ISR'), $aff('CHN', 'PHL')));
+$politicaGP = require $radiceGP . '/db/seed/politica-nota.php';
+Prove::che('e i pesi delle affinita\' si stimano sui soli rapporti strutturali, non sugli eventi',
+    !str_contains((string) file_get_contents($radiceGP . '/bin/importa_onu.php'), 'eventi_recenti')
+    && count($politicaGP['eventi_recenti'] ?? []) >= 10);

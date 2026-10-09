@@ -433,7 +433,8 @@ final class Mondo
             $n->conflittoIniziale = $n->netPeace;
         }
 
-        $mondo->preparaRelazioni($politica['rapporti'] ?? []);
+        // Gli eventi recenti vengono dopo i rapporti, e vincono su di loro.
+        $mondo->preparaRelazioni(array_merge($politica['rapporti'] ?? [], $politica['eventi_recenti'] ?? []));
 
         // L'influenza serve alle condizioni iniziali dell'intelligence e la
         // calcola la fase 06: qui una stima grezza per non partire da zero.
