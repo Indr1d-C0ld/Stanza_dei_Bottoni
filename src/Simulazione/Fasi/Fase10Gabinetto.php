@@ -84,7 +84,12 @@ final class Fase10Gabinetto implements Fase
             //
             // Adesso decide l'indice di democrazia liberale di V-Dem, che e'
             // la misura di questa cosa esatta.
-            $elettorale = $n->democrazia >= $sogliaElettorale && $n->statoPolizia <= 3;
+            // Una stretta OLTRE la norma del regime sospende il voto; la
+            // norma no. Col livello assoluto (fino a 3) le Filippine e l'India,
+            // che votano con uno Stato violento, non avrebbero piu' votato
+            // da quando la polizia parte dal dato V-Dem (docs/31).
+            $elettorale = $n->democrazia >= $sogliaElettorale
+                && $n->statoPolizia - $n->basePolizia() <= 1.0;
 
             if (!$elettorale) {
                 $n->prossimaElezione = 0;

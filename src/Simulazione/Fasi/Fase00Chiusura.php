@@ -197,6 +197,13 @@ final class Fase00Chiusura implements Fase
             $perDominio[$evento->dominio] = ($perDominio[$evento->dominio] ?? 0) + 1;
         }
 
+        // --- la guerra fra rivali --------------------------------------------
+        $guerre = $this->guerreFraRivali($c, $verbi, $presidiate, $umani, $inVoloMax);
+        $nuovi += $guerre;
+        if ($guerre > 0) {
+            $perDominio['mil'] = ($perDominio['mil'] ?? 0) + $guerre;
+        }
+
         return new EsitoFase(['nuovi' => $nuovi] + $perDominio);
     }
 
@@ -380,7 +387,6 @@ final class Fase00Chiusura implements Fase
     {
         $mondo = $c->mondo;
         $candidati = [];
-        $pesoGuerraVicini = $c->calibrazione->numero('dottrina.peso_guerra_vicini', 2.4);
 
         foreach ($mondo->relazioni->tutte() as $chiave => $r) {
             [$da, $verso] = explode('|', $chiave);
@@ -421,66 +427,12 @@ final class Fase00Chiusura implements Fase
                 $candidati['disinformazione'] = 1.6 * $sporco;
                 $candidati['sabotaggio'] = 0.8 * $sporco;
             }
-            // L'ultimo gradino. Serve odio dichiarato, una superiorita'
-            // militare netta, la possibilita' di arrivarci — e un governo
-            // abbastanza spregiudicato da provarci. Resta una mossa rara.
-            // Due vincoli che il modello non aveva e senza i quali produceva
-            // gli Stati Uniti che conquistano la Russia:
-            //
-            //   la DETERRENZA — chi ha l'arma non si invade, punto;
-            //   la PROIEZIONE — per invadere bisogna poterci arrivare, cioe'
-            //   confinare o avere un vicino del bersaglio che ti apra la porta
-            //   (e' la regola logistica di Balance of Power).
-            $invadibile = $b->posturaNucleare < (int) $c->calibrazione->numero('nucleare.soglia_armato', 4);
-            // Una grande potenza puo' proiettare forza anche nella propria
-            // regione senza confinare: e' il caso delle flotte.
-            $raggiungibile = $r->confinanti
-                || $this->haUnaTestaDiPonte($n, $b, $mondo)
-                || ($n->influenzaTotale > 8.0 && $n->regione === $b->regione);
-
-            $giaInGuerra = false;
-            foreach ($mondo->guerre as $gg) {
-                if (in_array($n->iso3, [$gg['aggressore'], $gg['difensore']], true)
-                    && in_array($b->iso3, [$gg['aggressore'], $gg['difensore']], true)) {
-                    $giaInGuerra = true;
-                }
-            }
-
-            // La DETERRENZA ESTESA: non si invade nemmeno chi sta sotto
-            // l'ombrello nucleare di un garante (obbligo 128, che Mondo
-            // assegna ai patti di difesa con uno Stato armato). Prima contava
-            // solo l'arsenale del bersaglio, e i baltici erano invadibili.
-            // (Le due verifiche costano: si fanno solo quando tutto il resto
-            // dice gia' di si'.)
-            if ($invadibile && $raggiungibile && !$giaInGuerra
-                && $r->affinita < -70.0
-                && $n->potenzaGoverno() > $b->potenzaGoverno() * 1.5
-                && !$this->sottoOmbrello($b->iso3, $mondo, $c->tick)
-                && !$this->haUnGaranteForte($n, $b, $mondo)) {
-                // Piu' il bersaglio e' debole in casa propria, piu' la
-                // tentazione cresce: si invade chi sembra gia' mezzo caduto.
-                $tentazione = $fragile ? 2.0 : 1.0;
-                if ($r->confinanti) {
-                    // LA GUERRA FRA VICINI RIVALI. E' la forma piu' comune di
-                    // guerra fra Stati: la maggior parte nasce da una disputa
-                    // territoriale fra confinanti (Vasquez, «The War Puzzle»,
-                    // 1993; Senese e Vasquez 2008) dentro una rivalita' di lunga
-                    // durata (Diehl e Goertz, «War and Peace in International
-                    // Rivalry», 2000), e la iniziano piu' spesso le autocrazie.
-                    // Prima serviva l'ambizione di una grande potenza e
-                    // un'etica estratta da un numero a caso: l'Azerbaigian, che
-                    // ha attaccato l'Armenia nel 2020 e nel 2023, non poteva.
-                    // Il peso: tarato perche' il mondo faccia qualche guerra
-                    // fra vicini in quindici anni, come il 2010-25 vero
-                    // (Russia-Ucraina, Azerbaigian-Armenia due volte,
-                    // India-Pakistan, Thailandia-Cambogia, Israele-Iran).
-                    $candidati['invasione'] = $pesoGuerraVicini * (0.25 + 0.75 * (1.0 - $n->democrazia)) * $tentazione;
-                    $candidati['dimostrazione_forza'] = 1.5;
-                } elseif ($n->ambizione >= 4 && $n->etica >= 4) {
-                    // Oltre i confini: la proiezione di una grande potenza.
-                    $candidati['invasione'] = 0.8 * $tentazione;
-                    $candidati['dimostrazione_forza'] = 1.5;
-                }
+            // L'ultimo gradino (puoInvadere()). La decisione di invadere non sta piu' qui: e' un rischio annuo per
+            // coppia, misurato sulle rivalita' vere (guerreFraRivali(), docs/31).
+            // Qui resta il gradino di sotto, la dimostrazione di forza.
+            if ($this->puoInvadere($n, $b, $r, $mondo, $c, -70.0)
+                && ($r->confinanti || ($n->ambizione >= 4 && $n->etica >= 4))) {
+                $candidati['dimostrazione_forza'] = 1.5;
             }
 
             // Contro un rivale solido: strumenti dichiarati.
@@ -649,6 +601,121 @@ final class Fase00Chiusura implements Fase
             $this->ombrelliDelTick = $tick;
         }
         return isset($this->ombrelli[$iso]);
+    }
+
+    /**
+     * Chi puo' invadere chi: odio dichiarato, una superiorita' militare netta,
+     * la possibilita' di arrivarci — e nessuno che lo impedisca. Due vincoli
+     * senza i quali il modello produceva gli Stati Uniti che conquistano la
+     * Russia: la DETERRENZA (chi ha l'arma non si invade, e nemmeno chi sta sotto
+     * l'ombrello di un garante armato o ha un garante forte sul posto) e la
+     * PROIEZIONE (confinare, o avere una testa di ponte, o essere una grande
+     * potenza nella stessa regione: e' la regola logistica di Balance of Power).
+     */
+    private function puoInvadere(Nazione $n, Nazione $b, $r, $mondo, ContestoTick $c, float $soglia): bool
+    {
+        if ($r->affinita >= $soglia
+            || $b->posturaNucleare >= (int) $c->calibrazione->numero('nucleare.soglia_armato', 4)
+            || $n->potenzaGoverno() <= $b->potenzaGoverno() * 1.5) {
+            return false;
+        }
+        if (!($r->confinanti || $this->haUnaTestaDiPonte($n, $b, $mondo)
+            || ($n->influenzaTotale > 8.0 && $n->regione === $b->regione))) {
+            return false;
+        }
+        foreach ($mondo->guerre as $gg) {
+            if (in_array($n->iso3, [$gg['aggressore'], $gg['difensore']], true)
+                && in_array($b->iso3, [$gg['aggressore'], $gg['difensore']], true)) {
+                return false;
+            }
+        }
+        // (Le due verifiche costano: si fanno solo quando tutto il resto dice
+        // gia' di si'.)
+        return !$this->sottoOmbrello($b->iso3, $mondo, $c->tick) && !$this->haUnGaranteForte($n, $b, $mondo);
+    }
+
+    /**
+     * LA GUERRA FRA RIVALI. Le guerre fra Stati nascono quasi tutte dentro
+     * rivalita' durature (Diehl e Goertz, «War and Peace in International
+     * Rivalry», 2000; Klein, Goertz e Diehl 2006), e per lo piu' fra vicini con
+     * una disputa territoriale (Vasquez, «The War Puzzle», 1993).
+     *
+     * Prima l'invasione era un verbo fra gli altri nella lotteria della
+     * dottrina, e la dottrina pescava fra le cinque coppie col rapporto piu'
+     * intenso: Cina e Taiwan, Russia e Ucraina stavano fra il sesto e
+     * l'undicesimo posto, e in sei mondi da quindici anni usciva un'invasione
+     * contro le quattro-sei del 2010-2025 (docs/30). Adesso e' un rischio annuo
+     * per coppia, preso dalle dispute vere (db/seed/rivalita.php): in una
+     * rivalita' (tre dispute in vent'anni) una guerra comincia nello 0,53%
+     * degli anni, in una rivalita' duratura (sei) nell'1,26% — Correlates of
+     * War, 1946-2014. Fra due paesi che si odiano senza una storia di dispute il
+     * rischio e' un decimo.
+     *
+     * Le iniziano piu' spesso le autocrazie, e piu' volentieri contro chi sembra
+     * gia' mezzo caduto.
+     *
+     * @param array<string,array<string,mixed>> $verbi
+     * @param array<string,bool> $presidiate
+     * @param array<string,array<string,bool>> $umani
+     */
+    private function guerreFraRivali(ContestoTick $c, array $verbi, array $presidiate, array $umani, int $inVoloMax): int
+    {
+        $mondo = $c->mondo;
+        $d = $verbi['invasione'] ?? null;
+        if ($d === null) {
+            return 0;
+        }
+        $cal = $c->calibrazione;
+        $perTick = 1.0 / $cal->numero('tempo.tick_per_anno', 52.0);
+        $tassoRivali   = $cal->numero('dottrina.guerra.rivalita', 0.0053);
+        $tassoDurature = $cal->numero('dottrina.guerra.duratura', 0.0126);
+        $tassoAltri    = $cal->numero('dottrina.guerra.senza_rivalita', 0.00053);
+        $condizionamento = $cal->numero('dottrina.guerra.condizionamento', 6.0);
+        $attesa = (int) ($d['attesa'] ?? 260);
+        $ruolo = \App\Dati\Gabinetto::DOMINIO_DI['mil'];
+
+        $nuove = 0;
+        foreach ($mondo->relazioni->tutte() as $chiave => $r) {
+            if ($r->affinita >= -35.0) {
+                continue;
+            }
+            [$da, $verso] = explode('|', (string) $chiave);
+            $n = $mondo->nazioni[$da] ?? null;
+            $b = $mondo->nazioni[$verso] ?? null;
+            if ($n === null || $b === null
+                || isset($presidiate[$da]) || isset($umani[$da]['capo']) || isset($umani[$da][$ruolo])
+                || $n->azioniInVolo >= $inVoloMax) {
+                continue;
+            }
+            $dispute = $mondo->rivalita[strcmp($da, $verso) < 0 ? "$da|$verso" : "$verso|$da"] ?? 0;
+            $tasso = match (true) {
+                $dispute >= 6 => $tassoDurature,
+                $dispute >= 3 => $tassoRivali,
+                default       => $tassoAltri,
+            };
+            // Fra rivali basta l'ostilita'; senza una storia di dispute serve
+            // l'odio dichiarato.
+            if (!$this->puoInvadere($n, $b, $r, $mondo, $c, $dispute >= 3 ? -35.0 : -70.0)) {
+                continue;
+            }
+            $memoria = $da . '|invasione|' . $verso;
+            if (($c->tick - ($mondo->azioniRecenti[$memoria] ?? -9999)) < $attesa) {
+                continue;
+            }
+            $fragile = $b->legittimita < 45.0 || $b->netPeace >= 4 || $b->haInsorti();
+            $p = $tasso * $condizionamento
+                * (0.25 + 0.75 * (1.0 - $n->democrazia))
+                * ($fragile ? 2.0 : 1.0);
+            if (!$c->caso->prova('00_guerra', crc32((string) $chiave), $c->tick, $p * $perTick)) {
+                continue;
+            }
+            $intensita = 0.6 + 0.4 * $c->caso->frazione('00_guerra_intensita', crc32((string) $chiave), $c->tick);
+            $mondo->eventi[] = $this->confeziona($n, $verso, 'invasione', $d, $intensita, 0.0, $mondo, $c);
+            $mondo->azioniRecenti[$memoria] = $c->tick;
+            $n->azioniInVolo++;
+            $nuove++;
+        }
+        return $nuove;
     }
 
     /**

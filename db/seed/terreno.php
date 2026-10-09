@@ -4,8 +4,9 @@
 //
 // montuoso: quota % di territorio molto accidentato (Nunn e Puga 2012,
 // rugged_pc), al posto della quota montuosa di Gerrard usata da Fearon e
-// Laitin. petrolio: il primo prodotto esportato nel Factbook e' greggio
-// o gas (32 paesi). Senza dato, e prendono la mediana: nessuno.
+// Laitin. petrolio: combustibili oltre un terzo delle esportazioni di merci,
+// Banca Mondiale 2019-2024 (32 paesi); dove manca, primo prodotto esportato
+// nel Factbook (TWN, BGD, SRB, TKM, VEN, SYR, SDN, GIN, TCD, HTI, GNQ, SOM, SLE, XKX, PRK, SSD, GNB, ERI, SLB, KNA, VUT, FSM, MHL). Senza terreno, e prendono la mediana: nessuno.
 
 return [
     'AFG' => ['montuoso' => 39.00, 'petrolio' => false],
@@ -33,11 +34,11 @@ return [
     'BOL' => ['montuoso' => 13.57, 'petrolio' => false],
     'BRA' => ['montuoso' => 0.56, 'petrolio' => false],
     'BRB' => ['montuoso' => 3.82, 'petrolio' => false],
-    'BRN' => ['montuoso' => 5.09, 'petrolio' => false],
+    'BRN' => ['montuoso' => 5.09, 'petrolio' => true],
     'BTN' => ['montuoso' => 96.47, 'petrolio' => false],
     'BWA' => ['montuoso' => 0.30, 'petrolio' => false],
     'CAF' => ['montuoso' => 0.03, 'petrolio' => false],
-    'CAN' => ['montuoso' => 9.12, 'petrolio' => true],
+    'CAN' => ['montuoso' => 9.12, 'petrolio' => false],
     'CHE' => ['montuoso' => 66.06, 'petrolio' => false],
     'CHL' => ['montuoso' => 38.20, 'petrolio' => false],
     'CHN' => ['montuoso' => 28.65, 'petrolio' => false],
@@ -58,7 +59,7 @@ return [
     'DNK' => ['montuoso' => 0.00, 'petrolio' => false],
     'DOM' => ['montuoso' => 26.18, 'petrolio' => false],
     'DZA' => ['montuoso' => 4.88, 'petrolio' => true],
-    'ECU' => ['montuoso' => 20.09, 'petrolio' => true],
+    'ECU' => ['montuoso' => 20.09, 'petrolio' => false],
     'EGY' => ['montuoso' => 5.76, 'petrolio' => false],
     'ERI' => ['montuoso' => 37.14, 'petrolio' => false],
     'ESP' => ['montuoso' => 23.37, 'petrolio' => false],
@@ -124,14 +125,14 @@ return [
     'MLT' => ['montuoso' => 14.70, 'petrolio' => false],
     'MMR' => ['montuoso' => 34.73, 'petrolio' => false],
     'MNE' => ['montuoso' => 27.13, 'petrolio' => false],
-    'MNG' => ['montuoso' => 12.62, 'petrolio' => false],
-    'MOZ' => ['montuoso' => 4.54, 'petrolio' => false],
+    'MNG' => ['montuoso' => 12.62, 'petrolio' => true],
+    'MOZ' => ['montuoso' => 4.54, 'petrolio' => true],
     'MRT' => ['montuoso' => 0.28, 'petrolio' => false],
     'MUS' => ['montuoso' => 9.10, 'petrolio' => false],
     'MWI' => ['montuoso' => 10.54, 'petrolio' => false],
     'MYS' => ['montuoso' => 12.87, 'petrolio' => false],
     'NAM' => ['montuoso' => 9.72, 'petrolio' => false],
-    'NER' => ['montuoso' => 0.24, 'petrolio' => false],
+    'NER' => ['montuoso' => 0.24, 'petrolio' => true],
     'NGA' => ['montuoso' => 1.56, 'petrolio' => true],
     'NIC' => ['montuoso' => 11.92, 'petrolio' => false],
     'NLD' => ['montuoso' => 0.00, 'petrolio' => false],
@@ -162,7 +163,7 @@ return [
     'SOM' => ['montuoso' => 6.91, 'petrolio' => false],
     'SRB' => ['montuoso' => 27.13, 'petrolio' => false],
     'SSD' => ['montuoso' => 2.89, 'petrolio' => true],
-    'STP' => ['montuoso' => 42.13, 'petrolio' => true],
+    'STP' => ['montuoso' => 42.13, 'petrolio' => false],
     'SUR' => ['montuoso' => 0.74, 'petrolio' => false],
     'SVK' => ['montuoso' => 23.42, 'petrolio' => false],
     'SVN' => ['montuoso' => 39.11, 'petrolio' => false],
@@ -177,7 +178,7 @@ return [
     'TKM' => ['montuoso' => 1.43, 'petrolio' => true],
     'TLS' => ['montuoso' => 28.30, 'petrolio' => true],
     'TON' => ['montuoso' => 9.74, 'petrolio' => false],
-    'TTO' => ['montuoso' => 5.10, 'petrolio' => true],
+    'TTO' => ['montuoso' => 5.10, 'petrolio' => false],
     'TUN' => ['montuoso' => 7.43, 'petrolio' => false],
     'TUR' => ['montuoso' => 40.91, 'petrolio' => false],
     'TWN' => ['montuoso' => 56.54, 'petrolio' => false],

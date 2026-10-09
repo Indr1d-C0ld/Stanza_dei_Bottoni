@@ -371,6 +371,10 @@ scaduto.
 | **FMI** — *World Economic Outlook*, indicatore NGDP_RPCH | la crescita recente (mediana 2023-25) e la tendenza di medio periodo (proiezioni 2026-30) di ogni paese, al posto delle voci del Factbook ferme al 2018 per alcuni | aprile 2026 |
 | **Banca Mondiale** — *Worldwide Governance Indicators* | stabilità politica, efficacia del governo, stato di diritto: dove riposa la legittimità di ciascun paese, e quanto è esposto alla guerra civile | edizione 2026, media 2023-25; Taiwan, assente dall'API, prende la Corea del Sud |
 | **Nunn & Puga (2012)**, *Ruggedness*, REStat 94(1) | il terreno accidentato dove la guerriglia si nasconde | 2010 |
+| **Banca Mondiale** — *WDI*, TX.VAL.FUEL.ZS.UN | chi vive di petrolio: combustibili oltre un terzo delle esportazioni di merci | media 2019-2024 |
+| **Correlates of War** — *Dyadic Militarized Interstate Disputes v4.03*; **UCDP/PRIO** — *ACD v26.1* | le rivalità fra Stati: dispute militarizzate nel 2006-2025, e il tasso di guerra misurato fra rivali (0,53% l'anno, 1,26% per le durature) | 2014 e 2025 |
+| **UCDP** — *Battle-Related Deaths v26.1* | i conflitti interni in corso alla divergenza, coi morti del 2025 | 2025 |
+| **V-Dem** — *Physical Integrity Rights* e *Freedom of Expression* | quanto ogni regime reprime e censura quando non si sente minacciato | 2025 |
 | **Freedom House** — *Freedom in the World* | i sedici micro-Stati che V-Dem non copre | stima dichiarata |
 
 ### I modelli e le misure
@@ -383,6 +387,7 @@ scaduto.
 | **Pritchett & Summers (2014)**, *Asiaphoria Meets Regression to the Mean* | oltre l'orizzonte del FMI, le tendenze di crescita tornano alla media |
 | **Gilley (2006)**, *The Meaning and Measure of State Legitimacy* | la legittimità dello Stato va con la qualità del governo |
 | **Olson & Zeckhauser (1966)**, *An Economic Theory of Alliances* | nei patti a molti, la colpa di una garanzia mancata la porta chi conta di più |
+| **Klein, Goertz & Diehl (2006)**, *The New Rivalry Dataset*, JPR 43(3); **Diehl & Goertz (2000)** | le guerre fra Stati nascono dentro rivalità durature: un rischio annuo per coppia, non una lotteria |
 | **Vasquez**, *The War Puzzle* (1993); **Senese & Vasquez** (2008); **Diehl & Goertz**, *War and Peace in International Rivalry* (2000) | le guerre fra Stati nascono soprattutto fra vicini con una disputa territoriale, dentro rivalità di lunga durata |
 | **Huth**, *Extended Deterrence and the Prevention of War* (1988) | non si attacca chi ha un garante impegnato e più forte |
 | **Mearsheimer**, *The Tragedy of Great Power Politics* (2001) | il «potere d'arresto dell'acqua»: chi attraversa il mare porta al fronte una frazione della sua forza |
@@ -404,7 +409,7 @@ scaduto.
 ```bash
 php bin/realismo.php --anni=15      # ventuno grandezze contro la loro fascia
 php bin/audit.php                   # che cosa è dichiarato e mai usato
-php bin/prova.php                   # quattrocentoquarantacinque prove
+php bin/prova.php                   # quattrocentosessantasette prove
 ```
 
 `bin/realismo.php` confronta ventuno grandezze con la fascia in cui il mondo
@@ -477,6 +482,14 @@ poveri sbagliati. Adesso il seme legge il FMI e la Banca Mondiale, e le guerre
 civili seguono i coefficienti stimati da Fearon. Ventuno grandezze su ventuno in
 fascia, su otto mondi.
 
+**`docs/31-i-dati-del-mondo.md`** è il primo blocco di dati che ne è seguito:
+la guerra fra Stati non è più una lotteria ma un rischio annuo per rivalità,
+misurato sulle dispute vere del Correlates of War e dell'UCDP, e cade sulle
+coppie giuste — Russia e Ucraina, Azerbaigian e Armenia, Etiopia ed Eritrea,
+Cina e Taiwan. E poi il petrolio dalla Banca Mondiale, Taiwan coi suoi
+indicatori, i conflitti del 2025, la polizia e la censura di ogni regime da
+V-Dem.
+
 **`docs/29-il-registro-e-le-contromosse.md`** racconta una partita in
 solitario che ha trovato il buco più grande del lato giocatore: il motore
 sapeva tutto delle operazioni, e la scrivania non ne diceva niente.
@@ -512,10 +525,9 @@ sapeva produrre.
 - **Metà dei conflitti seminati si spegne in quindici anni**, e altrettanti ne
   nascono altrove. In parte è giusto — i conflitti veri finiscono — ma il
   modello non sa *quali* devono durare.
-- **Le invasioni sono troppo rare**: una in sei mondi da quindici anni, contro
-  le quattro-sei del 2010-2025. La dottrina pesca fra le cinque coppie col
-  rapporto più intenso, e le rivalità vere ci arrivano di rado: serve un rischio
-  annuo di guerra per rivalità, dai dati (`docs/30`).
+- **Le affinità di partenza** vengono ancora da una formula ideologica più
+  rapporti scritti a mano, e le alleanze dal Correlates of War del 2012: il
+  prossimo blocco di dati sono i voti all'ONU e ATOP (`docs/31`).
 - **La U rovesciata di Goldstone non raggiunge la sua magnitudine.** Le
   democrazie piene stanno correttamente a 0,2 volte le autocrazie, ma i regimi
   parziali restano intorno a 1 invece di 5-30. Crawford e Goldstone sono in
@@ -560,7 +572,7 @@ struttura senza valori.
 php bin/tick.php              un passo del mondo
 php bin/simula.php            quindici anni a vuoto, con le statistiche
 php bin/diagnostica.php       la salute del modello
-php bin/prova.php             le prove automatiche (445, qualche minuto)
+php bin/prova.php             le prove automatiche (467, qualche minuto)
 php bin/realismo.php          ventuno grandezze contro le fonti
 php bin/audit.php             che cosa è dichiarato e mai usato
 php bin/migra.php             applica le migrazioni non ancora applicate

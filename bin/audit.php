@@ -109,7 +109,10 @@ printf("  %d valori di riserva confrontati con base.php\n", $riserve);
 echo "2/7  I file del seme\n";
 $attesi = ['nazioni.csv', 'democrazia.php', 'disuguaglianza.php', 'esclusione.php',
            'alleanze.php', 'politica-nota.php', 'commercio-noto.php',
-           'nomi-italiani.php', 'nomi-personaggi.php', 'confini.csv'];
+           'nomi-italiani.php', 'nomi-personaggi.php', 'confini.csv',
+           'conflitti-noti.php', 'guerre-note.php',
+           // docs/30 e docs/31: FMI, Banca Mondiale, Nunn e Puga, COW e UCDP, V-Dem
+           'crescita.php', 'governo.php', 'terreno.php', 'rivalita.php', 'repressione.php'];
 foreach ($attesi as $s) {
     $p = $radice . '/db/seed/' . $s;
     if (!is_file($p)) {
@@ -208,7 +211,7 @@ foreach ((array) $campiFermi as $campo) {
                           // dal seme (docs/30): la qualita' del governo, il
                           // terreno, i punti di partenza.
                           'qualitaGoverno', 'stabilitaPolitica', 'montuoso',
-                          'potenzaIniziale', 'conflittoIniziale'], true)) {
+                          'potenzaIniziale', 'conflittoIniziale', 'repressione', 'censura'], true)) {
         continue;
     }
     // Ne' quelli transitori: la scossa esterna nasce e muore dentro lo stesso

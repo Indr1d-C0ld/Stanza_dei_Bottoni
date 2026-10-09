@@ -24,7 +24,8 @@ declare(strict_types=1);
  *
  * Fonte: Banca Mondiale, Worldwide Governance Indicators, edizione 2026
  * (aggiornata il 25/09/2026, dati fino al 2025), stime in unita' normali
- * (circa -2,5..+2,5), via l'API:
+ * (circa -2,5..+2,5): il dataset completo (wgidataset_with_sourcedata-2026.xlsx,
+ * convertito in CSV come spiegato sotto), o in mancanza l'API:
  *
  *   https://api.worldbank.org/v2/country/all/indicator/GOV_WGI_PV.EST?source=3
  *
@@ -46,33 +47,58 @@ $indici   = ['PV' => 'stabilita', 'GE' => 'efficacia', 'RL' => 'diritto', 'VA' =
 
 $valori = [];
 $prestati = [];
-foreach ($indici as $codice => $nome) {
-    $file = "$cartella/wgi-$codice.json";
-    $dati = json_decode((string) @file_get_contents($file), true);
-    if (!is_array($dati[1] ?? null)) {
-        fwrite(STDERR, "Non riesco a leggere $file.\nScaricalo da https://api.worldbank.org/v2/country/all/"
-            . "indicator/GOV_WGI_$codice.EST?format=json&date=2019:2025&per_page=20000&source=3\n");
-        exit(1);
-    }
-    foreach ($dati[1] as $r) {
-        $anno = (int) $r['date'];
-        if ($r['value'] === null || $anno < 2023 || $anno > 2025) {
-            continue;
+
+// Il dataset COMPLETO, convertito in CSV: e' l'unico che ha Taiwan ("Taiwan,
+// China"), che l'API non restituisce. Si converte una volta dal file
+// wgidataset_with_sourcedata-2026.xlsx del sito WGI:
+//
+//   python3 -c "import openpyxl,csv; wb=openpyxl.load_workbook('wgi-completo-2026.xlsx',read_only=True);
+//     w=csv.writer(open('wgi-completo-2026.csv','w',newline='')); w.writerow(['codice','anno','dimensione','stima'])
+//     [w.writerow([r[2],r[5],r[6],r[8]]) for s in ['pv','ge','rl','va']
+//      for i,r in enumerate(wb[s].iter_rows(values_only=True)) if i and r[2] and r[8] not in (None,'..','')]"
+//
+// Senza, si legge l'API, e Taiwan prende la Corea del Sud: un ripiego
+// dichiarato, non un dato.
+$completo = "$cartella/wgi-completo-2026.csv";
+$dimensioni = ['pv' => 'stabilita', 'ge' => 'efficacia', 'rl' => 'diritto', 'va' => 'voce'];
+if (is_file($completo)) {
+    $f = fopen($completo, 'r');
+    fgetcsv($f, 0, ',', '"', '\\');
+    while (($r = fgetcsv($f, 0, ',', '"', '\\')) !== false) {
+        [$codice, $anno, $dim, $stima] = $r;
+        if ((int) $anno >= 2023 && (int) $anno <= 2025 && isset($dimensioni[$dim]) && is_numeric($stima)) {
+            $valori[$codice][$dimensioni[$dim]][] = (float) $stima;
         }
-        $valori[(string) $r['countryiso3code']][$nome][] = (float) $r['value'];
+    }
+    fclose($f);
+} else {
+    foreach ($indici as $codice => $nome) {
+        $file = "$cartella/wgi-$codice.json";
+        $dati = json_decode((string) @file_get_contents($file), true);
+        if (!is_array($dati[1] ?? null)) {
+            fwrite(STDERR, "Non riesco a leggere ne' $completo ne' $file.\nScaricali da "
+                . "https://www.worldbank.org/en/publication/worldwide-governance-indicators o da "
+                . "https://api.worldbank.org/v2/country/all/indicator/GOV_WGI_$codice.EST?format=json&date=2019:2025&per_page=20000&source=3\n");
+            exit(1);
+        }
+        foreach ($dati[1] as $r) {
+            $anno = (int) $r['date'];
+            if ($r['value'] === null || $anno < 2023 || $anno > 2025) {
+                continue;
+            }
+            $valori[(string) $r['countryiso3code']][$nome][] = (float) $r['value'];
+        }
+    }
+    foreach (['TWN' => 'KOR'] as $chi => $come) {
+        if (!isset($valori[$chi]) && isset($valori[$come])) {
+            $valori[$chi] = $valori[$come];
+            $prestati[] = "$chi come $come";
+        }
     }
 }
-
-// L'API della Banca Mondiale non restituisce Taiwan, che il dataset completo
-// pubblica ("Taiwan, China"). Finche' non lo si legge da li', si prende la
-// Corea del Sud, il paese piu' simile per reddito, istituzioni ed esposizione:
-// e' un ripiego dichiarato, non un dato (docs/30).
-$vicini = ['TWN' => 'KOR'];
-foreach ($vicini as $chi => $come) {
-    if (!isset($valori[$chi]) && isset($valori[$come])) {
-        $valori[$chi] = $valori[$come];
-        $prestati[] = "$chi come $come";
-    }
+// Il Kosovo, nel dataset, ha il codice del vecchio protettorato ONU.
+if (!isset($valori['XKX']) && isset($valori['KSV'])) {
+    $valori['XKX'] = $valori['KSV'];
 }
 
 $mondo = Mondo::daSeme($radice . '/db/seed/nazioni.csv');

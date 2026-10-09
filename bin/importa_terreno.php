@@ -26,12 +26,13 @@ declare(strict_types=1);
  * Fearon (2010, tabella 3). Il Sud Sudan prende il Sudan, la Serbia, il
  * Montenegro e il Kosovo la vecchia Serbia e Montenegro: i dati sono del 2010.
  *
- * IL PETROLIO. «Produttore di petrolio» se il primo prodotto esportato, nel
- * Factbook, e' greggio o gas naturale — non i raffinati, che metterebbero fra i
- * produttori i Paesi Bassi, il Belgio e le isole dei Caraibi. Fearon e Laitin (2003)
- * usano le esportazioni di combustibili oltre un terzo del totale; Fearon
- * (2010) le rendite naturali oltre un terzo del PIL. Il primo prodotto per
- * valore e' un'approssimazione dichiarata della prima definizione.
+ * IL PETROLIO. Fearon e Laitin (2003) chiamano «esportatore di petrolio» chi
+ * ricava dai combustibili piu' di un terzo delle esportazioni. Si legge cosi'
+ * com'e' dalla Banca Mondiale, World Development Indicators, TX.VAL.FUEL.ZS.UN
+ * («Fuel exports, % of merchandise exports»), media del 2019-2024 (API
+ * aggiornata l'08/10/2026). Dove la Banca Mondiale non ha il dato (Venezuela,
+ * Guinea Equatoriale, Sud Sudan...) si ripiega sul Factbook: «produttore» se il
+ * primo prodotto esportato e' greggio o gas.
  *
  *   php bin/importa_terreno.php [--csv=storage/fonti/rugged/rugged_data.csv]
  */
@@ -56,12 +57,24 @@ $eredi = ['SSD' => 'SDN', 'SRB' => 'SCG', 'MNE' => 'SCG', 'XKX' => 'SCG'];
 
 $petrolio = '/^\s*(crude petroleum|natural gas|petroleum gas|liquefied natural gas)\b/i';
 
-// Dove il primo prodotto inganna. L'Iran esporta petrolio per vie che le
-// statistiche commerciali non vedono (le sanzioni): il Factbook mette prima la
-// plastica. Gli Stati Uniti hanno il greggio in testa, ma i combustibili sono
-// circa un sesto delle loro esportazioni di merci: sotto il terzo di Fearon e
-// Laitin.
-$correzioni = ['IRN' => true, 'USA' => false];
+// La quota dei combustibili sulle esportazioni di merci, Banca Mondiale.
+$quotaCombustibili = [];
+$wb = json_decode((string) @file_get_contents($radice . '/storage/fonti/wb-fuel-exports.json'), true);
+if (!is_array($wb[1] ?? null)) {
+    fwrite(STDERR, "Manca storage/fonti/wb-fuel-exports.json: https://api.worldbank.org/v2/country/all/"
+        . "indicator/TX.VAL.FUEL.ZS.UN?format=json&date=2015:2024&per_page=20000\n");
+    exit(1);
+}
+$somme = [];
+foreach ($wb[1] as $r) {
+    if ($r['value'] !== null && (int) $r['date'] >= 2019) {
+        $somme[(string) $r['countryiso3code']][] = (float) $r['value'];
+    }
+}
+foreach ($somme as $iso => $v) {
+    $quotaCombustibili[$iso] = array_sum($v) / count($v);
+}
+$daFactbook = [];
 
 $esito = [];
 $mancano = [];
@@ -82,7 +95,9 @@ while (($r = fgetcsv($h, 0, ',', '"', '\\')) !== false) {
     }
     $esito[$iso] = [
         'montuoso' => $fonte,
-        'petrolio' => $correzioni[$iso] ?? (bool) preg_match($petrolio, $merci),
+        'petrolio' => isset($quotaCombustibili[$iso])
+            ? $quotaCombustibili[$iso] >= 33.3
+            : ($daFactbook[] = $iso) && (bool) preg_match($petrolio, $merci),
     ];
 }
 fclose($h);
@@ -101,12 +116,13 @@ $intesta = <<<PHP
 //
 // montuoso: quota %% di territorio molto accidentato (Nunn e Puga 2012,
 // rugged_pc), al posto della quota montuosa di Gerrard usata da Fearon e
-// Laitin. petrolio: il primo prodotto esportato nel Factbook e' greggio
-// o gas (%d paesi). Senza dato, e prendono la mediana: %s.
+// Laitin. petrolio: combustibili oltre un terzo delle esportazioni di merci,
+// Banca Mondiale 2019-2024 (%d paesi); dove manca, primo prodotto esportato
+// nel Factbook (%s). Senza terreno, e prendono la mediana: %s.
 
 return [
 
 PHP;
 file_put_contents($radice . '/db/seed/terreno.php',
-    sprintf($intesta, $quanti, $mancano === [] ? 'nessuno' : implode(', ', $mancano)) . implode("\n", $righe) . "\n];\n");
+    sprintf($intesta, $quanti, implode(', ', $daFactbook), $mancano === [] ? 'nessuno' : implode(', ', $mancano)) . implode("\n", $righe) . "\n];\n");
 printf("%d paesi, %d produttori di petrolio, senza terreno: %s\n", count($esito), $quanti, implode(' ', $mancano));

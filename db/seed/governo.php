@@ -5,7 +5,7 @@
 // Banca Mondiale, Worldwide Governance Indicators, edizione 2026: media
 // 2023-2025 delle stime (unita' normali, circa -2,5..+2,5). stabilita = PV
 // (stabilita' politica e assenza di violenza), efficacia = GE, diritto = RL,
-// voce = VA. Presi a prestito: TWN come KOR. Mancano, e prendono la mediana della
+// voce = VA. Presi a prestito: nessuno. Mancano, e prendono la mediana della
 // regione: nessuno.
 
 return [
@@ -181,7 +181,7 @@ return [
     'TTO' => ['stabilita' =>  0.387, 'efficacia' =>  0.246, 'diritto' => -0.348, 'voce' =>  0.542],
     'TUN' => ['stabilita' => -0.752, 'efficacia' => -0.248, 'diritto' => -0.363, 'voce' => -0.567],
     'TUR' => ['stabilita' => -0.888, 'efficacia' => -0.036, 'diritto' => -0.809, 'voce' => -1.100],
-    'TWN' => ['stabilita' =>  0.859, 'efficacia' =>  1.463, 'diritto' =>  1.164, 'voce' =>  0.831],
+    'TWN' => ['stabilita' =>  1.010, 'efficacia' =>  1.533, 'diritto' =>  1.222, 'voce' =>  1.047],
     'TZA' => ['stabilita' => -0.366, 'efficacia' => -0.293, 'diritto' => -0.528, 'voce' => -0.712],
     'UGA' => ['stabilita' => -0.982, 'efficacia' => -0.377, 'diritto' => -0.681, 'voce' => -0.971],
     'UKR' => ['stabilita' => -0.422, 'efficacia' => -0.577, 'diritto' => -0.780, 'voce' => -0.063],

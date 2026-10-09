@@ -130,7 +130,13 @@ final class Fase05SicurezzaInterna implements Fase
             // Si converge verso un livello, non si deriva: senza un obiettivo
             // il valore scivolava fino al pavimento e centosettanta paesi su
             // centottantanove finivano esattamente a 1.
-            $obiettivo = 1.0 + 3.6 * min(1.0, $minaccia / (2.2 * $sogliaRepressione))
+            //
+            // E il livello di partenza e' quello del REGIME, non 1 per tutti:
+            // senza minaccia la Corea del Nord resta la Corea del Nord e la
+            // Norvegia la Norvegia (V-Dem, Nazione::basePolizia, docs/31). La
+            // minaccia spinge da li' verso la morsa piena.
+            $base = $n->basePolizia();
+            $obiettivo = $base + (5.0 - $base) * 0.9 * min(1.0, $minaccia / (2.2 * $sogliaRepressione))
                 * (1.0 - 0.55 * $freno);
             $obiettivo = max(1.0, min(5.0, $obiettivo));
 
@@ -150,8 +156,12 @@ final class Fase05SicurezzaInterna implements Fase
             // Quanto un regime stringe sul racconto e' una questione di
             // istituzioni, non di reddito: gli Emirati e Singapore sono
             // ricchissimi e controllano moltissimo. Qui c'era `maturita`.
-            $obiettivoInfo = 18.0 + 17.0 * $n->statoPolizia
-                - 22.0 * $n->democrazia;
+            //
+            // Anche qui il punto di partenza e' la censura del regime (V-Dem):
+            // la formula di prima — 18 + 17 per la polizia - 22 per la
+            // democrazia — metteva Singapore e la Norvegia allo stesso
+            // livello, e la stretta si aggiunge sopra (docs/31).
+            $obiettivoInfo = 100.0 * $n->censura + 17.0 * ($n->statoPolizia - $n->basePolizia());
             $n->controlloInfo = max(0.0, min(100.0, $n->controlloInfo
                 + (max(0.0, $obiettivoInfo) - $n->controlloInfo) * $rispostaPolizia * 0.7));
 

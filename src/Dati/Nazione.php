@@ -192,6 +192,15 @@ final class Nazione
          * del FMI lo contano gia', e la fase 03 fa pagare solo il peggio.
          */
         public int    $conflittoIniziale = 2,
+        /**
+         * Quanto il regime reprime il dissenso, 0..1, per natura e non per
+         * paura: la media di (1 - integrita' fisica) e (1 - liberta' di
+         * espressione) di V-Dem 2025. Decide la polizia «normale» del regime
+         * (basePolizia), da cui la minaccia la spinge in su (fase 05).
+         */
+        public float  $repressione = 0.25,
+        /** Quanto il regime censura, 0..1: 1 - liberta' di espressione di V-Dem 2025. */
+        public float  $censura = 0.5,
         /** La forza del governo al seme: il metro del reclutamento dei ribelli (fase 05). */
         public float  $potenzaIniziale = 0.0,
         public int    $ingerenzaTick = 0,
@@ -247,6 +256,16 @@ final class Nazione
     public function ancoraLegittimita(): float
     {
         return 50.0 + self::PESO_GOVERNO * $this->qualitaGoverno;
+    }
+
+    /**
+     * Lo stato di polizia «normale» di questo regime, sulla scala 1..5, quando
+     * non si sente minacciato: la Norvegia 1,1, gli Stati Uniti 2, le
+     * Filippine 3, la Russia 4,4, la Corea del Nord 4,9 (V-Dem 2025, docs/31).
+     */
+    public function basePolizia(): float
+    {
+        return 1.0 + 4.0 * $this->repressione;
     }
 
     /**

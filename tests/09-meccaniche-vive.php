@@ -70,8 +70,24 @@ $mossi = static function (string $chiave, float $soglia) use ($mondo, $prima): i
 
 Prove::gruppo('Lo stato di polizia non e\' piu\' una costante');
 
-Prove::che('la maggior parte dei paesi lo ha mosso',
-    $mossi('polizia', 0.2) > 100, sprintf('%d su 189', $mossi('polizia', 0.2)));
+// Ogni regime parte dalla sua norma (V-Dem, docs/31) e si muove quando si
+// sente minacciato: prima partivano tutti da 2, e il segno che la meccanica
+// viveva era che quasi tutti si muovessero. Adesso il segno e' che si
+// muovano QUELLI minacciati, e gli altri restino vicini alla loro norma.
+$minacciati = $quieti = $stretti = $fermi = 0;
+foreach ($mondo->nazioni as $x) {
+    if ($x->netPeace >= 4 || $x->legittimita < 35.0) {
+        $minacciati++;
+        $stretti += $x->statoPolizia > $x->basePolizia() + 0.2 ? 1 : 0;
+    } elseif ($x->legittimita >= 50.0) {
+        $quieti++;
+        $fermi += abs($x->statoPolizia - $x->basePolizia()) < 0.6 ? 1 : 0;
+    }
+}
+Prove::che('chi e\' minacciato stringe oltre la norma del suo regime',
+    $minacciati > 0 && $stretti / $minacciati > 0.6, sprintf('%d su %d', $stretti, $minacciati));
+Prove::che('chi sta bene resta vicino alla sua norma',
+    $quieti > 0 && $fermi / $quieti > 0.7, sprintf('%d su %d', $fermi, $quieti));
 $p = array_map(static fn($x) => $x->statoPolizia, array_values($mondo->nazioni));
 Prove::fra('resta nella sua scala', 1.0, 5.0, min($p));
 Prove::fra('anche in cima', 1.0, 5.0, max($p));
@@ -88,12 +104,16 @@ Prove::fra('anche in cima', 0.0, 100.0, max($d));
 
 Prove::gruppo('Il controllo dell\'informazione puo\' anche salire');
 
-Prove::che('si e\' mosso per molti paesi',
-    $mossi('info', 1.0) > 100, sprintf('%d su 189', $mossi('info', 1.0)));
+$saliti = $scesi = 0;
+foreach ($mondo->nazioni as $x) {
+    $saliti += $x->controlloInfo > $prima[$x->iso3]['info'] + 1.0 ? 1 : 0;
+    $scesi  += $x->controlloInfo < $prima[$x->iso3]['info'] - 1.0 ? 1 : 0;
+}
+Prove::che('qualcuno ha stretto sopra il suo valore di partenza', $saliti >= 10, sprintf('%d paesi', $saliti));
+Prove::che('e qualcuno ha allentato', $scesi >= 2, sprintf('%d paesi', $scesi));
 $i = array_map(static fn($x) => $x->controlloInfo, array_values($mondo->nazioni));
-Prove::che('qualcuno e\' salito sopra il valore di partenza',
-    max($i) > 50.0, sprintf('massimo %.0f', max($i)));
-Prove::che('e qualcuno e\' sceso', min($i) < 50.0, sprintf('minimo %.0f', min($i)));
+Prove::che('e la distanza fra la Corea del Nord e la Norvegia resta', max($i) - min($i) > 60.0,
+    sprintf('%.0f … %.0f', min($i), max($i)));
 
 Prove::gruppo('La bomba si prende e si posa');
 

@@ -601,10 +601,26 @@ return [
 
     'dottrina' => [
         'attivita'             => 0.5,   // moltiplicatore generale [FABBRICATO]
-        // Il peso dell'invasione fra vicini rivali nella scelta della
-        // dottrina, per un'autocrazia piena (una democrazia piena ne ha un
-        // quarto). [FABBRICATO] e tarato: vedi Fase00 e docs/28.
-        'peso_guerra_vicini'   => 2.4,
+        // La guerra fra rivali (Fase00::guerreFraRivali, docs/31): il rischio
+        // annuo che una coppia ammissibile — ostile, invadibile, raggiungibile,
+        // senza garanti ne' ombrelli, con una superiorita' netta — diventi una
+        // guerra. Misurato sulle dispute Correlates of War 1946-2014
+        // (bin/importa_rivalita.php): 0,53% nelle rivalita' (tre dispute in
+        // vent'anni), 1,26% in quelle durature (sei). Senza una storia di
+        // dispute, un decimo.
+        'guerra' => [
+            'rivalita'        => 0.0053,
+            'duratura'        => 0.0126,
+            'senza_rivalita'  => 0.00053,
+            // Il tasso vero vale per tutte le rivalita'-anno; qui scatta solo
+            // in quelle in cui la guerra e' possibile, che sono un sottoinsieme.
+            // [TARATO] sul numero di guerre fra Stati: quattro-sei nel
+            // 2010-2025 (UCDP/PRIO; Russia-Ucraina due volte, Armenia-
+            // Azerbaigian due volte, Kirghizistan-Tagikistan).
+            // Con 1 uscivano due guerre in sei mondi, con 5 tre per mondo, con 10
+            // da quattro a otto.
+            'condizionamento' => 6.0,
+        ],
         // [FABBRICATO] la durata tipica di un'operazione coperta, in tick. Serve
         // a normalizzare la probabilita' di sventarla: la prova si ripete a
         // ogni giro, e senza questo un'azione lenta non arrivava mai in fondo.

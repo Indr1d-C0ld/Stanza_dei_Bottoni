@@ -55,6 +55,14 @@ final class Mondo
      */
     public float $crescitaProCapiteMediana = 0.02;
     /**
+     * Le rivalita' fra Stati: coppia «AAA|BBB» in ordine alfabetico => dispute
+     * militarizzate nel 2006-2025 (db/seed/rivalita.php). La fase 00 ne fa il
+     * rischio annuo di guerra.
+     *
+     * @var array<string,int>
+     */
+    public array $rivalita = [];
+    /**
      * Il paese mediano del seme — reddito, popolazione, terreno — rispetto a
      * cui si misura il rischio di guerra civile di ciascuno (fase 05).
      *
@@ -85,10 +93,20 @@ final class Mondo
         if (!is_array($fmi)) {
             $fmi = [];
         }
+        // Le rivalita' fra Stati (bin/importa_rivalita.php).
+        $rivalita = @include dirname($percorsoCsv) . '/rivalita.php';
+        foreach (is_array($rivalita) ? $rivalita : [] as $coppia => $v) {
+            $mondo->rivalita[(string) $coppia] = (int) ($v['dispute'] ?? 0);
+        }
         // Il terreno e il petrolio (bin/importa_terreno.php).
         $terreno = @include dirname($percorsoCsv) . '/terreno.php';
         if (!is_array($terreno)) {
             $terreno = [];
+        }
+        // Repressione e censura di V-Dem (bin/importa_repressione.php).
+        $diritti = @include dirname($percorsoCsv) . '/repressione.php';
+        if (!is_array($diritti)) {
+            $diritti = [];
         }
         // La qualita' del governo della Banca Mondiale (bin/importa_wgi.php).
         $wgi = @include dirname($percorsoCsv) . '/governo.php';
@@ -200,6 +218,16 @@ final class Mondo
                 alfabetizzazione: (float) $d['alfabetizzazione'],
             );
             $n->potenzaIniziale = $n->potenzaGoverno();
+            // La polizia e il racconto partono dalla norma del regime. Erano
+            // 2 e 50 per tutti: la Corea del Nord e la Norvegia uguali (docs/31).
+            if (isset($diritti[$n->iso3])) {
+                $pi = (float) $diritti[$n->iso3]['integrita'];
+                $fe = (float) $diritti[$n->iso3]['espressione'];
+                $n->repressione = ((1.0 - $pi) + (1.0 - $fe)) / 2.0;
+                $n->censura = 1.0 - $fe;
+            }
+            $n->statoPolizia = $n->basePolizia();
+            $n->controlloInfo = 100.0 * $n->censura;
             $n->montuoso = (float) ($terreno[$n->iso3]['montuoso'] ?? 11.8);
             $n->petrolio = (bool) ($terreno[$n->iso3]['petrolio'] ?? false);
             $mondo->nazioni[$n->iso3] = $n;

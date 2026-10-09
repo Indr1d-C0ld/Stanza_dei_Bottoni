@@ -256,6 +256,10 @@ Factbook; ogni importatore dice da dove riscaricarli.
 
 ## Che cosa resta aperto
 
+*Risolti in `docs/31`: le invasioni (un rischio annuo per rivalità, dai dati),
+Taiwan nei WGI (dal dataset completo), il petrolio (dalle esportazioni di
+combustibili della Banca Mondiale).*
+
 **Le invasioni sono troppo rare.** In sei mondi da quindici anni la dottrina ne
 lancia una (Azerbaigian contro Armenia); col codice di prima erano quattro, e il
 mondo vero ne ha avute quattro-sei nel 2010-2025. Le condizioni passano: la
