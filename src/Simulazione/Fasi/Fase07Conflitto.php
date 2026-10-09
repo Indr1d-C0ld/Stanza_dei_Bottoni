@@ -50,6 +50,7 @@ final class Fase07Conflitto implements Fase
         $armistizioMassimo  = $c->calibrazione->numero('conflitto.armistizio_massimo_anno', 0.35);
         $sogliaRitirata     = $c->calibrazione->numero('conflitto.soglia_ritirata', 0.5);
         $proiezione         = $c->calibrazione->numero('conflitto.proiezione_oltre_confine', 0.4);
+        $impegnoCob         = $c->calibrazione->numero('conflitto.impegno_cobelligeranti', 0.3);
 
         $aperte = 0;
         $chiuse = 0;
@@ -67,6 +68,25 @@ final class Fase07Conflitto implements Fase
             // --- le garanzie, alla prima settimana ------------------------
             if ($c->tick === $g['inizio'] + 1) {
                 $garanzie += $this->metteAllaProvaLeGaranzie($g, $mondo, $c);
+            }
+
+            // --- chi combatte accanto al difensore -------------------------
+            // I garanti che hanno onorato la parola (docs/33). Mettono in
+            // campo una quota della loro forza, ridotta dalla distanza come
+            // quella dell'aggressore, e ne pagano le perdite.
+            $cobelligeranti = [];
+            $forzaCob = 0.0;
+            foreach ((array) ($g['cobelligeranti'] ?? []) as $isoCob) {
+                $x = $mondo->nazioni[$isoCob] ?? null;
+                if ($x === null) {
+                    continue;
+                }
+                $accanto = ($mondo->relazioni->fra($isoCob, $a->iso3)?->confinanti ?? false)
+                    || ($mondo->relazioni->fra($isoCob, $d->iso3)?->confinanti ?? false);
+                $forzaX = $x->potenzaGoverno() * $impegnoCob * ($accanto ? 1.0 : $proiezione);
+                $cobelligeranti[] = [$x, $forzaX];
+                $forzaCob += $forzaX;
+                $x->netPeace = max($x->netPeace, 4);
             }
 
             // --- gli aiuti ----------------------------------------------------
@@ -100,8 +120,10 @@ final class Fase07Conflitto implements Fase
             $forzaA = $a->potenzaGoverno() * ($vicini ? 1.0 : $proiezione);
             $forzaD = $d->potenzaGoverno() * $mobilitazione;
 
-            $logoraA = $forzaD * $attrito;
-            $logoraD = $forzaA * $attrito;
+            $logoraA = ($forzaD + $forzaCob) * $attrito;
+            // Il danno che l'aggressore infligge si divide fra chi gli sta di
+            // fronte, in proporzione alla forza che ciascuno ha messo in campo.
+            $logoraD = $forzaA * $attrito * $forzaD / max(1.0, $forzaD + $forzaCob);
 
             // --- le perdite umane ------------------------------------------
             // Qui c'era un moltiplicatore libero (x60 sull'attrito) che non
@@ -114,6 +136,12 @@ final class Fase07Conflitto implements Fase
 
             $cadutiA = $persiA * $quotaCaduti;
             $cadutiD = $persiD * $quotaCaduti;
+            foreach ($cobelligeranti as [$x, $forzaX]) {
+                $cadutiX = $this->logora($x, $forzaA * $attrito * $forzaX / max(1.0, $forzaD + $forzaCob), $forzaX)
+                    * $quotaCaduti;
+                $x->popolazione = max(1000.0, $x->popolazione - $cadutiX);
+                $g['morti'] += $cadutiX;
+            }
             // I civili muoiono dove si combatte, cioe' quasi tutti in casa del
             // difensore: e' l'asimmetria che rende l'invasione una catastrofe
             // per l'invaso molto prima che per l'invasore.
@@ -147,7 +175,7 @@ final class Fase07Conflitto implements Fase
             }
 
             // --- esito ------------------------------------------------------
-            $rapporto = $forzaA / max(1.0, $d->potenzaGoverno() * $mobilitazione);
+            $rapporto = $forzaA / max(1.0, $d->potenzaGoverno() * $mobilitazione + $forzaCob);
 
             // Nessuna conquista nel giro di una settimana: anche la piu'
             // squilibrata delle invasioni richiede mesi di terreno percorso.
@@ -258,7 +286,7 @@ final class Fase07Conflitto implements Fase
      *
      * @param array<string,mixed> $g
      */
-    private function metteAllaProvaLeGaranzie(array $g, $mondo, ContestoTick $c): int
+    private function metteAllaProvaLeGaranzie(array &$g, $mondo, ContestoTick $c): int
     {
         $aggressore = $mondo->nazioni[$g['aggressore']];
         $protetto   = $mondo->nazioni[$g['difensore']];
@@ -273,7 +301,13 @@ final class Fase07Conflitto implements Fase
             if ($r === null || $r->obbligo < 64) {
                 continue;
             }
-            $chiamati[] = [$garante, $r, $r->affinita > 75.0 || $r->obbligo >= 96];
+            // Chi ci tiene davvero: un rapporto stretto, o un patto di difesa,
+            // o truppe sul posto con un rapporto buono. Quest'ultimo e' il
+            // «filo d'inciampo» di SCHELLING («Arms and Influence», 1966):
+            // pochi soldati che non potrebbero fermare nessuno rendono
+            // credibile una promessa, perche' un attacco li coinvolgerebbe.
+            $chiamati[] = [$garante, $r, $r->affinita > 75.0 || $r->obbligo >= 96
+                || ($r->obbligo >= 64 && $r->affinita > 60.0)];
         }
 
         // La capacita' e' della COALIZIONE, non del singolo. La prima stesura
@@ -306,6 +340,13 @@ final class Fase07Conflitto implements Fase
                 $garante->equipaggiamento -= $aiuto;
                 $protetto->equipaggiamento += $aiuto;
                 $garante->netPeace = max($garante->netPeace, 4);
+                // E combatte. Prima l'aiuto qui sopra era tutto: nessun garante
+                // entrava in guerra, nemmeno un alleato della NATO per un
+                // altro, e la Cina prendeva Taiwan in un anno e mezzo in ogni
+                // mondo, contro i giochi di guerra del CSIS (2023) in cui
+                // l'intervento americano e giapponese la fa fallire (docs/33).
+                $g['cobelligeranti'] = array_values(array_unique(array_merge(
+                    (array) ($g['cobelligeranti'] ?? []), [$garante->iso3])));
                 $c->annota('garanzia_onorata', [
                     'garante'  => $garante->nome,
                     'protetto' => $protetto->nome,

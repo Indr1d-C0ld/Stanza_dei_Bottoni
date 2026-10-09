@@ -258,7 +258,7 @@ final class Deposito
             'reputazione_sporca', 'consumo_pro_capite_prec', 'azioni_in_volo',
             'cambi_esecutivo', 'cambi_irregolari', 'vittorie_insorti', 'scandali_subiti',
             'anno_ultimo_cambio', 'prossima_elezione', 'mandato_tick',
-            'ingerenza_tick', 'ingerenza_da',
+            'ingerenza_tick', 'ingerenza_da', 'repressione', 'censura',
         ];
         $segnaposti = '(?, ?, ' . implode(', ', array_fill(0, count($campi), '?')) . ')';
         $blocchi = [];
@@ -282,7 +282,7 @@ final class Deposito
                 $n->reputazioneSporca, $n->consumoProCapitePrec, $n->azioniInVolo,
                 $n->cambiEsecutivo, $n->cambiIrregolari, $n->vittorieInsorti, $n->scandaliSubiti,
                 $n->annoUltimoCambio, $n->prossimaElezione, $n->mandatoTick,
-                $n->ingerenzaTick, $n->ingerenzaDa);
+                $n->ingerenzaTick, $n->ingerenzaDa, $n->repressione, $n->censura);
         }
         if ($blocchi === []) {
             return;
@@ -489,9 +489,11 @@ final class Deposito
         );
         foreach ($mondo->guerre as $g) {
             $this->db->esegui(
-                'UPDATE sdb_guerra SET fine_tick = NULL, morti = ?, aiuti_difensore = ?, aiuti_aggressore = ?
+                'UPDATE sdb_guerra SET fine_tick = NULL, morti = ?, aiuti_difensore = ?, aiuti_aggressore = ?,
+                        cobelligeranti = ?
                  WHERE aggressore_id = ? AND difensore_id = ? AND inizio_tick = ?',
                 [(float) $g['morti'], (float) ($g['aiuti_difensore'] ?? 0.0), (float) ($g['aiuti_aggressore'] ?? 0.0),
+                 implode(',', (array) ($g['cobelligeranti'] ?? [])),
                  $this->idPerIso[$g['aggressore']] ?? 0, $this->idPerIso[$g['difensore']] ?? 0, $g['inizio']],
             );
         }
@@ -661,6 +663,12 @@ final class Deposito
             $n->mandatoTick         = (int) $r['mandato_tick'];
             $n->ingerenzaTick       = (int) ($r['ingerenza_tick'] ?? 0);
             $n->ingerenzaDa         = (string) ($r['ingerenza_da'] ?? '');
+            // Zero vuol dire «mai salvato» (righe anteriori alla migrazione
+            // 0036): resta il valore del seme, che non e' mai zero esatto.
+            if ((float) ($r['repressione'] ?? 0.0) > 0.0) {
+                $n->repressione = (float) $r['repressione'];
+                $n->censura     = (float) $r['censura'];
+            }
         }
 
         $stmt = $this->db->esegui('SELECT * FROM sdb_relazione');
@@ -857,6 +865,7 @@ final class Deposito
                 'inizio' => (int) $r['inizio_tick'], 'morti' => (float) $r['morti'],
                 'aiuti_difensore'  => (float) $r['aiuti_difensore'],
                 'aiuti_aggressore' => (float) $r['aiuti_aggressore'],
+                'cobelligeranti'   => array_values(array_filter(explode(',', (string) ($r['cobelligeranti'] ?? '')))),
             ];
         }
     }

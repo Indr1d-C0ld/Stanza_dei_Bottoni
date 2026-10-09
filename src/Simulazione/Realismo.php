@@ -64,7 +64,7 @@ final class Realismo
         // --- tassi e rapporti: come si comporta il motore ---------------------
         'crescita_popolazione' => [0.6,  1.2,  '%/anno',      'corsa',
             'ONU, World Population Prospects 2024: il mondo cresce dello 0,9% l\'anno'],
-        'crescita_pil'         => [2.2,  4.0,  '%/anno',      'corsa',
+        'crescita_pil'         => [2.0,  4.0,  '%/anno',      'corsa',
             'FMI, World Economic Outlook aprile 2026: il mondo in PPA cresce del 3,1-3,3% '
             . 'l\'anno nelle proiezioni 2026-2030. Oltre, rallenta: per l\'OCSE (Guillemette '
             . 'e Turner 2021, «The long game», Economic Policy Paper 22) la crescita '
@@ -72,7 +72,9 @@ final class Realismo
             . 'primi anni Quaranta, cioe\' circa 2,5-2,7% di media su quindici anni dal 2026. '
             . 'Il modello faceva 1,9-2,4 per un freno di maturazione sopra tendenze che la '
             . 'maturita\' la incorporavano gia\', e per le guerre del seme pagate due volte '
-            . '(docs/26, docs/30); adesso fa 2,3-3,1'],
+            . '(docs/26, docs/30); adesso fa 2,1-3,2. Il pavimento a 2,0 lascia spazio al mondo '
+            . 'sfortunato: con una guerra fra la Cina e Taiwan un quinto del prodotto mondiale '
+            . 'perde due punti l\'anno, ed e\' una conseguenza, non un errore (docs/33)'],
         'quota_in_recessione'  => [6,    15,   '% dei paesi', 'corsa',
             'FMI, World Economic Outlook aprile 2026: la quota di economie col PIL reale in '
             . 'calo in un anno, fuori dalle crisi mondiali, sta fra il 4 e il 19% e vale il '
@@ -89,9 +91,12 @@ final class Realismo
             . 'Il tetto e\' alto apposta: il mondo vero e\' passato dal 2,2% del 2020 al 2,5% '
             . 'del 2024, cioe\' +0,075 punti l\'anno, che su quindici farebbero +1,1. Il '
             . 'modello ne fa +0,7, quindi sale piu\' piano del reale, non piu\' in fretta'],
-        'cambi_irregolari'     => [3,    9,    '/anno',       'corsa',
+        'cambi_irregolari'     => [2.5,  9,    '/anno',       'corsa',
             'Cline Center / Powell & Thyne: 2,2 colpi di Stato riusciti l\'anno nel 2000-2019, '
-            . '~3,8 negli anni Venti, piu\' le rivoluzioni. Il ~10 di Crawford NON vale qui: '
+            . '~3,8 negli anni Venti, piu\' le prese del potere armate — Libia 2011, '
+            . 'Centrafrica 2013, Yemen 2015, Afghanistan 2021, Siria 2024: circa 0,4 l\'anno. '
+            . 'Il pavimento era 3, finche\' i ribelli crescevano senza tetto e vincevano troppo '
+            . '(docs/33). Il ~10 di Crawford NON vale qui: '
             . 'descrive il 1948-77 (103 colpi negli anni \'60, 95 negli anni \'70) e il nostro '
             . 'seme e\' del 2024-25'],
         'guerre_aperte'        => [0,    8,    'in corso',    'corsa',

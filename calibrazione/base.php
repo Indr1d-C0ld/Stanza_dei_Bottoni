@@ -230,6 +230,12 @@ return [
         // relativo di guerra maggiore stimato da Fearon (2010), qui sotto
         // (docs/30).
         'reclutamento'       => 1.0,
+        // Fin dove possono arrivare i ribelli, in multipli della forza che lo
+        // Stato aveva al seme: il reclutamento rallenta e li' si ferma
+        // (Cunningham, Gleditsch e Salehyan 2013: i ribelli alla pari o piu'
+        // forti dello Stato sono una piccola minoranza; docs/33). [FABBRICATO]
+        // come numero preciso.
+        'tetto_insorti'      => 1.5,
         // FEARON (2010), «Governance and Civil War Onset», WDR 2011: tabella 2
         // modello 1 (guerre oltre i mille morti l'anno, 1946-2008) e tabella 20
         // (qualita' del governo, che dimezza il peso del reddito). Log-odds
@@ -291,6 +297,13 @@ return [
         // giochi di guerra del CSIS su Taiwan (gennaio 2023) danno a un'invasione
         // anfibia esiti per lo piu' falliti anche con una superiorita' netta.
         'proiezione_oltre_confine' => 0.4,
+        // Quanta della propria forza un garante mette in campo quando combatte
+        // accanto al difensore (docs/33). Una grande potenza non svuota le
+        // proprie caserme per una guerra lontana: nei giochi di guerra del
+        // CSIS su Taiwan (2023) gli Stati Uniti impegnano due o tre gruppi
+        // portaerei e le forze aeree del Pacifico, un quarto-un terzo del
+        // totale. [FABBRICATO] come ordine di grandezza.
+        'impegno_cobelligeranti'   => 0.3,
     ],
 
     // --------------------------------------------- instabilita' politica
@@ -597,6 +610,19 @@ return [
         // Quanto guadagna il rapporto col paese che avvisiamo di
         // un'operazione contro di lui.
         'gratitudine_avviso'    => 8.0,
+    ],
+
+    // ---------------------------------------------------------- il regime
+    // Quanto un cambio di regime stringe repressione e censura (V-Dem, 0..1;
+    // docs/33). Dopo un colpo di Stato: la media dei quindici colpi riusciti
+    // del 2010-2023 di Powell e Thyne, tre anni dopo contro l'anno prima. Dopo
+    // una presa del potere armata: la media di Afghanistan 2021, Yemen 2015 e
+    // Libia 2011 — tre casi soli e diversissimi, ed e' dichiarato.
+    'regime' => [
+        'repressione_dopo_colpo'      => 0.12,
+        'censura_dopo_colpo'          => 0.13,
+        'repressione_dopo_rivoluzione' => 0.14,
+        'censura_dopo_rivoluzione'    => 0.09,
     ],
 
     'dottrina' => [

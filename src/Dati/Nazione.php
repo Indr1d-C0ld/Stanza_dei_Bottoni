@@ -263,6 +263,21 @@ final class Nazione
      * non si sente minacciato: la Norvegia 1,1, gli Stati Uniti 2, le
      * Filippine 3, la Russia 4,4, la Corea del Nord 4,9 (V-Dem 2025, docs/31).
      */
+    /**
+     * Quanto il regime e' radicale, 0..1: la sua repressione (V-Dem).
+     *
+     * Era |orientamento|/128, cioe' la distanza dal centro dell'asse politico.
+     * Ma l'orientamento e' l'ALLINEAMENTO internazionale — dal 2026 lo misura
+     * il voto all'ONU — e su quell'asse il polo e' l'Occidente: gli Stati
+     * Uniti sarebbero risultati il regime piu' radicale del mondo. La
+     * radicalita' di cui parla il modello e' un'altra cosa: un governo che
+     * reprime il dissenso e non si divide (docs/33).
+     */
+    public function radicalita(): float
+    {
+        return $this->repressione;
+    }
+
     public function basePolizia(): float
     {
         return 1.0 + 4.0 * $this->repressione;

@@ -483,6 +483,14 @@ poveri sbagliati. Adesso il seme legge il FMI e la Banca Mondiale, e le guerre
 civili seguono i coefficienti stimati da Fearon. Ventuno grandezze su ventuno in
 fascia, su otto mondi.
 
+**`docs/33-gli-aspetti-aperti.md`** riprende quel che restava: l'orientamento
+separato dalla radicalità del regime (il primo dai voti all'ONU, la seconda dalla
+repressione di V-Dem, che dopo un colpo di Stato sale di quanto è salita dopo i
+quindici del 2010-2023); i garanti che finalmente combattono, e Taiwan che non
+cade più in un anno e mezzo; e un difetto grave e vecchio, i ribelli che
+crescevano senza tetto fino a quattordici volte l'esercito e, vincendo, facevano
+dell'Iran una potenza più forte della Cina.
+
 **`docs/32-onu-e-atop.md`** è il secondo: le alleanze di ATOP, aggiornate riga
 per riga al 2025, e l'affinità di ogni coppia misurata dai voti all'ONU, dai
 patti e dalle dispute, coi pesi stimati invece che scelti.
@@ -514,19 +522,12 @@ sapeva produrre.
 
 ### Quel che oggi non funziona come dovrebbe
 
-- **Un'invasione cinese di Taiwan, quando avviene, riesce.** Senza un trattato
-  gli Stati Uniti mandano materiale e non combattono: l'intervento diretto di
-  chi non è alleato — l'«ambiguità strategica» — chiede un meccanismo che il
-  modello non ha. I giochi di guerra del CSIS (gennaio 2023) la danno per lo più
-  fallita proprio perché gli Stati Uniti e il Giappone intervengono.
 - **Un civile per ogni militare caduto** è la media storica, e vale per tutte
-  le guerre: in quella russo-ucraina i civili sono molti meno, e il totale dei
-  morti ne esce raddoppiato.
-- **Timor Est** finisce spesso in conflitto perché il suo PIL reale, nel
-  Factbook, comprende il petrolio in esaurimento: una crescita media di -13,6%.
-- **La CSI come patto di difesa** nel Correlates of War lega ancora paesi che
-  non si difenderebbero mai: fra nemici dichiarati il motore rompe il trattato al
-  primo tick, fra indifferenti resta.
+  le guerre: in quella russo-ucraina i civili sono molti meno — ma il modello
+  conta anche meno caduti militari delle stime indipendenti, e i due errori si
+  compensano nel totale (`docs/33`).
+- **La pace non ricostruisce**: una guerra che finisce non dà alcun rimbalzo
+  alla crescita.
 - **Metà dei conflitti seminati si spegne in quindici anni**, e altrettanti ne
   nascono altrove. In parte è giusto — i conflitti veri finiscono — ma il
   modello non sa *quali* devono durare.

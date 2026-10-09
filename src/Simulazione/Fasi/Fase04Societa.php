@@ -69,7 +69,7 @@ final class Fase04Societa implements Fase
             // Inerzia: la gente non si volta contro il governo da un giorno
             // all'altro. Poi il termine economico, poi un piccolo premio ai
             // governi radicali (reprimono il dissenso e non si dividono).
-            $radicalita = $bonusRad * (abs($n->orientamento) / 128.0);
+            $radicalita = $bonusRad * $n->radicalita();
             $spinta = ($miglioramento * 180.0 + $radicalita) * $perTick;
 
             // La deriva politica è un processo a ritorno alla media: si allontana

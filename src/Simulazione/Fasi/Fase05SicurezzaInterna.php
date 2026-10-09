@@ -241,6 +241,17 @@ final class Fase05SicurezzaInterna implements Fase
                 $reclute = $kReclutamento * $terreno * $motivo * $spinta
                     * $n->potenzaIniziale * $attrito
                     * (1.0 + $carrozzone * $successo);
+                // E un tetto: un paese non esprime ribelli all'infinito. Il
+                // reclutamento rallenta man mano che i ribelli si avvicinano a
+                // una volta e mezza la forza che lo Stato aveva al seme. Senza,
+                // l'Iran in guerra con l'Afghanistan arrivava a quattordici
+                // volte il proprio esercito (docs/33). Nei dati sugli attori
+                // non statali — CUNNINGHAM, GLEDITSCH, SALEHYAN (2013), «Non-State
+                // Actors in Civil Wars: A New Dataset», Conflict Management and
+                // Peace Science 30(5) — i ribelli alla pari dello Stato o piu'
+                // forti sono una piccola minoranza.
+                $reclute *= max(0.0, 1.0 - $n->forzaInsorti
+                    / max(1.0, $cal->numero('insurrezione.tetto_insorti', 1.5) * $n->potenzaIniziale));
 
                 // L'INNESCO. Fearon e Laitin non stimano quanti ribelli ci sono:
                 // stimano la PROBABILITA' ANNUA che una guerra civile cominci.
@@ -356,7 +367,7 @@ final class Fase05SicurezzaInterna implements Fase
             // la data. Nel mondo vero i governi cadono anche con consensi
             // discreti, solo più di rado — ed è quel "più di rado" a fare la
             // differenza fra una storia e un orologio.
-            $centro = $sogliaColpo + $resistenzaEstremi * (abs($n->orientamento) / 128.0);
+            $centro = $sogliaColpo + $resistenzaEstremi * $n->radicalita();
 
             // Il tipo di regime sposta il CENTRO della logistica, non la
             // moltiplica — ed e' una differenza di forma, non di taratura.
@@ -550,7 +561,9 @@ final class Fase05SicurezzaInterna implements Fase
         // scompaiono, DIVENTANO l'esercito. Se il vincitore eredita uno Stato
         // più debole di quello che ha appena battuto, il paese ricade in
         // rivoluzione ogni pochi mesi all'infinito.
-        $potenzaVincitori = $n->forzaInsorti;
+        // Ma non piu' forte dello Stato che hanno abbattuto, com'era al seme:
+        // altrimenti l'Iran rivoluzionato valeva piu' della Cina (docs/33).
+        $potenzaVincitori = min($n->forzaInsorti, max(1.0, $n->potenzaIniziale));
         $n->soldati = max(1000.0, $n->soldati * 0.5 + $potenzaVincitori * 0.5);
         $n->equipaggiamento = max(
             1.0,
@@ -561,7 +574,13 @@ final class Fase05SicurezzaInterna implements Fase
         // E il credito che la gente concede sempre a chi arriva: alto abbastanza
         // da azzerare il malcontento per qualche stagione.
         $n->derivaPolitica = $c->caso->rumore('05_dopo_rivoluzione', crc32($n->iso3), $c->tick, 16.0);
-        $n->legittimita  = ($n->ancoraLegittimita() + $n->derivaPolitica) + 7.0 - abs($n->orientamento) / 10.0;
+        // Chi vince con le armi governa con le armi: dopo le prese del potere
+        // armate la repressione sale (V-Dem, Afghanistan 2021, Yemen 2015,
+        // Libia 2011: +0,14 in media, ma con la Libia che la abbassa; docs/33).
+        $cal = $c->calibrazione;
+        $n->repressione = min(1.0, $n->repressione + $cal->numero('regime.repressione_dopo_rivoluzione', 0.14));
+        $n->censura     = min(1.0, $n->censura + $cal->numero('regime.censura_dopo_rivoluzione', 0.09));
+        $n->legittimita  = ($n->ancoraLegittimita() + $n->derivaPolitica) + 7.0 - 12.8 * $n->radicalita();
         $n->netPeace     = 3;
         $n->vittorieInsorti++;
         $n->cambiEsecutivo++;
@@ -597,6 +616,13 @@ final class Fase05SicurezzaInterna implements Fase
             // all'altro: gli rompe le istituzioni. L'erosione va li'.
             $n->democrazia = max(0.0, $n->democrazia - 0.02);
             $n->orientamento = max(-128, min(128, -$n->orientamento + ($n->orientamento === 0 ? 24 : 0)));
+            // E stringe: tre anni dopo i quindici colpi di Stato riusciti del
+            // 2010-2023 (Powell e Thyne), la repressione di V-Dem era salita
+            // in media di 0,12 e la censura di 0,13 — l'Egitto, la Thailandia,
+            // la Birmania e il Burkina Faso molto, altri quasi niente (docs/33).
+            $cal = $c->calibrazione;
+            $n->repressione = min(1.0, $n->repressione + $cal->numero('regime.repressione_dopo_colpo', 0.12));
+            $n->censura     = min(1.0, $n->censura + $cal->numero('regime.censura_dopo_colpo', 0.13));
         }
         $n->cambiEsecutivo++;
         if ($irregolare) {

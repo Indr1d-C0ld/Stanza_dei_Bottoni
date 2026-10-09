@@ -103,7 +103,7 @@ final class Fase06Relazioni implements Fase
             // stato della nazione e la spostano gli eventi.
             $n->ambizione = (int) max(1, min(6,
                 2 + round(min(3.0, $n->influenzaTotale / 4.0))
-                  + (abs($n->orientamento) >= 55 ? 1 : 0)));
+                  + ($n->radicalita() >= 0.6 ? 1 : 0)));
         }
 
         // --- 2. chi è caduto in questo tick ----------------------------------

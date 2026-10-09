@@ -166,7 +166,7 @@ Prove::che('e l\'importatore la riscrive da solo',
     str_contains((string) file_get_contents($radice . '/bin/importa_factbook.php'),
         'PROVENIENZA.md'));
 
-Prove::gruppo('I trattati vengono dal Correlates of War, non dalle simpatie');
+Prove::gruppo('I trattati vengono dai dati (ATOP), non dalle simpatie');
 
 $mondoT = Mondo::daSeme($radice . '/db/seed/nazioni.csv');
 
@@ -185,8 +185,10 @@ Prove::che('la Cina ha un patto con la Corea del Nord',
     $obb('CHN', 'PRK') >= 96, 'trattato del 1961, tuttora in vigore');
 Prove::che('la Finlandia e\' entrata nella NATO dopo il dataset',
     $obb('USA', 'FIN') >= 96, 'COW arriva al 2012, la Finlandia e\' del 2023');
-Prove::che('e nessuno garantisce Taiwan',
-    $obb('USA', 'TWN') <= 0, 'il trattato fu denunciato nel 1980');
+Prove::che('e nessuno ha un patto di difesa con Taiwan',
+    $obb('USA', 'TWN') < 96, 'il trattato fu denunciato nel 1980');
+Prove::uguale('ma gli Stati Uniti hanno l\'impegno del Taiwan Relations Act, al gradino delle basi',
+    64, $obb('USA', 'TWN'));
 
 Prove::gruppo('Un trattato regge al raffreddamento, e le garanzie scattano');
 

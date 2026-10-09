@@ -87,6 +87,12 @@ const INGRESSI = [
 const BASI = [
     ['USA', 'XKX', 'KFOR, Camp Bondsteel: la forza NATO in Kosovo per la risoluzione ONU 1244 (10/06/1999)'],
     ['ITA', 'XKX', 'KFOR: l\'Italia e\' fra i contributori maggiori e ne ha avuto piu\' volte il comando'],
+    // Non un patto di difesa — la «ambiguita' strategica» e' proprio questo —
+    // ma un impegno scritto in una legge e truppe sul posto: e' un filo
+    // d'inciampo (Schelling), e il gradino giusto e' quello delle basi.
+    ['USA', 'TWN', 'Taiwan Relations Act (10/04/1979): un attacco a Taiwan e\' «di grave preoccupazione», '
+        . 'e gli Stati Uniti ne mantengono la capacita\' di difendersi; addestratori militari americani '
+        . 'sull\'isola autorizzati dal Taiwan Enhanced Resilience Act (NDAA 2023)'],
 ];
 
 /**
@@ -109,8 +115,9 @@ const SCIOGLIMENTI = [
     ['ARM', ['RUS', 'BLR', 'KAZ', 'KGZ', 'TJK'],
         'Armenia: partecipazione alla CSTO congelata (Pashinyan, 22/02/2024) dopo che '
         . 'l\'alleanza non era intervenuta negli attacchi azeri del 2022 e del 2023'],
-    ['ARM', ['AZE'], 'ATOP lega Armenia e Azerbaigian in un patto collettivo del 1993: si sono fatti '
-        . 'la guerra nel 2016, nel 2020 e nel 2023'],
+    ['ARM', ['AZE'], 'Armenia e Azerbaigian: ATOP li tiene in accordi della CSI di non aggressione e '
+        . 'consultazione, e si sono fatti la guerra nel 2016, nel 2020 e nel 2023; testo di pace siglato a '
+        . 'Washington l\'08/08/2025, non ancora un trattato in vigore'],
     ['DZA', ['MAR'], 'Algeria e Marocco: rapporti diplomatici rotti dall\'Algeria il 24/08/2021, '
         . 'frontiera chiusa dal 1994. ATOP li lega nella Lega araba e nell\'Unione del Maghreb'],
     ['RWA', ['COD'], 'Ruanda e Congo: l\'M23 sostenuto da truppe ruandesi prende Goma il 27/01/2025 '
@@ -123,6 +130,21 @@ const SCIOGLIMENTI = [
     ['NER', ['BEN', 'CIV', 'GMB', 'GHA', 'GNB', 'GIN', 'LBR', 'NGA', 'SEN', 'SLE', 'TGO', 'CPV'],
         'Niger fuori dall\'ECOWAS, 29/01/2025'],
 ];
+
+/**
+ * Le alleanze di ATOP che non si prendono affatto.
+ *
+ * La 4400 comincia il 22/01/1993: e' la Carta della Comunita' degli Stati
+ * Indipendenti, adottata a Minsk quel giorno, che ATOP codifica come patto di
+ * difesa fra otto paesi — compresi l'Armenia e l'Azerbaigian, che si sono fatti
+ * la guerra nel 2016, nel 2020 e nel 2023, e l'Uzbekistan e l'Azerbaigian, usciti
+ * dal trattato di sicurezza collettiva nel 1999. La difesa collettiva vera
+ * dello spazio post-sovietico e' la CSTO (la 4220), e i legami bilaterali veri
+ * stanno in ATOP per conto loro: Russia-Uzbekistan (1992, 2005),
+ * Tagikistan-Uzbekistan, Turchia-Azerbaigian. Era il difetto che docs/28
+ * lasciava aperto, «la CSI come patto di difesa» (docs/33).
+ */
+const ESCLUSE = ['4400' => 'Carta della CSI, Minsk, 22/01/1993'];
 
 $atop = $radice . '/storage/fonti/atop/ATOP 5.1 (.csv)';
 foreach (["$atop/atop5_1m.csv", "$atop/atop5_1a.csv", $radice . '/storage/fonti/cow-codici.csv'] as $f) {
@@ -173,7 +195,7 @@ while (($r = fgetcsv($f, 0, ',', '"', '\\')) !== false) {
     $d = array_combine($t, $r);
     $entra = (int) $d['yrent'];
     $esce  = (int) $d['yrexit'];
-    if ($entra > ANNO || ($esce !== 0 && $esce < ANNO)) {
+    if ($entra > ANNO || ($esce !== 0 && $esce < ANNO) || isset(ESCLUSE[(string) $d['atopid']])) {
         continue;
     }
     $chi = $iso((int) $d['member']);
@@ -299,7 +321,8 @@ $out = "<?php\n\ndeclare(strict_types=1);\n\n"
      . " * del Nord 2024, Arabia Saudita-Pakistan 2025, Turchia-Azerbaigian 2021,\n"
      . " * Alleanza degli Stati del Sahel 2023; Macedonia del Nord, Finlandia e Svezia\n"
      . " * nella NATO. Tolti: l'Ucraina e la Georgia dalla CSI, l'Armenia dalla CSTO,\n"
-     . " * Armenia-Azerbaigian, Algeria-Marocco, Ruanda-Congo, il Sahel dall'ECOWAS.\n"
+     . " * Algeria-Marocco, Ruanda-Congo, il Sahel dall'ECOWAS; e la Carta della CSI\n"
+     . " * del 1993, che ATOP codifica come patto di difesa.\n"
      . " *\n"
      . " * Il gradino 128 (difesa nucleare) NON sta qui: lo assegna Mondo, che sa\n"
      . " * quali Stati hanno l'atomica. Le chiavi sono direzionate «A|B»: l'obbligo\n"

@@ -256,10 +256,28 @@ final class Mondo
         // Prima l'orientamento strutturale, poi gli scostamenti dichiarati.
         $politica = @include dirname($percorsoCsv) . '/politica-nota.php';
         $politica = is_array($politica) ? $politica : ['orientamenti' => [], 'rapporti' => []];
+        // L'orientamento e' l'ALLINEAMENTO internazionale, e lo misura il voto
+        // all'ONU (db/seed/onu.php): il paese mediano a zero, il polo
+        // occidentale — gli Stati Uniti — a +128, sulla stessa scala in giu'.
+        // Prima veniva dal tipo di governo del Factbook piu' 45 correzioni
+        // scritte a mano; restano per chi all'ONU non vota (Taiwan, il
+        // Kosovo). La radicalita' del regime, che prima si leggeva qui, e'
+        // un'altra cosa e sta in Nazione::radicalita() (docs/33).
+        $onu = @include dirname($percorsoCsv) . '/onu.php';
+        $punti = is_array($onu) ? (array) ($onu['punti'] ?? []) : [];
+        $scala = 0.0;
+        $medianaOnu = 0.0;
+        if ($punti !== []) {
+            $v = array_values(array_intersect_key($punti, $mondo->nazioni));
+            sort($v);
+            $medianaOnu = (float) $v[intdiv(count($v), 2)];
+            $scala = 128.0 / max(1e-9, (float) end($v) - $medianaOnu);
+        }
         foreach ($mondo->nazioni as $n) {
             $n->posturaNucleare = $politica['postura_nucleare'][$n->iso3] ?? 1;
-            $n->orientamento = $politica['orientamenti'][$n->iso3]
-                ?? self::orientamentoDa($mondo->ideologie[$n->iso3] ?? '');
+            $n->orientamento = isset($punti[$n->iso3])
+                ? (int) max(-128, min(128, round(((float) $punti[$n->iso3] - $medianaOnu) * $scala)))
+                : ($politica['orientamenti'][$n->iso3] ?? self::orientamentoDa($mondo->ideologie[$n->iso3] ?? ''));
         }
 
         $mondo->relazioni = new Relazioni();
