@@ -25,11 +25,12 @@ namespace App\Dati;
  * a decidere se una sanzione morde o e' teatro: il gas di un vicino unico non
  * si rimpiazza in un trimestre, i telefoni si'.
  *
- * Tutto quel che c'e' qui e' [FABBRICATO]: nessuna di queste cifre viene da
- * dati commerciali veri. Vengono da un modello di gravita' applicato ai pochi
- * dati veri che il seme porta — popolazione, area, PIL, ricchezza, istruzione,
- * valore strategico — e la loro pretesa e' di essere verosimili nella forma e
- * nei rapporti, non esatte nei valori.
+ * Quanto ogni paese esporta e importa, settore per settore, viene dalla Banca
+ * Mondiale; chi vende a chi dai flussi bilaterali del FMI (docs/35). La
+ * gravita' qui sotto — popolazione, area, PIL, ricchezza, istruzione — resta
+ * [FABBRICATO] e serve solo dove i dati non ci sono: l'Iran, Cuba, l'Eritrea,
+ * la Corea del Nord, la Siria, e il commercio di un mondo senza dati nelle
+ * prove.
  */
 final class Commercio
 {
@@ -48,21 +49,10 @@ final class Commercio
         'manifattura' => 0.35,
     ];
 
-    /**
-     * LIMITE NOTO: la taglia assoluta decide troppo.
-     *
-     * Un paese piccolo non entra nelle classifiche dei fornitori dei suoi
-     * vicini grandi, per quanto sia aperto e specializzato. Il Belgio, che nel
-     * mondo vero esporta piu' dell'ottanta per cento del proprio prodotto,
-     * qui dentro esporta zero: e' tredicesimo fra i fornitori di tecnologia
-     * della Francia, e il taglio e' a dieci.
-     *
-     * Ho provato ad allargare i tagli e non serve: il Belgio resta fuori per
-     * un posto, e intanto l'energia si spalma e la leva del gas si annacqua —
-     * i Paesi Bassi sono passati dal 23 al 10 per cento di export sul PIL.
-     * Il modello non ha un concetto di specializzazione ne' di riesportazione,
-     * e non si puo' fabbricarlo allargando una classifica. Resta cosi', e si
-     * dice.
+    /*
+     * Il limite di prima — la taglia assoluta che decideva tutto, e il Belgio
+     * che esportava zero — e' caduto coi dati: quanto si vende e si compra
+     * viene dalla Banca Mondiale, chi vende a chi dal FMI (docs/35, docs/36).
      */
 
     /**
@@ -157,6 +147,9 @@ final class Commercio
      */
     public array $bilaterale = [];
 
+    /** @var array<string,true> chi compare come esportatore nei dati bilaterali */
+    private array $esportatoriBilaterali = [];
+
     /**
      * @param array<string,array<string,float>> $vocazioni
      * @param array<string,array{esporta:array<string,float>,importa:array<string,float>}> $dati
@@ -180,6 +173,7 @@ final class Commercio
         foreach ($bilaterale as $coppia => $valore) {
             [$fornitore, $cliente] = explode('|', (string) $coppia);
             $c->bilaterale[$cliente][$fornitore] = (float) $valore;
+            $c->esportatoriBilaterali[$fornitore] = true;
         }
         $c->profili($mondo, $vocazioni);
         $c->intreccia($mondo);
@@ -362,7 +356,10 @@ final class Commercio
     private function pesoBase(Mondo $mondo, string $cliente, string $fornitore, string $settore,
         float $offerta, float $esponente): float
     {
-        if (isset($this->bilaterale[$cliente])) {
+        // Chi nei dati bilaterali non esporta mai (l'Andorra, che il FMI non
+        // ha) passa per la gravita' anche verso i clienti coi dati: la scala
+        // non conta, la rimette a posto il moltiplicatore del riequilibrio.
+        if (isset($this->bilaterale[$cliente], $this->esportatoriBilaterali[$fornitore])) {
             $flusso = $this->bilaterale[$cliente][$fornitore] ?? 0.0;
             if ($flusso <= 0.0) {
                 return 0.0;
@@ -488,12 +485,15 @@ final class Commercio
 
             // Nessuno mette tutte le uova in un paniere solo. Il tetto si
             // applica e quel che avanza si ridistribuisce, due volte: basta a
-            // togliere i casi assurdi senza appiattire tutto.
+            // togliere i casi assurdi senza appiattire tutto. Ma solo dove
+            // decide la gravita': coi flussi veri i paesi con un vicino solo
+            // ce l'hanno davvero — il Lesotho compra dal Sudafrica l'89% dei
+            // suoi beni, il Bhutan dall'India l'85% (FMI, IMTS; docs/36).
             $quote = [];
             foreach ($pesi as $fornitore => $p) {
                 $quote[$fornitore] = $p / $somma;
             }
-            for ($giro = 0; $giro < 2; $giro++) {
+            for ($giro = 0; $giro < ($this->esportaVero === [] ? 2 : 0); $giro++) {
                 $eccesso = 0.0;
                 $sotto   = 0.0;
                 foreach ($quote as $fornitore => $q) {
@@ -526,11 +526,25 @@ final class Commercio
         // non vendeva a nessuno: e' lo 0,6% delle importazioni tedesche, ma la
         // Germania e' il suo primo cliente (docs/35).
         $sogliaCliente = $this->esportaVero === [] ? 0.02 : 0.01;
+        $tenuti = [];
         foreach ($candidati as [$fornitore, $cliente, $quantita, $manca]) {
             if ($quantita < $manca * $sogliaCliente
                 && ($this->esportaVero === [] || $quantita < 0.03 * ($totale[$fornitore] ?? 0.0))) {
                 continue;
             }
+            $tenuti[] = [$fornitore, $cliente, $quantita, $manca];
+        }
+        // Lo sfoltimento butta via i flussi piccoli, e i flussi piccoli
+        // sommati pesano: il 6,5% del commercio mondiale, quasi tutto delle
+        // economie piccole e aperte, che vendono poco a molti. Il Belgio
+        // finiva a un quinto sotto il vero. Sui flussi tenuti si rifa' quindi
+        // il fitting proporzionale: ogni fornitore torna a vendere quel che
+        // vendeva prima del taglio, e ogni cliente a comprare quel che compra
+        // (docs/36). Il supporto non cambia piu', quindi non oscilla.
+        if ($this->esportaVero !== []) {
+            $tenuti = $this->riequilibraTenuti($tenuti, $totale);
+        }
+        foreach ($tenuti as [$fornitore, $cliente, $quantita, $manca]) {
             $venduto[$fornitore] = ($venduto[$fornitore] ?? 0.0) + $quantita;
             if (!$scrivi) {
                 continue;
@@ -546,6 +560,41 @@ final class Commercio
                 100.0 * (1.0 - min(1.0, $quota)) * self::FACILITA_SETTORE[$settore]);
         }
         return $venduto;
+    }
+
+    /**
+     * Il fitting proporzionale sui flussi gia' scelti: righe sulla domanda di
+     * ogni cliente, colonne su quel che ogni fornitore vendeva prima dello
+     * sfoltimento. Si chiude sulle righe, perche' la dipendenza di chi compra
+     * e' quel che il gioco usa.
+     *
+     * @param list<array{0:string,1:string,2:float,3:float}> $tenuti
+     * @param array<string,float> $obiettivo
+     * @return list<array{0:string,1:string,2:float,3:float}>
+     */
+    private function riequilibraTenuti(array $tenuti, array $obiettivo): array
+    {
+        for ($giro = 0; $giro < self::GIRI_RIEQUILIBRIO; $giro++) {
+            $colonne = [];
+            foreach ($tenuti as [$f, , $q]) {
+                $colonne[$f] = ($colonne[$f] ?? 0.0) + $q;
+            }
+            foreach ($tenuti as $i => [$f]) {
+                if (($colonne[$f] ?? 0.0) > 0.0) {
+                    $tenuti[$i][2] *= ($obiettivo[$f] ?? $colonne[$f]) / $colonne[$f];
+                }
+            }
+            $righe = [];
+            foreach ($tenuti as [, $c, $q]) {
+                $righe[$c] = ($righe[$c] ?? 0.0) + $q;
+            }
+            foreach ($tenuti as $i => [, $c, , $manca]) {
+                if (($righe[$c] ?? 0.0) > 0.0) {
+                    $tenuti[$i][2] *= $manca / $righe[$c];
+                }
+            }
+        }
+        return $tenuti;
     }
 
     private function attrito(Mondo $mondo, string $a, string $b): float

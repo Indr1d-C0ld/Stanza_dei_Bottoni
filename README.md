@@ -222,9 +222,9 @@ Crawford: i suoi ~10 cambi di esecutivo irregolari l'anno erano giusti per il
 1948-77. Oggi Powell & Thyne contano 1,4 colpi riusciti l'anno nel 2000-2025
 (2,5 negli anni Venti), a cui si aggiungono circa 0,4 prese del potere armate;
 UCDP conta 36 paesi in conflitto armato (circa 30 negli anni Dieci) e 11 in
-guerra. Il profilo `osservazione` fa 1,6-2,6 cambi irregolari l'anno, con le
+guerra. Il profilo `osservazione` fa 1,3-2,1 cambi irregolari l'anno, con le
 autocrazie piene che quasi non cadono e i regimi parziali che cadono quanto nel
-mondo vero, e un'economia in recessione su dieci ogni anno come nei dati del
+mondo vero, fascia di democrazia per fascia, e un'economia in recessione su dieci ogni anno come nei dati del
 FMI; le prove automatiche lo verificano.
 
 ---
@@ -400,7 +400,11 @@ scaduto.
 | **Polity5** (Marshall & Gurr), PARCOMP «factional», 2018 | quali regimi sono faziosi, per tutti i paesi e non solo per le potenze giocabili; e quanto pesa davvero: un quinto in più di colpi fra i regimi parziali |
 | **Quinlivan (1999)**, *International Security* 24(2); **Powell (2012)**, JCR 56(6) | la blindatura delle autocrazie piene (*coup-proofing*): zero colpi riusciti in 265 anni-paese nel 2000-2025 |
 | **Collier et al. (2003)**, *Breaking the Conflict Trap*, Banca Mondiale | quanto costa una guerra civile: 2,3 punti di crescita l'anno |
-| **Powell & Thyne**, colpi di Stato e leader (versione del 29/08/2026) | i colpi riusciti per tipo di regime, 1,4 l'anno nel 2000-2025, e la quota irregolare delle uscite dal potere: 5,1%. I «~10 l'anno» di Crawford sono gli anni Sessanta, e il «circa un quinto» di Archigos vale dal 1875 |
+| **Powell & Thyne**, colpi di Stato e leader (versione del 29/08/2026) | i colpi riusciti per tipo di regime, 1,4 l'anno nel 2000-2025, e la quota irregolare delle uscite dal potere: 5,1%. I «~10 l'anno» di Crawford sono gli anni Sessanta, e il «circa un quinto» di Archigos vale dal 1875. Fascia per fascia di democrazia liberale: metà dei colpi cade dove si vota, fra 0,25 e 0,55 |
+| **Thompson, Sakuwa & Suhas (2021)**, *Analyzing Strategic Rivalries in World Politics*, Springer | le 56 rivalità strategiche in corso nel 2020, comprese quelle che non sparano: l'Iran e l'Arabia Saudita, l'Algeria e il Marocco |
+| **Governo russo**, ordinanze 430-r (5/3/2022) e 2018 (23/7/2022) | i 49 paesi «ostili»: le sanzioni dopo l'invasione dell'Ucraina, che le dispute militarizzate non contano |
+| **NATO**, dichiarazione del vertice dell'Aia (giugno 2025) | il 3,5% del PIL per la difesa entro il 2035, e il tetto della fascia sull'onere militare |
+| **ONU**, *National Accounts Main Aggregates*; **UN Comtrade** | il commercio dei paesi che la Banca Mondiale non copre: l'Iran, Cuba, l'Eritrea, la Corea del Nord, la Siria |
 | **UCDP/PRIO ACD v26.1** | quanto durano i conflitti: il 59% di quelli attivi è ancora aperto quindici anni dopo |
 | **Banca Mondiale**, *World Development Indicators*; **FMI**, *International Trade in Goods* e *World Economic Outlook* | il commercio: quanto ogni paese esporta e importa settore per settore, e chi vende a chi (9.400 coppie) |
 | **SIPRI** — *Military Expenditure* e *Yearbook* | l'onere militare mondiale, gli Stati dotati di nucleare, e la spesa ucraina del 2024 (34% del PIL) dove il Factbook si ferma al 2021 |
@@ -415,7 +419,7 @@ scaduto.
 ```bash
 php bin/realismo.php --anni=15      # ventidue grandezze contro la loro fascia
 php bin/audit.php                   # che cosa è dichiarato e mai usato
-php bin/prova.php                   # cinquecentotre prove
+php bin/prova.php                   # cinquecentosedici prove
 ```
 
 `bin/realismo.php` confronta ventidue grandezze con la fascia in cui il mondo
@@ -488,6 +492,16 @@ poveri sbagliati. Adesso il seme legge il FMI e la Banca Mondiale, e le guerre
 civili seguono i coefficienti stimati da Fearon. Ventuno grandezze su ventuno in
 fascia, su otto mondi.
 
+**`docs/36-i-conti-che-tornano.md`** chiude i quattro difetti che `docs/35`
+aveva lasciato. Il più grosso non era quello cercato: metà dei colpi di Stato
+veri cade in paesi che votano (il Mali, il Niger, la Birmania, la Thailandia), e
+il modello li registrava come crisi di governo. Adesso i colpi tornano fascia
+per fascia di democrazia, e i regimi faziosi cadono quanto nel mondo vero. Il
+commercio non perde più un quinto dei piccoli, e tutti i 189 paesi hanno i loro
+dati. Le rivalità che non sparano e le sanzioni alla Russia portano la
+spiegazione dei rapporti dichiarati dal 62% all'81%; e il modello, da solo,
+riarma l'Europa come la NATO si è impegnata a fare.
+
 **`docs/35-colpi-commercio-faziosita.md`** chiude i quattro difetti vecchi
 dell'elenco qui sotto. Le autocrazie piene non cadono più tre volte più dei
 regimi parziali: zero colpi riusciti in 265 anni-paese, e il modello ora lo sa.
@@ -539,15 +553,14 @@ sapeva produrre.
 
 ### Quel che oggi non funziona come dovrebbe
 
-- **Le affinità di partenza spiegano il 62% dei rapporti dichiarati.** Il
-  resto sono rivalità senza scontri diretti — l'Arabia Saudita e l'Iran, il
-  Giappone e la Corea del Nord — e lì restano i rapporti scritti a mano
-  (`docs/32`).
-- **I regimi parziali faziosi cadono più del vero**, circa 1,7 volte, perché la
-  loro legittimità di partenza è bassa (`docs/35`).
-- **Le economie piccole e molto aperte commerciano un quinto meno del vero**, e
-  l'Iran, Cuba, l'Eritrea, la Corea del Nord e la Siria restano al modello del
-  commercio di prima: per loro un dato affidabile non c'è (`docs/35`).
+- **Le affinità di partenza spiegano l'81% dei rapporti dichiarati.** Il resto
+  — gli Stati Uniti e l'Iran, il Giappone e la Corea del Nord — resta scritto a
+  mano finché non ci sono le sanzioni del Global Sanctions Data Base, che si
+  ottiene solo su richiesta (`docs/36`).
+- **Le rivalità strategiche sono ferme al 2020**: quel che è cambiato dopo lo
+  portano le dispute e i rapporti dichiarati (`docs/36`).
+- **Fra 0,15 e 0,25 di democrazia liberale** i colpi stanno nella parte alta
+  dell'intervallo del dato (`docs/36`).
 
 Sono difetti noti e scritti, non nascosti.
 
@@ -583,7 +596,7 @@ struttura senza valori.
 php bin/tick.php              un passo del mondo
 php bin/simula.php            quindici anni a vuoto, con le statistiche
 php bin/diagnostica.php       la salute del modello
-php bin/prova.php             le prove automatiche (503, qualche minuto)
+php bin/prova.php             le prove automatiche (516, qualche minuto)
 php bin/realismo.php          ventidue grandezze contro le fonti
 php bin/audit.php             che cosa è dichiarato e mai usato
 php bin/migra.php             applica le migrazioni non ancora applicate

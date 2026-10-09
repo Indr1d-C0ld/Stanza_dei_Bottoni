@@ -537,13 +537,33 @@ final class Mondo
             }
         }
 
+        // E le ostilita' che non sparano (docs/36): le rivalita' strategiche
+        // di Thompson, Sakuwa e Suhas (2021), e i paesi che la Russia dichiara ostili.
+        $onu = $this->cartellaSeme !== '' ? @include $this->cartellaSeme . '/onu.php' : false;
+        $strategiche = is_array($onu) ? array_flip((array) ($onu['strategiche'] ?? [])) : [];
+        $ostiliRussia = is_array($onu) ? array_flip((array) ($onu['ostili_russia'] ?? [])) : [];
+        foreach (array_keys($strategiche) as $chiave) {
+            [$x, $z] = explode('|', (string) $chiave);
+            if (isset($this->nazioni[$x], $this->nazioni[$z])) {
+                $aggiungi($this->nazioni[$x], $this->nazioni[$z]);
+                $aggiungi($this->nazioni[$z], $this->nazioni[$x]);
+            }
+        }
+        if (isset($this->nazioni['RUS'])) {
+            foreach (array_keys($ostiliRussia) as $x) {
+                if (isset($this->nazioni[$x])) {
+                    $aggiungi($this->nazioni['RUS'], $this->nazioni[$x]);
+                    $aggiungi($this->nazioni[$x], $this->nazioni['RUS']);
+                }
+            }
+        }
+
         // L'affinita' strutturale si MISURA: voti all'ONU, patti di difesa,
         // dispute militarizzate, coi pesi stimati da bin/importa_onu.php sui
         // rapporti dichiarati (docs/32). Prima era la formula ideologica qui
         // sotto per tutti, e fuori dai 137 rapporti scritti a mano quasi ogni
         // coppia del mondo valeva 25. Resta per chi non vota all'ONU (Taiwan,
         // il Kosovo).
-        $onu = $this->cartellaSeme !== '' ? @include $this->cartellaSeme . '/onu.php' : false;
         $punti = is_array($onu) ? (array) ($onu['punti'] ?? []) : [];
         $pesi  = is_array($onu) ? (array) ($onu['pesi'] ?? []) : [];
         $patti = $this->cartellaSeme !== '' ? @include $this->cartellaSeme . '/patti-difesa.php' : false;
@@ -561,7 +581,11 @@ final class Mondo
                     + ($patto === 'integrato' ? (float) ($pesi['integrato'] ?? 0.0) : 0.0)
                     + (str_starts_with($patto, 'multilaterale:')
                         ? (float) $pesi['multilaterale'] / sqrt(max(1, (int) explode(':', $patto)[1] - 1)) : 0.0)
-                    + (float) $pesi['dispute'] * min(10, $this->rivalita[$rivali] ?? 0);
+                    + (float) $pesi['dispute'] * min(10, $this->rivalita[$rivali] ?? 0)
+                    + (isset($strategiche[$rivali]) ? (float) ($pesi['strategica'] ?? 0.0) : 0.0)
+                    + ((($a->iso3 === 'RUS' && isset($ostiliRussia[$b->iso3]))
+                        || ($b->iso3 === 'RUS' && isset($ostiliRussia[$a->iso3])))
+                        ? (float) ($pesi['ostile_russia'] ?? 0.0) : 0.0);
                 $affinita = max(-127.0, min(127.0, $affinita));
                 $r = new Relazione(affinita: $affinita, confinanti: $confinanti, ancora: $affinita);
                 $r->aggiornaUmore();

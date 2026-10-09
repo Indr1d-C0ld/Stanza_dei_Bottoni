@@ -40,16 +40,16 @@ final class Fase05SicurezzaInterna implements Fase
         $kReclutamento = $cal->numero('insurrezione.reclutamento', 1.0);
         $pesoEsclusione     = $cal->numero('insurrezione.peso_esclusione', 3.0);
         $pesoFrammentazione = $cal->numero('insurrezione.peso_frammentazione', 0.5);
-        $sogliaColpo = $cal->numero('colpo_di_stato.soglia_legittimita', 38.0);
-        $rischioMax  = $cal->numero('colpo_di_stato.rischio_massimo_anno', 0.065);
-        $pendenza    = $cal->numero('colpo_di_stato.pendenza', 7.0);
+        $sogliaColpo = $cal->numero('colpo_di_stato.soglia_legittimita', 34.0);
+        $rischioMax  = $cal->numero('colpo_di_stato.rischio_massimo_anno', 0.030);
+        $pendenza    = $cal->numero('colpo_di_stato.pendenza', 18.0);
         $resistenzaEstremi = $cal->numero('colpo_di_stato.resistenza_estremisti', 2.0);
         $blindatura        = $cal->numero('colpo_di_stato.blindatura', 3.0);
         $vittoriaInsorti   = $cal->numero('insurrezione.vittoria_insorti_anno', 0.18);
         $rispostaGoverno   = $cal->numero('insurrezione.risposta_governo', 6.0);
         $innescoBase       = $cal->numero('insurrezione.innesco_base_anno', 0.010);
         $innescoMassimo    = $cal->numero('insurrezione.innesco_massimo_anno', 0.10);
-        $spostamentoRegime = $cal->numero('instabilita.spostamento_regime', 12.0);
+        $spostamentoRegime = $cal->numero('instabilita.spostamento_regime', 24.0);
         $pesoFaziosita     = $cal->numero('instabilita.peso_faziosita', 0.2);
         $protezioneChiusura = $cal->numero('instabilita.protezione_chiusura', 10.0);
         $pesoQualitaVita = $cal->numero('instabilita.peso_qualita_vita', 2.7);
@@ -382,9 +382,10 @@ final class Fase05SicurezzaInterna implements Fase
             // Spostando il centro si dice invece la cosa giusta, che e' anche
             // quella di Goldstone: un regime parziale cade con una
             // legittimita' con cui un'autocrazia piena reggerebbe. Con la
-            // pendenza a 7, dodici punti di spostamento valgono circa cinque
-            // volte le probabilita'. La faziosita' raddoppiava lo spostamento
-            // (fino a trenta volte, il numero di PITF): non piu', vedi sotto.
+            // pendenza a 18, ventiquattro punti di spostamento valgono circa
+            // quattro volte le probabilita' (docs/36). La faziosita'
+            // raddoppiava lo spostamento (fino a trenta volte, il numero di
+            // PITF): non piu', vedi sotto.
             $gab = $mondo->gabinetti[$n->iso3] ?? null;
             $centro += $spostamentoRegime * $n->regimeParziale();
 
@@ -417,6 +418,9 @@ final class Fase05SicurezzaInterna implements Fase
             // quartili di qualitaVita stanno a 3 e a 8, cinque livelli di
             // scarto, e con la pendenza a 7 servono 7*ln(7) = 13,6 punti per
             // fare sette volte le probabilita'. Cioe' 2,7 punti per livello.
+            // Con la pendenza a 18 (docs/36) valgono circa due volte: sui
+            // colpi di Stato il vincolo e' la pendenza misurata per stabilita'
+            // politica, e la taratura la rispetta con questo peso dentro.
             $centro += $pesoQualitaVita * (6.0 - $n->qualitaVita);
 
             $rischioAnnuo = $rischioMax / (1.0 + exp(($n->legittimita - $centro) / $pendenza));
@@ -635,10 +639,15 @@ final class Fase05SicurezzaInterna implements Fase
         // c'era `maturita`, che correla 0,989 col logaritmo del reddito: un
         // paese ricco aveva ricambi «regolari» anche se non votava nessuno.
         //
-        // E' la stessa soglia con cui la fase 10 decide chi va alle urne,
-        // perche' e' la stessa domanda: o le istituzioni elettorali
-        // funzionano, o il potere cambia per un'altra via.
-        $irregolare = $n->democrazia < $c->calibrazione->numero('elezioni.democrazia_minima', 0.25);
+        // Era la soglia con cui la fase 10 decide chi va alle urne (0,25), e
+        // non e' la stessa domanda. Un paese puo' votare e subire un colpo di
+        // Stato: dei 36 colpi riusciti del 2000-2025 (Powell e Thyne) 19 sono
+        // caduti fra 0,25 e 0,55 di democrazia liberale V-Dem — il Mali, il
+        // Niger, la Birmania, la Thailandia due volte, il Burkina Faso, l'Honduras
+        // —, 16,2 e 8,2 ogni mille anni-paese, quanto sotto. Sopra 0,55 nessuno,
+        // in 1.488 anni-paese. Il modello quei rischi li aveva, e li chiamava
+        // crisi di governo (docs/36).
+        $irregolare = $n->democrazia < $c->calibrazione->numero('colpo_di_stato.democrazia_regolare', 0.55);
         // Un nuovo governo non è il precedente con la legittimità ricaricata:
         // è gente diversa, con fortuna diversa. Alcuni consolidano per un
         // decennio, altri cadono in sei mesi, e questo NON è deducibile.

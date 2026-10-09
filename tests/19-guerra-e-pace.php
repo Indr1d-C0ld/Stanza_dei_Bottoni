@@ -93,3 +93,22 @@ Prove::che('il Libano, l\'Iraq e il Pakistan sono faziosi; la Norvegia e la Cina
     && $m->nazioni['NOR']->faziosita === 0.0 && $m->nazioni['CHN']->faziosita === 0.0);
 Prove::vicino('e pesa quanto nei colpi veri: un quinto in piu\' fra i regimi parziali (Powell e Thyne)',
     0.2, $calGP->numero('instabilita.peso_faziosita'), 0.001);
+
+// ------------------------------------------------------------ colpi e rivalita'
+Prove::gruppo('Si fa un colpo di Stato anche dove si vota, e si odia anche senza sparare');
+
+Prove::vicino('sotto 0,55 di democrazia liberale una caduta e\' un colpo di Stato (19 colpi su 36 fra 0,25 e 0,55)',
+    0.55, $calGP->numero('colpo_di_stato.democrazia_regolare'), 0.001);
+Prove::che('la curva del colpo e\' quella misurata, non quella ripida di prima (pendenza 18, tetto 3%)',
+    $calGP->numero('colpo_di_stato.pendenza') >= 14.0 && $calGP->numero('colpo_di_stato.rischio_massimo_anno') <= 0.035);
+
+$m = Mondo::daSeme($semeGP);
+$aff = static fn(string $a, string $b): float => (float) ($m->relazioni->fra($a, $b)?->affinita ?? 0.0);
+Prove::che('le rivalita\' strategiche senza guerre pesano: l\'Argentina e il Regno Unito partono ostili',
+    $aff('ARG', 'GBR') < -20.0, (string) round($aff('ARG', 'GBR')));
+Prove::che('ma quelle finite non piu\': l\'Iran e l\'Iraq (Thompson, Sakuwa e Suhas, aggiornate al 2020)',
+    $aff('IRN', 'IRQ') > 0.0, (string) round($aff('IRN', 'IRQ')));
+Prove::che('i paesi che la Russia dichiara ostili lo sono anche qui: il Portogallo, lontano e senza dispute',
+    $aff('RUS', 'PRT') < 0.0, (string) round($aff('RUS', 'PRT')));
+Prove::che('e chi non c\'entra resta indifferente o amico: la Russia e il Brasile',
+    $aff('RUS', 'BRA') > 20.0, (string) round($aff('RUS', 'BRA')));

@@ -31,8 +31,12 @@ declare(strict_types=1);
  *
  *   energia      combustibili
  *   cibo         cibo + materie prime agricole
- *   tecnologia   beni informatici + servizi informatici (per le importazioni
- *                solo i beni: l'API non ha i servizi informatici importati)
+ *   tecnologia   beni informatici + servizi informatici. L'API non ha i
+ *                servizi informatici importati: per ciascun paese sono le sue
+ *                importazioni di servizi per la quota che i servizi
+ *                informatici hanno nelle esportazioni di servizi del mondo.
+ *                Senza, le importazioni di tecnologia del mondo erano un
+ *                quarto sotto le esportazioni (docs/36)
  *   manifattura  manufatti meno i beni informatici, + minerali e metalli
  *   finanza      servizi assicurativi e finanziari
  *
@@ -156,10 +160,91 @@ foreach ((array) ($weo['values']['NGDPD'] ?? []) as $iso => $s) {
     }
 }
 $daFmi = [];
+
+// La quota informatica dei servizi scambiati nel mondo, dal lato di chi esporta.
+$informaticaMondo = 0.0;
+$serviziMondo = 0.0;
+foreach ($servizi['x'] as $iso => $v) {
+    if (isset($mondo->nazioni[$iso], $informatica[$iso])) {
+        $informaticaMondo += $v * $informatica[$iso] / 100.0;
+        $serviziMondo += $v;
+    }
+}
+$quotaInformatica = $serviziMondo > 0.0 ? $informaticaMondo / $serviziMondo : 0.0;
+
 // L'Iran no: il petrolio che vende alla Cina sotto sanzioni le dogane cinesi lo
 // registrano come malese, e nei flussi del FMI l'Iran esporterebbe il 3% del PIL
-// contro il 20% circa delle stime (EIA, Kpler). Meglio il modello di docs/21.
+// contro il 24% dei suoi conti nazionali. Va coi conti nazionali, qui sotto.
 unset($pilFmi['IRN']);
+
+// L'ultimo ripiego: i conti nazionali dell'ONU (UNSD, National Accounts Main
+// Aggregates), che coprono tutti — anche l'Iran, Cuba, l'Eritrea, la Corea del
+// Nord e la Siria — con esportazioni e importazioni di beni e servizi e il PIL
+// nella stessa valuta, somma 2021-2024. Il rapporto col PIL non dipende dal
+// cambio, che per Cuba e' un problema.
+//
+// Quei totali sono beni E servizi, e il modello di servizi ha solo la
+// finanza. Si tiene la quota di beni che i flussi del FMI vedono: per Cuba il
+// 6% delle esportazioni (il resto e' turismo e medici all'estero), per la
+// Corea del Nord il 41%. Non per l'Iran, i cui beni il FMI non vede (sopra).
+//
+// La composizione e' la mediana della regione, tranne dove i partner dicono
+// che cosa comprano: UN Comtrade, importazioni 2022-2023 dalla Siria (Arabia
+// Saudita, Egitto, Kuwait, Emirati, Giordania, Turchia, Russia, Libano, Iraq)
+// e dall'Eritrea (Cina, Corea del Sud, Filippine, Croazia), per capitolo del
+// Sistema Armonizzato. La regione dava alla Siria due terzi di petrolio che
+// non vende piu', e all'Eritrea il cibo invece dei minerali di Bisha.
+$onu = [];
+$fileOnu = $radice . '/storage/fonti/unsd/unsd-ama-usd-correnti.csv';
+$nomiOnu = ['Iran (Islamic Republic of)' => 'IRN', 'Cuba' => 'CUB', 'Eritrea' => 'ERI',
+            'D.P.R. of Korea' => 'PRK', 'Syrian Arab Republic' => 'SYR'];
+if (($f = @fopen($fileOnu, 'r')) !== false) {
+    $t = fgetcsv($f, 0, ',', '"', '\\');
+    $anni = array_keys(array_filter($t, static fn($a): bool => in_array((string) $a, ['2021', '2022', '2023', '2024'], true)));
+    $voci = ['Exports of goods and services' => 'x', 'Imports of goods and services' => 'm',
+             'Gross Domestic Product (GDP)' => 'pil'];
+    while (($r = fgetcsv($f, 0, ',', '"', '\\')) !== false) {
+        $iso = $nomiOnu[$r[1] ?? ''] ?? null;
+        $voce = $voci[$r[2] ?? ''] ?? null;
+        if ($iso !== null && $voce !== null) {
+            $onu[$iso][$voce] = array_sum(array_map(static fn(int $i): float => (float) $r[$i], $anni));
+        }
+    }
+    fclose($f);
+} else {
+    fwrite(STDERR, "Manca $fileOnu: https://unstats.un.org/unsd/amaapi/api/file/2 (xlsx da convertire)\n");
+}
+$daOnu = [];
+$specchio = [];   // iso => [FUEL, FOOD, AGRI, MANF, MMTL, ICTG] in %
+foreach (['SYR' => 760, 'ERI' => 232] as $iso => $codice) {
+    $righe = json_decode((string) @file_get_contents("$cartella/../comtrade/specchio-$codice-2022-2023.json"), true);
+    if (!is_array($righe)) {
+        fwrite(STDERR, "Manca storage/fonti/comtrade/specchio-$codice-2022-2023.json (API pubblica di UN Comtrade)\n");
+        continue;
+    }
+    $per = ['FUEL' => 0.0, 'FOOD' => 0.0, 'AGRI' => 0.0, 'MANF' => 0.0, 'MMTL' => 0.0, 'ICTG' => 0.0];
+    foreach ($righe as $riga) {
+        if (!ctype_digit((string) $riga['cmdCode'])) {
+            continue;
+        }
+        $cap = (int) $riga['cmdCode'];
+        $v = (float) ($riga['primaryValue'] ?? 0.0);
+        $chiave = match (true) {
+            $cap === 27                                   => 'FUEL',
+            $cap <= 24                                    => 'FOOD',
+            in_array($cap, [41, 44, 45, 50, 51, 52, 53], true) => 'AGRI',
+            in_array($cap, [25, 26], true) || ($cap >= 71 && $cap <= 81) => 'MMTL',
+            $cap === 85                                   => 'ICTG',
+            default                                       => 'MANF',
+        };
+        $per[$chiave] += $v;
+    }
+    $per['MANF'] += $per['ICTG'];   // come nella Banca Mondiale: i manufatti comprendono i beni informatici
+    $totale = $per['FUEL'] + $per['FOOD'] + $per['AGRI'] + $per['MANF'] + $per['MMTL'];
+    if ($totale > 0.0) {
+        $specchio[$iso] = array_map(static fn(float $v): float => 100.0 * $v / $totale, $per);
+    }
+}
 
 $esito = [];
 $mancano = [];
@@ -175,6 +260,21 @@ foreach ($mondo->elenco() as $n) {
         $servizi['m'][$iso] = 0.0;
         unset($quota['x']['FUEL'][$iso], $quota['m']['FUEL'][$iso]);
         $daFmi[] = $iso;
+    }
+    if (($p <= 0.0 || !isset($beni['x'][$iso], $beni['m'][$iso])) && ($onu[$iso]['pil'] ?? 0.0) > 0.0) {
+        $p = $onu[$iso]['pil'];
+        foreach (['x', 'm'] as $verso) {
+            $totaleOnu = ($onu[$iso][$verso] ?? 0.0) / 4.0;   // l'anno medio, come i flussi
+            $quotaBeni = $iso === 'IRN' || $totaleOnu <= 0.0
+                ? 1.0 : min(1.0, ($imts[$verso][$iso] ?? $totaleOnu) / $totaleOnu);
+            $beni[$verso][$iso] = ($onu[$iso][$verso] ?? 0.0) * $quotaBeni;
+            $servizi[$verso][$iso] = 0.0;
+            unset($quota[$verso]['FUEL'][$iso]);
+        }
+        foreach ($specchio[$iso] ?? [] as $k => $v) {
+            $quota['x'][$k][$iso] = $v;
+        }
+        $daOnu[] = $iso;
     }
     if ($p <= 0.0 || !isset($beni['x'][$iso], $beni['m'][$iso])) {
         $mancano[] = $iso;
@@ -192,7 +292,7 @@ foreach ($mondo->elenco() as $n) {
         $b = $beni[$verso][$iso];
         $s = $servizi[$verso][$iso] ?? 0.0;
         $q = static fn(string $k): float => ($quota[$verso][$k][$iso] ?? 0.0) / 100.0;
-        $tecnologia = $b * $q('ICTG') + ($verso === 'x' ? $s * ($informatica[$iso] ?? 0.0) / 100.0 : 0.0);
+        $tecnologia = $b * $q('ICTG') + $s * ($verso === 'x' ? ($informatica[$iso] ?? 0.0) / 100.0 : $quotaInformatica);
         $esito[$iso][$nome] = [
             'energia'     => $b * $q('FUEL') / $p,
             'cibo'        => $b * ($q('FOOD') + $q('AGRI')) / $p,
@@ -221,6 +321,7 @@ $testa = <<<PHP
 // Composizione delle merci presa dalla mediana della regione: %s.
 // Beni dai flussi bilaterali del FMI e PIL dal FMI (la Banca Mondiale non li
 // copre), senza servizi: %s.
+// Beni e servizi insieme dai conti nazionali dell'ONU (UNSD), 2021-2024: %s.
 // Senza dati, e restano al modello di docs/21: %s.
 
 return [
@@ -229,5 +330,7 @@ PHP;
 file_put_contents($radice . '/db/seed/commercio-dati.php',
     sprintf($testa, $prestati === [] ? 'nessuno' : implode(', ', array_keys($prestati)),
         $daFmi === [] ? 'nessuno' : implode(', ', $daFmi),
+        $daOnu === [] ? 'nessuno' : implode(', ', $daOnu),
         $mancano === [] ? 'nessuno' : implode(', ', $mancano)) . implode("\n", $righe) . "\n];\n");
-printf("%d paesi coi dati, %d senza: %s\n", count($esito), count($mancano), implode(' ', $mancano));
+printf("%d paesi coi dati, %d senza: %s; servizi informatici: %.1f%% dei servizi del mondo\n",
+    count($esito), count($mancano), implode(' ', $mancano), 100 * $quotaInformatica);

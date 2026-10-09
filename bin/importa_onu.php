@@ -30,6 +30,7 @@ declare(strict_types=1);
  *            + c * difesa in un patto integrato (NATO, CSTO)
  *            + d * difesa in un patto fra molti sulla carta / radice(membri - 1)
  *            + e * dispute
+ *            + f * rivalita' strategica + g * ostile per la Russia
  *
  * e i pesi NON si scelgono: si stimano qui, ai minimi quadrati, sui rapporti
  * dichiarati di db/seed/politica-nota.php. La scala resta quella dei rapporti
@@ -44,6 +45,27 @@ declare(strict_types=1);
  * e' dal 2015 in poi.
  *
  *   php bin/importa_onu.php
+ *
+ * Due ostilita' che le dispute non vedono (docs/36), perche' non si spara:
+ *
+ *   - le RIVALITA' STRATEGICHE di THOMPSON, SAKUWA e SUHAS (2021),
+ *     «Analyzing Strategic Rivalries in World Politics», Springer — chi si
+ *     considera nemico o concorrente, aggiornamento al 2020 dell'inventario
+ *     di Thompson e Dreyer (2012): le 56 ancora in corso nel 2020, l'Iran e
+ *     l'Arabia Saudita, l'Algeria e il Marocco, la Russia e l'Ucraina. File
+ *     di Kentaro Sakuwa, storage/fonti/rivalita-strategiche/
+ *     tss-rivalita-1816-2020.csv, da
+ *     https://www.kentarosakuwa.info/uploads/9/4/6/6/94666922/strategic_rivalry_data_list_of_rivalries_by_type.csv
+ *     Prima avevo usato l'edizione ferma al 2010, che teneva aperte rivalita'
+ *     finite dopo: l'Iraq con l'Arabia Saudita (2018), l'Etiopia con
+ *     l'Eritrea (la pace del 2018).
+ *   - i paesi «ostili» per la Russia, ordinanza del governo russo n. 430-r del
+ *     5 marzo 2022 e n. 2018 del 23 luglio 2022 (le Bahamas): le sanzioni dopo
+ *     l'invasione dell'Ucraina, che le dispute COW (ferme al 2014) non
+ *     contano. Prima di questa variabile la distanza dei voti pesava -33 per
+ *     spiegare da sola l'ostilita' fra la Russia e l'Europa; adesso -17.
+ *
+ * Con le due variabili l'R² sui rapporti dichiarati passa da 0,62 a 0,81.
  *
  * Va lanciato DOPO bin/importa_alleanze.php e bin/importa_rivalita.php.
  */
@@ -87,12 +109,72 @@ foreach ($mondo->elenco() as $n) {
 }
 $mancano = array_values(array_diff(array_keys($mondo->nazioni), array_keys($punti)));
 
+// --- le ostilita' senza spari -------------------------------------------------
+/** Ordinanze del governo russo 430-r (5/3/2022) e 2018 (23/7/2022). */
+const OSTILI_ALLA_RUSSIA = [
+    // i 27 dell'Unione Europea
+    'AUT', 'BEL', 'BGR', 'HRV', 'CYP', 'CZE', 'DNK', 'EST', 'FIN', 'FRA', 'DEU', 'GRC', 'HUN', 'IRL',
+    'ITA', 'LVA', 'LTU', 'LUX', 'MLT', 'NLD', 'POL', 'PRT', 'ROU', 'SVK', 'SVN', 'ESP', 'SWE',
+    // gli altri del 5 marzo 2022
+    'USA', 'GBR', 'CAN', 'JPN', 'KOR', 'AUS', 'NZL', 'CHE', 'NOR', 'ISL', 'SGP', 'TWN', 'UKR',
+    'ALB', 'AND', 'LIE', 'FSM', 'MCO', 'MNE', 'MKD', 'SMR',
+    // 23 luglio 2022
+    'BHS',
+];
+$fileTd = $radice . '/storage/fonti/rivalita-strategiche/tss-rivalita-1816-2020.csv';
+if (!is_file($fileTd)) {
+    fwrite(STDERR, "Manca $fileTd (vedi l'intestazione).\n");
+    exit(1);
+}
+// I codici COW, tradotti come in bin/importa_rivalita.php.
+$nomeCow = [];
+foreach (file($radice . '/storage/fonti/cow-codici.csv', FILE_IGNORE_NEW_LINES) ?: [] as $riga) {
+    $p = str_getcsv($riga, ',', '"', '\\');
+    if (count($p) >= 3 && ctype_digit(trim((string) $p[1]))) {
+        $nomeCow[(int) $p[1]] = trim((string) $p[2]);
+    }
+}
+$perNome = [];
+$fh = fopen($radice . '/db/seed/nazioni.csv', 'r');
+$int = fgetcsv($fh, 0, ',', '"', '\\');
+while (($riga = fgetcsv($fh, 0, ',', '"', '\\')) !== false) {
+    $d = array_combine($int, $riga);
+    $perNome[mb_strtolower(trim((string) $d['nome_fonte']))] = (string) $d['iso3'];
+}
+fclose($fh);
+$nomiCow = [
+    'United States of America' => 'USA', 'United Arab Emirates' => 'ARE', 'Taiwan' => 'TWN',
+    'Democratic Republic of the Congo' => 'COD', 'Central African Republic' => 'CAF', 'Kosovo' => 'XKX',
+    'Yugoslavia' => 'SRB', 'Germany' => 'DEU', 'German Federal Republic' => 'DEU', 'Myanmar' => 'MMR',
+];
+$isoCow = static fn(int $c): ?string => isset($nomeCow[$c])
+    ? ($nomiCow[$nomeCow[$c]] ?? $perNome[mb_strtolower($nomeCow[$c])] ?? null) : null;
+$strategiche = [];
+$fh = fopen($fileTd, 'r');
+$int = fgetcsv($fh, 0, ',', '"', '\\');
+while (($riga = fgetcsv($fh, 0, ',', '"', '\\')) !== false) {
+    $d = array_combine($int, $riga);
+    if ((string) $d['ongoing2020'] !== '1') {
+        continue;
+    }
+    $a = $isoCow((int) $d['ccode1']);
+    $b = $isoCow((int) $d['ccode2']);
+    if ($a === null || $b === null) {
+        fwrite(STDERR, "Rivalita' senza paese nel seme: {$d['abbrev1']}-{$d['abbrev2']}\n");
+        continue;
+    }
+    $strategiche[strcmp($a, $b) < 0 ? "$a|$b" : "$b|$a"] = true;
+}
+fclose($fh);
+ksort($strategiche);
+$ostili = array_flip(OSTILI_ALLA_RUSSIA);
+
 // --- la stima dei pesi --------------------------------------------------------
 $patti = require $radice . '/db/seed/patti-difesa.php';
 $rivalita = require $radice . '/db/seed/rivalita.php';
 $politica = require $radice . '/db/seed/politica-nota.php';
 
-$variabili = static function (string $a, string $b) use ($punti, $patti, $rivalita): ?array {
+$variabili = static function (string $a, string $b) use ($punti, $patti, $rivalita, $strategiche, $ostili): ?array {
     if (!isset($punti[$a], $punti[$b])) {
         return null;
     }
@@ -107,6 +189,8 @@ $variabili = static function (string $a, string $b) use ($punti, $patti, $rivali
         // stima il peso di 1/radice(membri - 1).
         str_starts_with($tipo, 'multilaterale:') ? 1.0 / sqrt(max(1, (int) explode(':', $tipo)[1] - 1)) : 0.0,
         (float) min(10, (int) ($rivalita[$k]['dispute'] ?? 0)),
+        isset($strategiche[$k]) ? 1.0 : 0.0,
+        ($a === 'RUS' && isset($ostili[$b])) || ($b === 'RUS' && isset($ostili[$a])) ? 1.0 : 0.0,
     ];
 };
 $X = [];
@@ -186,7 +270,8 @@ $out = sprintf(<<<PHP
 //
 //   affinita' = %.1f %+.1f * distanza %+.1f * difesa bilaterale
 //              %+.1f * patto integrato %+.1f * patto sulla carta / radice(membri-1)
-//              %+.1f * dispute (fino a dieci)
+//              %+.1f * dispute (fino a dieci) %+.1f * rivalita' strategica
+//              %+.1f * ostile per la Russia
 
 return [
     'pesi' => [
@@ -196,16 +281,24 @@ return [
         'integrato'     => %.3f,
         'multilaterale' => %.3f,
         'dispute'       => %.3f,
+        'strategica'    => %.3f,
+        'ostile_russia' => %.3f,
         'r2'            => %.3f,
     ],
+    // Thompson, Sakuwa e Suhas (2021), rivalita' strategiche in corso nel 2020.
+    'strategiche' => [%s],
+    // Ordinanze 430-r e 2018 del governo russo (2022).
+    'ostili_russia' => [%s],
     'punti' => [
 
 PHP,
     $vecchi === [] ? 'nessuno' : implode(', ', $vecchi), $mancano === [] ? 'nessuno' : implode(', ', $mancano),
-    count($y), $r2, $coef[0], $coef[1], $coef[2], $coef[3], $coef[4], $coef[5],
-    $coef[0], $coef[1], $coef[2], $coef[3], $coef[4], $coef[5], $r2)
+    count($y), $r2, $coef[0], $coef[1], $coef[2], $coef[3], $coef[4], $coef[5], $coef[6], $coef[7],
+    $coef[0], $coef[1], $coef[2], $coef[3], $coef[4], $coef[5], $coef[6], $coef[7], $r2,
+    "\n        '" . implode("',\n        '", array_keys($strategiche)) . "',\n    ",
+    "'" . implode("', '", OSTILI_ALLA_RUSSIA) . "'")
     . implode("\n", $righe) . "\n    ],\n];\n";
 file_put_contents($radice . '/db/seed/onu.php', $out);
 
-printf("%d punti ideali; %d senza. Pesi su %d rapporti (R2 %.2f): %.1f %+.1f*d %+.1f*bil %+.1f*integr %+.1f*carta %+.1f*disp\n",
+printf("%d punti ideali; %d senza. Pesi su %d rapporti (R2 %.2f): %.1f %+.1f*d %+.1f*bil %+.1f*integr %+.1f*carta %+.1f*disp %+.1f*strat %+.1f*ostili\n",
     count($punti), count($mancano), count($y), $r2, ...$coef);

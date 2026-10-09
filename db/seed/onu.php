@@ -9,22 +9,86 @@
 // ideologica: TWN, XKX.
 //
 // I pesi dell'affinita' strutturale, stimati ai minimi quadrati su 132 rapporti
-// dichiarati (R² = 0.62):
+// dichiarati (R² = 0.81):
 //
-//   affinita' = 42.7 -32.9 * distanza +68.0 * difesa bilaterale
-//              +68.5 * patto integrato +124.5 * patto sulla carta / radice(membri-1)
-//              -10.8 * dispute (fino a dieci)
+//   affinita' = 58.0 -14.4 * distanza +37.3 * difesa bilaterale
+//              +48.0 * patto integrato +85.0 * patto sulla carta / radice(membri-1)
+//              -3.3 * dispute (fino a dieci) -85.4 * rivalita' strategica
+//              -84.6 * ostile per la Russia
 
 return [
     'pesi' => [
-        'costante'      => 42.747,
-        'distanza'      => -32.857,
-        'bilaterale'    => 67.997,
-        'integrato'     => 68.532,
-        'multilaterale' => 124.460,
-        'dispute'       => -10.810,
-        'r2'            => 0.623,
+        'costante'      => 58.039,
+        'distanza'      => -14.383,
+        'bilaterale'    => 37.293,
+        'integrato'     => 47.958,
+        'multilaterale' => 84.952,
+        'dispute'       => -3.326,
+        'strategica'    => -85.438,
+        'ostile_russia' => -84.623,
+        'r2'            => 0.808,
     ],
+    // Thompson, Sakuwa e Suhas (2021), rivalita' strategiche in corso nel 2020.
+    'strategiche' => [
+        'AFG|PAK',
+        'ARE|IRN',
+        'ARE|QAT',
+        'ARG|GBR',
+        'ARM|AZE',
+        'BDI|RWA',
+        'BHR|QAT',
+        'BIH|HRV',
+        'BIH|SRB',
+        'BOL|CHL',
+        'CAF|TCD',
+        'CHN|IND',
+        'CHN|JPN',
+        'CHN|TWN',
+        'CHN|USA',
+        'COD|RWA',
+        'COD|UGA',
+        'COL|VEN',
+        'CUB|USA',
+        'CYP|TUR',
+        'DZA|MAR',
+        'EGY|ETH',
+        'EGY|IRN',
+        'EGY|ISR',
+        'EGY|QAT',
+        'EGY|SDN',
+        'EGY|TUR',
+        'ERI|SDN',
+        'ETH|SDN',
+        'GAB|GNQ',
+        'GRC|TUR',
+        'GUY|VEN',
+        'IND|PAK',
+        'IRN|ISR',
+        'IRN|SAU',
+        'IRN|TUR',
+        'IRN|USA',
+        'IRN|YEM',
+        'IRQ|ISR',
+        'IRQ|KWT',
+        'ISR|SYR',
+        'JOR|SYR',
+        'KEN|SOM',
+        'KHM|THA',
+        'KOR|PRK',
+        'MYS|SGP',
+        'QAT|SAU',
+        'QAT|SYR',
+        'RUS|UKR',
+        'RUS|USA',
+        'RWA|UGA',
+        'SAU|SYR',
+        'SAU|TUR',
+        'SDN|SSD',
+        'SRB|XKX',
+        'SYR|TUR',
+    ],
+    // Ordinanze 430-r e 2018 del governo russo (2022).
+    'ostili_russia' => ['AUT', 'BEL', 'BGR', 'HRV', 'CYP', 'CZE', 'DNK', 'EST', 'FIN', 'FRA', 'DEU', 'GRC', 'HUN', 'IRL', 'ITA', 'LVA', 'LTU', 'LUX', 'MLT', 'NLD', 'POL', 'PRT', 'ROU', 'SVK', 'SVN', 'ESP', 'SWE', 'USA', 'GBR', 'CAN', 'JPN', 'KOR', 'AUS', 'NZL', 'CHE', 'NOR', 'ISL', 'SGP', 'TWN', 'UKR', 'ALB', 'AND', 'LIE', 'FSM', 'MCO', 'MNE', 'MKD', 'SMR', 'BHS'],
     'punti' => [
         'AFG' => -0.3763,
         'AGO' => -0.5176,

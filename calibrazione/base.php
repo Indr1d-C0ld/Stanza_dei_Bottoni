@@ -343,9 +343,14 @@ return [
         // misurato: da 4 a 25 il rapporto fra parziali e autocrazie si muoveva
         // solo da 1,1 a 1,6).
         //
-        // Con la pendenza a 7: dodici punti valgono ~5 volte le probabilita'.
-        // La faziosita' non li raddoppia piu' (vedi peso_faziosita).
-        'spostamento_regime'   => 12.0,
+        // Con la pendenza a 18 (docs/36) ventiquattro punti valgono ~3,8 volte
+        // le probabilita'. La faziosita' non li raddoppia piu' (vedi
+        // peso_faziosita).
+        // 24 da docs/36: con la curva piu' dolce del colpo di Stato, dodici
+        // punti non bastavano piu' a fare dei regimi fra 0,25 e 0,55 di
+        // democrazia liberale quel che sono nel dato (16,2 e 8,2 colpi ogni
+        // mille anni-paese).
+        'spostamento_regime'   => 24.0,
         // [TARATO] Quanto la faziosita' (Polity5, PARCOMP «factional»)
         // aggiunge al rischio di colpo di un regime parziale. Powell e Thyne
         // per PARCOMP fra i regimi parziali di Polity: 21,9 colpi riusciti
@@ -363,7 +368,11 @@ return [
         //
         // 2,7 punti per livello non e' una scelta di gusto: i quartili della
         // nostra qualitaVita stanno a 3 e a 8, e con la pendenza a 7 servono
-        // 7*ln(7) = 13,6 punti su quei cinque livelli di scarto.
+        // 7*ln(7) = 13,6 punti su quei cinque livelli di scarto. Con la
+        // pendenza a 18 (docs/36) gli stessi punti valgono ~2 volte: il sette
+        // di Goldstone e' sull'instabilita' in generale, e sui colpi di Stato
+        // il vincolo e' la pendenza misurata per stabilita' politica, che la
+        // taratura rispetta con questo peso dentro.
         //
         // E' anche la via per cui entra la DISUGUAGLIANZA: quel livello si
         // calcola sul consumo mediano, non su quello medio.
@@ -381,7 +390,8 @@ return [
         // va da 0 a 100 e si assesta intorno a 50: la soglia equivalente non è
         // zero, è circa un quinto della scala. Tradurre un modello significa
         // anche tradurne le scale, ed è il genere di errore che passa inosservato.
-        'soglia_legittimita'     => 38.0,
+        // 38 fino a docs/36: vedi rischio_massimo_anno qui sotto.
+        'soglia_legittimita'     => 34.0,
         // NOTA: qui c'era 'peso_destabilizzazione'. Tolta: il verbo
         // «destabilizzare» agisce gia' su legittimita' e clamore sociale, che
         // sono gli ingressi del rischio di colpo di Stato. Un secondo peso che
@@ -423,8 +433,28 @@ return [
         // politica che finalmente vaga, la soglia unica dell'insurrezione e
         // gli eserciti che non si gonfiano piu' (docs/27) avevano riportato i
         // colpi a 5,3 l'anno. A 0,065 tornano nel riferimento.
-        'rischio_massimo_anno'   => 0.065,
-        'pendenza'               => 7.0,
+        //
+        // [TARATO] una quarta volta, e la prima regime per regime (docs/36).
+        // Powell e Thyne per fascia di democrazia liberale V-Dem, 2000-2025:
+        // 9,2 colpi riusciti ogni mille anni-paese fra 0,05 e 0,15, 14,5 fra
+        // 0,15 e 0,25, 16,2 fra 0,25 e 0,40, 8,2 fra 0,40 e 0,55. E per
+        // stabilita' politica WGI dentro i regimi parziali: ogni unita' in
+        // meno moltiplica i colpi per 1,6-1,8 (regressione di Poisson,
+        // pendenza -0,57 +- 0,19; -0,45 a parita' di vicinato). Con 0,065 e 7
+        // il modello faceva 1,0: i paesi fragili, con la legittimita' bassa,
+        // cadevano tre volte il vero (45-50 per mille fra 0,15 e 0,25), e i
+        // regimi parziali faziosi 1,7 volte. Una curva piu' dolce e un tetto
+        // piu' basso, con la soglia e lo spostamento dei regimi parziali
+        // ritoccati per tenere il livello: tutte e quattro le fasce dentro
+        // l'intervallo di Poisson al 95% del dato.
+        'rischio_massimo_anno'   => 0.030,
+        'pendenza'               => 18.0,
+        // [TARATO] Sotto questa democrazia liberale una caduta e' un colpo di
+        // Stato, sopra una crisi di governo. Era la soglia delle elezioni,
+        // 0,25: ma 19 dei 36 colpi riusciti del 2000-2025 sono caduti fra 0,25
+        // e 0,55, e sopra 0,55 nessuno in 1.488 anni-paese (Powell e Thyne;
+        // docs/36).
+        'democrazia_regolare'    => 0.55,
     ],
 
     // ----------------------------------------------------------- relazioni

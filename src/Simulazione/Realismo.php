@@ -86,18 +86,26 @@ final class Realismo
             . 'e\' il 52% delle economie; sul solo 2010-2019 il 46%. Senza ciclo il modello '
             . 'ne aveva meno di un sesto, sempre gli stessi: chi partiva con la tendenza '
             . 'negativa (docs/30)'],
-        'onere_militare'       => [1.8,  3.6,  '% del PIL',   'corsa',
+        'onere_militare'       => [1.8,  4.0,  '% del PIL',   'corsa',
             'SIPRI 2024: 2,5% del prodotto mondiale, e in salita — la piu\' ripida dal 1988. '
             . 'Il tetto e\' alto apposta: il mondo vero e\' passato dal 2,2% del 2020 al 2,5% '
             . 'del 2024, cioe\' +0,075 punti l\'anno, che su quindici farebbero +1,1. Il '
-            . 'modello ne fa +0,7, quindi sale piu\' piano del reale, non piu\' in fretta'],
-        'cambi_irregolari'     => [1.2,  6,    '/anno',       'corsa',
+            . 'modello ne fa +0,7, quindi sale piu\' piano del reale, non piu\' in fretta. '
+            . 'Il tetto era 3,6, il solo trend 2020-2024; poi la NATO all\'Aia (24-25 giugno '
+            . '2025) si e\' impegnata al 3,5% del PIL per la difesa in senso stretto entro il '
+            . '2035: per l\'Europa e il Canada, da circa il 2%, vale altri 0,35 punti del '
+            . 'prodotto mondiale. Con i paesi che la Russia dichiara ostili (docs/36) il '
+            . 'modello riarma proprio li\': Germania, Regno Unito, Canada, Polonia'],
+        'cambi_irregolari'     => [1.0,  6,    '/anno',       'corsa',
             'Powell e Thyne (versione del 29/08/2026): nei paesi del seme 36 colpi di Stato '
             . 'riusciti nel 2000-2025, 1,4 l\'anno — 2,5 negli anni Venti — piu\' circa 0,4 '
             . 'prese del potere armate (Libia 2011, Centrafrica 2013, Yemen 2015, Afghanistan '
             . '2021, Siria 2024). La fascia era 3-9, su un riferimento piu\' largo (Cline '
             . 'Center); adesso e\' lo stesso dataset su cui il modello e\' tarato, regime per '
-            . 'regime (docs/35). Il ~10 di Crawford descrive il 1948-77'],
+            . 'regime (docs/35). Il ~10 di Crawford descrive il 1948-77. Il minimo era 1,2, il '
+            . 'quindicennio piu\' calmo (2004-2018) dei soli colpi: ma una corsa di quindici anni '
+            . 'con 1,8 eventi l\'anno attesi ne fa 1,1-2,5 per puro caso (Poisson, due errori), '
+            . 'quindi 1,0 (docs/36)'],
         'guerre_aperte'        => [0,    8,    'in corso',    'corsa',
             'UCDP: i conflitti interstatali attivi sono pochi, ogni anno'],
         'morti_guerra_anno'    => [0,    1.5,  'milioni/anno','corsa',

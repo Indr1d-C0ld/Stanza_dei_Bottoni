@@ -160,7 +160,21 @@ foreach ([['FRA', 'DEU'], ['DEU', 'FRA'], ['FRA', 'BEL']] as [$a, $b]) {
         array_sum($c->flusso[$a][$b] ?? []) > 0.0);
 }
 
-Prove::gruppo('Commercio: nessun fornitore domina un fabbisogno intero');
+Prove::gruppo('Commercio: le dipendenze forti sono quelle vere');
+
+// Fino a docs/35 qui c'era un tetto: nessuna dipendenza oltre il sessanta per
+// cento. Era una regola del modello di gravita'. Coi flussi del FMI le
+// dipendenze forti esistono e sono note: il Lesotho dal Sudafrica, il Bhutan
+// dall'India, il Canada dagli Stati Uniti (docs/36). La dipendenza qui e'
+// sul fabbisogno intero, produzione propria compresa, quindi sta sotto la
+// quota delle importazioni.
+foreach ([['ZAF', 'LSO', 'manifattura'], ['IND', 'BTN', 'manifattura'], ['USA', 'CAN', 'manifattura']] as [$f, $cl, $s]) {
+    Prove::che("$cl dipende da $f per la $s piu' che da chiunque altro",
+        $c->dipendenza($f, $cl, $s) > 0.0
+        && $c->dipendenza($f, $cl, $s) >= max(array_map(static fn(string $altro): float
+            => $c->dipendenza($altro, $cl, $s), array_keys($c->flusso))),
+        sprintf('%.0f%%', 100 * $c->dipendenza($f, $cl, $s)));
+}
 
 $peggiore = 0.0;
 $dove = '';
@@ -175,5 +189,20 @@ foreach ($c->flusso as $forn => $clienti) {
         }
     }
 }
-Prove::che('la dipendenza massima resta sotto il sessanta per cento',
-    $peggiore <= 0.60, sprintf('%.1f%% in %s', 100 * $peggiore, $dove));
+// Per settore la dipendenza puo' superare la quota sul totale dei beni: la
+// Mongolia compra quasi tutto il carburante dalla Russia, l'eSwatini i
+// manufatti dal Sudafrica. Ma un fabbisogno intero da uno solo, no.
+Prove::che('ma nessun fornitore copre da solo un fabbisogno intero',
+    $peggiore < 0.99, sprintf('%.1f%% in %s', 100 * $peggiore, $dove));
+
+Prove::gruppo('Commercio: anche i paesi senza Banca Mondiale hanno i loro dati');
+
+// L'Iran, Cuba, l'Eritrea, la Corea del Nord e la Siria dai conti nazionali
+// dell'ONU, con la composizione dei partner dove c'e' (docs/36).
+$datiCommercio = require dirname(__DIR__) . '/db/seed/commercio-dati.php';
+Prove::uguale('tutti i 189 paesi hanno il commercio dai dati', 189, count($datiCommercio));
+Prove::che('l\'Iran esporta soprattutto energia, che il FMI non vede',
+    $datiCommercio['IRN']['esporta']['energia'] > 0.5 * array_sum($datiCommercio['IRN']['esporta']));
+Prove::che('la Siria non vende piu\' petrolio ma cibo; l\'Eritrea minerali (UN Comtrade)',
+    $datiCommercio['SYR']['esporta']['energia'] < 0.01 && $datiCommercio['SYR']['esporta']['cibo'] > $datiCommercio['SYR']['esporta']['manifattura']
+    && $datiCommercio['ERI']['esporta']['cibo'] < 0.01);
