@@ -22,15 +22,6 @@ use App\Simulazione\Fase;
  */
 final class Fase05SicurezzaInterna implements Fase
 {
-    /**
-     * Reddito pro capite (PPA) a cui il moltiplicatore di poverta' vale 1.
-     * E' all'incirca la mediana mondiale: sopra, arruolarsi conviene meno.
-     */
-    private const REDDITO_RIFERIMENTO = 8000.0;
-
-    /** Tetto al moltiplicatore: la miseria aggrava, non spiega tutto. */
-    private const POVERTA_MAX = 4.0;
-
     public function codice(): string { return '05'; }
     public function nome(): string   { return 'Insurrezioni e cambi di esecutivo'; }
 
@@ -46,7 +37,7 @@ final class Fase05SicurezzaInterna implements Fase
         $perTick  = 1.0 / $tickAnno;
         $attrito  = $cal->numero('insurrezione.attrito_anno', 0.25) * $perTick;
         $carrozzone = $cal->numero('insurrezione.effetto_carrozzone', 0.20);
-        $kReclutamento = $cal->numero('insurrezione.reclutamento_k', 0.8e-3);
+        $kReclutamento = $cal->numero('insurrezione.reclutamento', 1.0);
         $pesoEsclusione     = $cal->numero('insurrezione.peso_esclusione', 3.0);
         $pesoFrammentazione = $cal->numero('insurrezione.peso_frammentazione', 0.5);
         $sogliaColpo = $cal->numero('colpo_di_stato.soglia_legittimita', 38.0);
@@ -55,7 +46,7 @@ final class Fase05SicurezzaInterna implements Fase
         $resistenzaEstremi = $cal->numero('colpo_di_stato.resistenza_estremisti', 2.0);
         $vittoriaInsorti   = $cal->numero('insurrezione.vittoria_insorti_anno', 0.18);
         $rispostaGoverno   = $cal->numero('insurrezione.risposta_governo', 6.0);
-        $innescoBase       = $cal->numero('insurrezione.innesco_base_anno', 0.04);
+        $innescoBase       = $cal->numero('insurrezione.innesco_base_anno', 0.010);
         $innescoMassimo    = $cal->numero('insurrezione.innesco_massimo_anno', 0.10);
         $spostamentoRegime = $cal->numero('instabilita.spostamento_regime', 12.0);
         $protezioneChiusura = $cal->numero('instabilita.protezione_chiusura', 10.0);
@@ -165,17 +156,14 @@ final class Fase05SicurezzaInterna implements Fase
                 + (max(0.0, $obiettivoInfo) - $n->controlloInfo) * $rispostaPolizia * 0.7));
 
             // --- reclutamento ---------------------------------------------
-            // Tre fattori: quanta gente c'è, quanto è debole lo stato di
-            // diritto (la "maturity" che Crawford confessa di aver inventato),
-            // e quanto l'insurrezione sta già andando bene — nessuno vuole
-            // salire su un carro che perde.
+            // Quattro fattori: quanto terreno il paese offre a una guerra
+            // (Fearon 2010, sotto), il motivo (l'esclusione dal potere), il
+            // malcontento, e quanto l'insurrezione sta già andando bene —
+            // nessuno vuole salire su un carro che perde.
             // ATTENZIONE alle unità. La forza del governo è una media
             // geometrica di uomini ed equipaggiamento; contare gli insorti a
             // testa le rende incommensurabili, e il governo li annienta sempre.
-            // Anche il reclutamento va quindi in unità di POTENZA, e scala con
-            // la popolazione, col moltiplicatore di poverta' di Fearon & Laitin
-            // (vedi insurrezione.reclutamento_k: con la radice i paesi piccoli
-            // risultavano i piu' insorti del mondo).
+            // Anche il reclutamento va quindi in unità di POTENZA.
             // Nella formula di Crawford il reclutamento insurrezionale dipende
             // da popolazione, DEBOLEZZA ISTITUZIONALE e successo accumulato —
             // la popolarita' del governo non vi compare affatto: quella decide
@@ -184,38 +172,39 @@ final class Fase05SicurezzaInterna implements Fase
             // amato non aveva alcuna insurrezione, il che non somiglia a
             // nessun posto reale.
             $malcontento = max(0.0, (55.0 - $n->legittimita) / 55.0);
-            // La debolezza dello Stato che alimenta l'insurrezione. Era
-            // 1 - maturita/255, cioe' — essendo `maturita` il reddito
-            // travestito — la poverta' un'altra volta: e la poverta' entra
-            // gia' nel moltiplicatore di Fearon & Laitin qui sotto. Adesso
-            // dice quel che deve dire, cioe' quanto le istituzioni tengono.
+            // Le democrazie piene non hanno insurrezioni che durino: li' il
+            // dissenso armato si sfalda da se'. Quanto un'insurrezione cresce
+            // altrove lo dice il terreno di guerra qui sotto, non questo.
             $debolezza   = 1.0 - $n->democrazia;
             $spinta      = 0.30 + 0.70 * $malcontento;
             if ($debolezza > 0.15) {
                 $successo = $n->forzaInsorti > 0.0
                     ? min(1.0, $n->forzaInsorti / max(1.0, $n->potenzaGoverno()))
                     : 0.0;
-                // FEARON & LAITIN (2003), «Ethnicity, Insurgency, and Civil
-                // War», American Political Science Review 97(1).
+                // QUANTO TERRENO HA UN'INSURREZIONE, una volta accesa.
                 //
-                // Il reclutamento cresceva con la RADICE della popolazione,
-                // mentre la potenza del governo cresce linearmente con essa
-                // (i soldati sono una quota degli abitanti). Il rapporto fra
-                // le due scalava quindi come 1/radice(P): i paesi piccoli
-                // risultavano sistematicamente piu' insorti dei grandi, ed
-                // era misurabile — il 29% dei paesi sotto il milione di
-                // abitanti in conflitto armato, contro lo 0% di quelli sopra
-                // i duecento milioni. Il gradiente era monotono e rovesciato.
+                // Era una meccanica: reclute in proporzione alla popolazione
+                // e alla poverta', contro un governo la cui forza cresce con
+                // la radice di popolazione per PIL. Il rapporto fra le due
+                // aveva cosi' un'elasticita' di -1,5 al reddito e NESSUNA
+                // alla popolazione: il Madagascar risultava ventiquattro volte
+                // piu' esposto dell'India, e ogni paese povero oltre la soglia
+                // a cui il governo smette di reggere — Togo, Burundi, Ruanda,
+                // Uganda, Kenya, Tanzania — finiva in guerra civile piena
+                // appena qualcosa si accendeva (docs/30).
                 //
-                // Fearon e Laitin misurano l'opposto: la popolazione grande e'
-                // fra i predittori piu' forti dell'insorgenza. E il loro
-                // predittore PIU' forte — che qui non c'era affatto — e' la
-                // poverta': segna uno Stato finanziariamente e
-                // burocraticamente debole e insieme rende conveniente
-                // arruolarsi. Non l'etnia: a parita' di reddito, i paesi piu'
-                // divisi non hanno piu' guerre civili degli altri.
-                $poverta = min(self::POVERTA_MAX,
-                    self::REDDITO_RIFERIMENTO / max(300.0, $n->pilProCapite));
+                // Adesso il terreno e' il rischio di GUERRA MAGGIORE stimato,
+                // non dedotto: FEARON (2010), «Governance and Civil War
+                // Onset», WDR 2011, tabella 2 modello 1 (guerre oltre i mille
+                // morti l'anno, 1946-2008) e tabella 20 per la qualita' del
+                // governo — vedi terrenoDiGuerra(). Il reddito pesa -0,20 e
+                // non -1,5; la popolazione +0,20 e non zero; contano il
+                // terreno, il petrolio e soprattutto lo Stato.
+                //
+                // Si misura in unita' della forza che il governo aveva al
+                // seme: un governo che si arma resta piu' forte dei ribelli,
+                // uno che si logora piu' debole.
+                $terreno = $this->terrenoDiGuerra($n, $c);
                 // CEDERMAN, WIMMER, MIN (2010), «Why Do Ethnic Groups
                 // Rebel?», World Politics 62(1); CEDERMAN, WEIDMANN, GLEDITSCH
                 // (2011), APSR 105(3).
@@ -239,25 +228,28 @@ final class Fase05SicurezzaInterna implements Fase
                 $motivo = 1.0 + $pesoEsclusione * $n->esclusioneEtnica
                     * (1.0 + $pesoFrammentazione * min(1.0, $n->gruppiEsclusi / 6.0));
 
-                $reclute = $kReclutamento * $n->popolazione * $poverta * $motivo
-                    * $spinta * ($debolezza ** 1.6)
-                    * (1.0 + $carrozzone * $successo) * $perTick;
+                $reclute = $kReclutamento * $terreno * $motivo * $spinta
+                    * $n->potenzaIniziale * $attrito
+                    * (1.0 + $carrozzone * $successo);
 
                 // L'INNESCO. Fearon e Laitin non stimano quanti ribelli ci sono:
-                // stimano la PROBABILITA' ANNUA che una guerra civile cominci —
-                // 1,9% in media sui paesi a rischio nel 1945-99, fino a circa il
-                // 10% per i piu' esposti. Qui prima un'insurrezione nasceva da
-                // sola appena il reclutamento superava l'attrito del governo, e
-                // nasceva dovunque nello stesso momento: il mondo apriva con 34
-                // paesi in conflitto e un anno dopo ne aveva una cinquantina.
-                // Adesso chi non ha un'insurrezione la accende con una
-                // probabilita' annua che cresce con quanto il terreno e'
-                // favorevole — il rapporto fra il reclutamento possibile e
-                // l'attrito che il governo infligge — fino a un tetto. Molte
-                // si spengono presto, come nel mondo vero.
+                // stimano la PROBABILITA' ANNUA che una guerra civile cominci.
+                // Qui prima un'insurrezione nasceva da sola appena il
+                // reclutamento superava l'attrito del governo, e nasceva
+                // dovunque nello stesso momento.
+                //
+                // Poi la probabilita' cresceva col rapporto fra il reclutamento
+                // possibile e la forza del governo, fino a un tetto. Ma nei
+                // paesi piccoli e poveri l'esercito pesa pochissimo e il
+                // rapporto esplodeva: sedici paesi stavano al tetto del 10%
+                // l'anno, compreso il Ruanda, e l'India al 2,7% (docs/30).
+                //
+                // Adesso il rischio RELATIVO e' quello stimato, con i suoi
+                // coefficienti: vedi rischioDiGuerraCivile(). La base e' la
+                // probabilita' del paese mediano, ed e' tarata.
                 if (!$n->haInsorti()) {
-                    $favore = $reclute / max(1e-9, $n->potenzaGoverno() * $attrito);
-                    $pInnesco = min($innescoMassimo, $innescoBase * $favore);
+                    $pInnesco = min($innescoMassimo,
+                        $innescoBase * $this->rischioDiGuerraCivile($n, $c, $tickAnno));
                     if ($c->caso->prova('05_innesco', crc32($n->iso3), $c->tick, $pInnesco * $perTick)) {
                         $n->forzaInsorti = max(1.0, $n->forzaInsorti) + $reclute;
                         $c->annota('innesco', ['nazione' => $n->nome]);
@@ -450,7 +442,10 @@ final class Fase05SicurezzaInterna implements Fase
                 $rischioAnnuo *= 1.0 + $gab->pressioneInterna() / 55.0;
             }
 
-            $tregua = (int) ($tickAnno * (0.8 + 1.8 * $c->caso->frazione('05_tregua', $seme, $n->cambiEsecutivo)));
+            // La tregua e' una per governo: si tira col caso del MONDO. Col
+            // caso del tick si ritirava ogni settimana, e il primo tiro basso
+            // la chiudeva — durava quasi sempre il minimo (docs/30).
+            $tregua = (int) ($tickAnno * (0.8 + 1.8 * $c->delMondo()->frazione('05_tregua', $seme, $n->cambiEsecutivo)));
             if (($c->tick - $n->annoUltimoCambio) >= $tregua
                 && $c->caso->prova('05_colpo', $seme, $c->tick, $rischioAnnuo * $perTick)) {
                 $this->cambioEsecutivo($n, $c);
@@ -463,6 +458,75 @@ final class Fase05SicurezzaInterna implements Fase
             'colpi'        => $colpi,
             'rivoluzioni'  => $rivoluzioni,
         ]);
+    }
+
+    /**
+     * Il rischio di guerra civile di un paese, in multipli di quello del
+     * paese mediano del seme.
+     *
+     *   FEARON (2010), «Governance and Civil War Onset», documento di base
+     *   del World Development Report 2011, Banca Mondiale — tabella 2,
+     *   modello 3: logit sull'inizio di tutti i conflitti UCDP/PRIO (anche
+     *   minori, oltre i 25 morti) nel 1946-2008. E' la ristima, con dati
+     *   piu' completi e il reddito in logaritmo, del modello di FEARON e
+     *   LAITIN (2003), «Ethnicity, Insurgency, and Civil War», APSR 97(1).
+     *
+     * I coefficienti stanno in insurrezione.rischio, ciascuno con la sua
+     * riga. Due adattamenti, dichiarati:
+     *
+     *   - la qualita' del governo (WGI) e' nella tabella 21 dello stesso
+     *     lavoro: la stabilita' politica vale -0,93, e quando entra il peso
+     *     del reddito scende di circa un quarto (da -0,55 a -0,40). Qui il
+     *     reddito vale quindi -0,26 invece di -0,351;
+     *   - l'«instabilita'» di Fearon e' un qualunque cambio del punteggio
+     *     Polity nell'anno prima. Qui e' un cambio al vertice nell'ultimo anno
+     *     in un paese che non vota: e' il caso in cui cambia il regime, non
+     *     solo il governo.
+     */
+    private function rischioDiGuerraCivile(Nazione $n, ContestoTick $c, float $tickAnno): float
+    {
+        $cal = $c->calibrazione;
+        $med = $c->mondo->mediano;
+        $instabile = $c->tick - $n->annoUltimoCambio < $tickAnno
+            && $n->democrazia < $cal->numero('elezioni.democrazia_minima', 0.25);
+        $eta = $cal->numero('insurrezione.rischio.reddito', -0.26)
+                * log(max(300.0, $n->pilProCapite) / max(300.0, $med['reddito']))
+            + $cal->numero('insurrezione.rischio.popolazione', 0.238)
+                * log(max(1.0e4, $n->popolazione) / max(1.0e4, $med['popolazione']))
+            + $cal->numero('insurrezione.rischio.montuoso', 0.151)
+                * log((1.0 + $n->montuoso) / (1.0 + $med['montuoso']))
+            + $cal->numero('insurrezione.rischio.petrolio', 0.715) * ($n->petrolio ? 1.0 : 0.0)
+            + $cal->numero('insurrezione.rischio.regime_parziale', 0.355) * $n->regimeParziale()
+            + $cal->numero('insurrezione.rischio.instabilita', 0.466) * ($instabile ? 1.0 : 0.0)
+            + $cal->numero('insurrezione.rischio.governo', -0.93) * $n->stabilitaPolitica;
+        return exp($eta);
+    }
+
+    /**
+     * Quanto terreno ha un'insurrezione accesa, in multipli di quello del
+     * paese mediano: il rischio relativo di GUERRA MAGGIORE (oltre i mille
+     * morti l'anno) di FEARON (2010), tabella 2 modello 1, con la qualita'
+     * del governo della tabella 20 — la stabilita' politica vale -0,97 e
+     * dimezza il peso del reddito (da -0,42 a -0,20). Coefficienti in
+     * insurrezione.terreno.
+     *
+     * L'esclusione etnica non sta qui: entra a parte come motivo (Cederman,
+     * Wimmer e Min), ed e' anche il risultato di Fearon (2010, p. 18).
+     */
+    private function terrenoDiGuerra(Nazione $n, ContestoTick $c): float
+    {
+        $cal = $c->calibrazione;
+        $med = $c->mondo->mediano;
+        $eta = $cal->numero('insurrezione.terreno.reddito', -0.20)
+                * log(max(300.0, $n->pilProCapite) / max(300.0, $med['reddito']))
+            + $cal->numero('insurrezione.terreno.popolazione', 0.0)
+                * log(max(1.0e4, $n->popolazione) / max(1.0e4, $med['popolazione']))
+            + $cal->numero('insurrezione.terreno.montuoso', 0.360)
+                * log((1.0 + $n->montuoso) / (1.0 + $med['montuoso']))
+            + $cal->numero('insurrezione.terreno.petrolio', 1.095) * ($n->petrolio ? 1.0 : 0.0)
+            + $cal->numero('insurrezione.terreno.regime_parziale', 0.258) * $n->regimeParziale()
+            + $cal->numero('insurrezione.terreno.governo', -0.97) * $n->stabilitaPolitica;
+        return exp($eta);
     }
 
     /** I ribelli vincono: si scambiano i posti, e il pendolo politico si inverte. */
@@ -487,7 +551,7 @@ final class Fase05SicurezzaInterna implements Fase
         // E il credito che la gente concede sempre a chi arriva: alto abbastanza
         // da azzerare il malcontento per qualche stagione.
         $n->derivaPolitica = $c->caso->rumore('05_dopo_rivoluzione', crc32($n->iso3), $c->tick, 16.0);
-        $n->legittimita  = (50.0 + $n->derivaPolitica) + 7.0 - abs($n->orientamento) / 10.0;
+        $n->legittimita  = ($n->ancoraLegittimita() + $n->derivaPolitica) + 7.0 - abs($n->orientamento) / 10.0;
         $n->netPeace     = 3;
         $n->vittorieInsorti++;
         $n->cambiEsecutivo++;
@@ -512,7 +576,7 @@ final class Fase05SicurezzaInterna implements Fase
         // è gente diversa, con fortuna diversa. Alcuni consolidano per un
         // decennio, altri cadono in sei mesi, e questo NON è deducibile.
         $n->derivaPolitica = $c->caso->rumore('05_nuovogoverno', crc32($n->iso3), $c->tick, 14.0);
-        $n->legittimita = (50.0 + $n->derivaPolitica)
+        $n->legittimita = ($n->ancoraLegittimita() + $n->derivaPolitica)
             + ($irregolare ? 3.0 : 5.0)
             + $c->caso->rumore('05_luna_di_miele', crc32($n->iso3), $c->tick, 5.0);
         $n->clamoreSociale *= 0.4;

@@ -258,6 +258,7 @@ final class Deposito
             'reputazione_sporca', 'consumo_pro_capite_prec', 'azioni_in_volo',
             'cambi_esecutivo', 'cambi_irregolari', 'vittorie_insorti', 'scandali_subiti',
             'anno_ultimo_cambio', 'prossima_elezione', 'mandato_tick',
+            'ingerenza_tick', 'ingerenza_da',
         ];
         $segnaposti = '(?, ?, ' . implode(', ', array_fill(0, count($campi), '?')) . ')';
         $blocchi = [];
@@ -280,7 +281,8 @@ final class Deposito
                 $n->derivaPolitica, $n->integrita, $n->crescitaStrutturale, $n->pressioneEsterna,
                 $n->reputazioneSporca, $n->consumoProCapitePrec, $n->azioniInVolo,
                 $n->cambiEsecutivo, $n->cambiIrregolari, $n->vittorieInsorti, $n->scandaliSubiti,
-                $n->annoUltimoCambio, $n->prossimaElezione, $n->mandatoTick);
+                $n->annoUltimoCambio, $n->prossimaElezione, $n->mandatoTick,
+                $n->ingerenzaTick, $n->ingerenzaDa);
         }
         if ($blocchi === []) {
             return;
@@ -657,6 +659,8 @@ final class Deposito
             $n->annoUltimoCambio    = (int) $r['anno_ultimo_cambio'];
             $n->prossimaElezione    = (int) $r['prossima_elezione'];
             $n->mandatoTick         = (int) $r['mandato_tick'];
+            $n->ingerenzaTick       = (int) ($r['ingerenza_tick'] ?? 0);
+            $n->ingerenzaDa         = (string) ($r['ingerenza_da'] ?? '');
         }
 
         $stmt = $this->db->esegui('SELECT * FROM sdb_relazione');

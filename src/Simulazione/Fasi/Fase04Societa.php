@@ -95,7 +95,7 @@ final class Fase04Societa implements Fase
             // per tick significa riportare ogni governo alla media in due mesi,
             // e allora non cade mai nessuno. È l'errore che ha reso inerte la
             // prima versione di questo mondo.
-            $n->legittimita += (50.0 + $n->derivaPolitica - $n->legittimita)
+            $n->legittimita += ($n->ancoraLegittimita() + $n->derivaPolitica - $n->legittimita)
                 * (1.0 - $inerzia) * $perTick + $spinta;
 
             // Una guerra civile in corso erode la legittimità da sola.

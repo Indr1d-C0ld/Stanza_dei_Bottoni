@@ -38,6 +38,39 @@ return [
         // senza un tetto il modello si autoalimenta e diverge. [FABBRICATO]
         'crescita_max_anno'        => 0.10,
         'crescita_min_anno'        => -0.15,
+
+        // La tendenza di ogni paese e' la proiezione 2026-2030 del FMI
+        // (db/seed/crescita.php). Per quanti anni vale, e poi a che ritmo la
+        // tendenza pro capite torna a quella del paese mediano: Pritchett e
+        // Summers (2014) misurano una correlazione fra 0,1 e 0,3 fra la
+        // crescita di un decennio e quella del successivo, cioe' circa il 14%
+        // l'anno di ritorno alla media (docs/30).
+        'orizzonte_proiezioni'     => 5.0,
+        'ritorno_alla_media_anno'  => 0.14,
+
+        // Il ciclo economico (fase 03, docs/30): un'onda lenta in tre pezzi.
+        //   KOSE, OTROK, WHITEMAN (2003), AER 93(4): il fattore mondiale pesa
+        //   di piu' nelle economie avanzate, il regionale poco, il resto e'
+        //   del paese.
+        //   KOREN, TENREYRO (2007), QJE 122(1): le economie povere oscillano
+        //   circa il doppio di quelle ricche.
+        // La volatilita' e' la deviazione tipica del tasso di crescita
+        // istantaneo; si passa dai poveri ai ricchi col reddito (50.000 $).
+        // Tarata sulla quota di economie in recessione del FMI (10% di
+        // mediana fuori dalle crisi mondiali): le guerre, le sanzioni e gli
+        // investimenti fanno oscillare per conto loro, e il ciclo e' quel che
+        // resta. Con 1,8 e 4 punti i paesi in pace erano in recessione un
+        // anno su sei; con 1,2 e 2,5, dopo aver tolto alle guerre del seme
+        // il costo che il FMI aveva gia' messo in conto, uno su dodici.
+        // Il periodo e' la distanza fra due nodi dell'onda, in tick.
+        'ciclo' => [
+            'periodo'            => 52,
+            'volatilita_ricchi'  => 0.014,
+            'volatilita_poveri'  => 0.029,
+            'quota_mondo_ricchi' => 0.30,
+            'quota_mondo_poveri' => 0.10,
+            'quota_regione'      => 0.10,
+        ],
         // Quanto la pressione dei consumi risponde a una legittimita' bassa.
         'pressione_consumi_k'      => 1.0,
         'pressione_investimenti_k' => 0.35,
@@ -52,15 +85,10 @@ return [
         // guadagnato. L'obiettivo ruota invece intorno alla quota di partenza
         // del paese, e le pressioni lo spostano da li'.
         //
-        // La spinta neutra e' il valore che la pressione assume in un paese
-        // tranquillo al tick 0: mettendola qui, al tick 0 l'obiettivo coincide
-        // con la quota osservata e nessuno parte in guadagno.
-        'spinta_investimenti_neutra' => 0.71,
+        // I punti neutri delle spinte non stanno piu' qui: si derivano dalle
+        // stesse formule in un paese in condizioni normali (Fase03Economia,
+        // docs/30). Misurati a mano, erano invecchiati col seme.
         'ampiezza_investimenti'      => 0.16,
-        // I due punti neutri NON si deducono: si misurano sul seme, perche'
-        // sono il valore che la spinta assume quando il mondo sta fermo al
-        // tick 0. Messi a occhio, il mondo parte in guadagno o in perdita.
-        'spinta_militare_neutra'     => 0.21,
         'ampiezza_militare'          => 0.09,
         // Quanto in fretta la tendenza di crescita torna alla propria base dopo
         // un programma di investimenti. Era 0,10 l'anno, cioe' piu' lenta del
@@ -145,13 +173,28 @@ return [
         // Crea la guerriglia cronica che l'attrito fisso non permetteva; vedi
         // Fase05 e docs/27. [FABBRICATO]
         'risposta_governo'   => 6.0,   // a 3 i paesi in guerra erano 21-25
-        // La probabilita' annua che un'insurrezione si ACCENDA dove non c'e':
-        // base per unita' di «terreno favorevole» (il reclutamento possibile
-        // diviso l'attrito del governo) e tetto. Fearon & Laitin (2003), APSR
-        // 97(1): 127 inneschi in 6.610 anni-paese nel 1945-99, cioe' 1,9%
-        // l'anno, e circa il 10% per i paesi piu' esposti.
-        'innesco_base_anno'    => 0.04,
+        // La probabilita' annua che un'insurrezione si ACCENDA dove non c'e',
+        // per il paese mediano del seme, e il tetto. Fearon (2010): fra tutti
+        // i conflitti UCDP, anche minori, il 3,3% degli anni-paese nel
+        // 1946-2008 ne vede cominciare uno; per il paese mediano, stabile e
+        // senza petrolio, circa un terzo di quello. [TARATO su
+        // paesi_in_conflitto: qui accendersi non vuol dire diventare guerra,
+        // e molte si spengono presto]
+        'innesco_base_anno'    => 0.010,
         'innesco_massimo_anno' => 0.10,
+        // Il rischio relativo, in log-odds per unita' (Fase05::
+        // rischioDiGuerraCivile). FEARON (2010), «Governance and Civil War
+        // Onset», WDR 2011, tabella 2 modello 3 (tutti i conflitti UCDP,
+        // 1946-2008) e tabella 21 (qualita' del governo). Non fabbricati.
+        'rischio' => [
+            'reddito'         => -0.26,    // per log del reddito pro capite; -0,351 senza la qualita' del governo
+            'popolazione'     => 0.238,    // per log della popolazione
+            'montuoso'        => 0.151,    // per log(1 + % di territorio accidentato)
+            'petrolio'        => 0.715,    // produttore di greggio o gas
+            'regime_parziale' => 0.355,    // anocrazia (Polity fra -5 e 5)
+            'instabilita'     => 0.466,    // cambio di regime nell'anno prima
+            'governo'         => -0.93,    // per unita' di stabilita' politica WGI (PV), tabella 21
+        ],
         // La disuguaglianza ORIZZONTALE di Cederman, Wimmer e Min: quanto
         // pesa l'esclusione etnica dal potere sul reclutamento insurrezionale.
         // E' il MOTIVO, che il modello non aveva: fin qui c'erano solo le
@@ -172,41 +215,38 @@ return [
         // (Afghanistan 2021, Siria 2024). Abbassata insieme al reclutamento e
         // alla risposta del governo qui sotto: vedi docs/27.
         'vittoria_insorti_anno' => 0.18,
-        // Quanta potenza insurrezionale genera il malcontento, per radice di
-        // Quanta potenza insurrezionale genera il malcontento, PER ABITANTE e
-        // per anno. E' il parametro che decide se il mondo ha guerre civili o
-        // se non ne ha mai.
+        // Quanta potenza insurrezionale si recluta, in unita' dell'attrito
+        // che il governo del seme infligge, nel paese col terreno di guerra
+        // mediano. E' il parametro che decide se il mondo ha guerre civili o
+        // se non ne ha mai. [TARATO sui riferimenti UCDP 2024: 61 conflitti
+        // statali in 36 paesi, 11 arrivati al livello di guerra]
         //
-        // Era 1,6 e moltiplicava la RADICE della popolazione, mentre la potenza
-        // del governo cresce linearmente con essa: il rapporto fra le due
-        // scalava come 1/radice(P) e i paesi piccoli risultavano
-        // sistematicamente piu' insorti dei grandi. Misurato sul mondo vivo:
-        // 29% dei paesi sotto il milione di abitanti in conflitto armato,
-        // contro 0% di quelli sopra i duecento milioni. Monotono e rovesciato.
-        //
-        // Adesso moltiplica la popolazione e il moltiplicatore di poverta' di
-        // Fearon & Laitin, tarato sui riferimenti UCDP del 2024: 61 conflitti
-        // statali attivi in 36 paesi, di cui 11 arrivati al livello di guerra.
-        //
-        // A 1,0e-3 il profilo osservazione ne fa 26 a livello >= 4 e 9 a >= 5,
-        // il profilo gioco 27 e 11: le guerre cadono sul riferimento, i paesi
-        // in conflitto restano sotto perche' la nostra soglia di «guerriglia»
-        // e' piu' alta dei venticinque morti l'anno con cui UCDP apre un
-        // conflitto minore.
-        //
-        // E soprattutto i paesi che nomina sono quelli giusti: Congo, Sudan,
-        // Somalia, Sud Sudan, Mozambico, Burkina Faso, Niger, Nigeria,
-        // Afghanistan, Yemen, Centrafrica, Haiti stanno davvero nell'elenco
-        // UCDP. Il modello non ha ne' etnie ne' storia ne' geografia: ci
-        // arriva con reddito, popolazione, legittimita' e maturita'
-        // istituzionale, che e' esattamente quel che Fearon e Laitin dicono
-        // basti.
-        //
-        // 0,8e-3 dall'audit di settembre 2026, insieme a risposta_governo: con
-        // l'attrito fisso un'insurrezione o moriva o arrivava alla guerra
-        // civile, e i paesi a livello >= 5 erano 24-35 contro gli 11 veri.
-        // Adesso il profilo osservazione ne fa 11-19, e 39-44 a livello >= 4.
-        'reclutamento_k'     => 0.8e-3,
+        // Fino a settembre 2026 moltiplicava la popolazione e un
+        // moltiplicatore di poverta' (0,8e-3), contro una forza del governo
+        // che cresce con la radice di popolazione per PIL: il rapporto aveva
+        // un'elasticita' di -1,5 al reddito e nessuna alla popolazione, e ogni
+        // paese povero finiva in guerra civile appena qualcosa si accendeva —
+        // Togo, Burundi, Ruanda, Madagascar. Adesso il «terreno» e' il rischio
+        // relativo di guerra maggiore stimato da Fearon (2010), qui sotto
+        // (docs/30).
+        'reclutamento'       => 1.0,
+        // FEARON (2010), «Governance and Civil War Onset», WDR 2011: tabella 2
+        // modello 1 (guerre oltre i mille morti l'anno, 1946-2008) e tabella 20
+        // (qualita' del governo, che dimezza il peso del reddito). Log-odds
+        // per unita', rispetto al paese mediano. Non fabbricati.
+        'terreno' => [
+            'reddito'         => -0.20,    // per log del reddito; -0,404 senza la qualita' del governo
+            // La popolazione di Fearon (+0,203) predice che una guerra COMINCI
+            // da qualche parte nel paese, e sta nell'innesco. Qui si misura
+            // quanto i ribelli crescono contro uno Stato che cresce con la
+            // popolazione quanto loro: con +0,203 la Cina passava otto anni su
+            // dieci in insurrezione grave.
+            'popolazione'     => 0.0,
+            'montuoso'        => 0.360,    // per log(1 + % di territorio accidentato)
+            'petrolio'        => 1.095,    // produttore di greggio o gas
+            'regime_parziale' => 0.258,    // anocrazia
+            'governo'         => -0.97,    // per unita' di stabilita' politica WGI (PV), tabella 20
+        ],
     ],
 
     // ------------------------------------------------------- guerre fra Stati
@@ -354,6 +394,12 @@ return [
         // raffreddamento — Grecia e Turchia stanno nella NATO da settant'anni
         // — e cedono solo alla rottura.
         'rottura_trattato' => -35.0,
+
+        // Per quante settimane una caduta conta come «con una mano straniera»
+        // dopo l'ultima ingerenza ostile andata a segno (armi ai ribelli,
+        // fondi all'opposizione, destabilizzazione, una trama). Solo quelle
+        // cadute mettono alla prova una garanzia (docs/30): un anno.
+        'finestra_ingerenza' => 52,
 
         // Tabella degli obblighi di trattato (BoP, invariata).
         // A che affinita' scatta ciascun gradino della tavola qui sotto.

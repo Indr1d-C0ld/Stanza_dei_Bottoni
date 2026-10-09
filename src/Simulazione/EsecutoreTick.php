@@ -67,6 +67,7 @@ final class EsecutoreTick
             tick:         $tick,
             seme:         $seme,
             caso:         new Caso($seme),
+            casoDelMondo: new Caso($semeRadice),
             calibrazione: $this->calibrazione,
             db:           $this->db,
             aVuoto:       $this->aVuoto,

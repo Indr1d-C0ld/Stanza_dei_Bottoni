@@ -163,6 +163,39 @@ final class Nazione
         public float $derivaPolitica = 0.0,
         /** Pressione esterna subita (sanzioni, embarghi): frena la crescita e decade. */
         public float $pressioneEsterna = 0.0,
+        /**
+         * L'ultima ingerenza straniera ostile andata a segno qui — armi ai
+         * ribelli, fondi all'opposizione, destabilizzazione, una trama — e di
+         * chi. La fase 06 la legge per distinguere la caduta che mette alla
+         * prova una garanzia da quella che non la riguarda (docs/30).
+         */
+        /**
+         * La qualita' del governo, in deviazioni standard dalla media dei
+         * nostri 189 paesi: la media di stabilita' politica, efficacia del
+         * governo e stato di diritto della Banca Mondiale (WGI 2023-2025). E'
+         * cio' che decide dove riposa la legittimita' (ancoraLegittimita).
+         */
+        public float  $qualitaGoverno = 0.0,
+        /**
+         * La sola stabilita' politica della Banca Mondiale (PV), nelle stesse
+         * unita': e' la variabile con cui Fearon (2010) misura la qualita' del
+         * governo contro le guerre civili. Lo stato di polizia nordcoreano ha
+         * efficacia e stato di diritto pessimi ed e' stabilissimo.
+         */
+        public float  $stabilitaPolitica = 0.0,
+        /** Quota % di territorio molto accidentato (Nunn e Puga 2012): dove la guerriglia si nasconde. */
+        public float  $montuoso = 0.0,
+        /** Il primo prodotto esportato e' greggio o gas: lo Stato vive di rendita (Fearon e Laitin 2003). */
+        public bool   $petrolio = false,
+        /**
+         * Il livello di conflitto al momento della divergenza: le proiezioni
+         * del FMI lo contano gia', e la fase 03 fa pagare solo il peggio.
+         */
+        public int    $conflittoIniziale = 2,
+        /** La forza del governo al seme: il metro del reclutamento dei ribelli (fase 05). */
+        public float  $potenzaIniziale = 0.0,
+        public int    $ingerenzaTick = 0,
+        public string $ingerenzaDa = '',
         // Le quattro dipendenze contemporanee. Restano a zero finche' non
         // importeremo la matrice commerciale: le colonne esistono perche' il
         // modello le prevede, non perche' siano gia' popolate.
@@ -190,6 +223,31 @@ final class Nazione
         public int   $scossaEsterna = 0,
         public int   $vittorieInsorti = 0,
     ) {}
+
+    /**
+     * Quanti punti di legittimita' vale una deviazione standard di qualita'
+     * del governo. Con sette, la Danimarca riposa a 63, la Somalia a 34 e il
+     * paese mediano a 50, che e' il punto su cui il resto del modello e'
+     * tarato (docs/30).
+     */
+    public const PESO_GOVERNO = 7.0;
+
+    /**
+     * Dove riposa la legittimita' di questo paese quando non succede niente.
+     *
+     * Era 50 per tutti, e le differenze vere fra la Danimarca e la Somalia le
+     * portava solo il caso. Adesso e' una proprieta' del paese, letta dalla
+     * Banca Mondiale (GILLEY 2006: la legittimita' dello Stato va con la
+     * qualita' del governo e lo stato di diritto).
+     *
+     * ATTENZIONE: e' la solidita' del REGIME. Le elezioni non giudicano questo
+     * livello ma lo scarto da esso (fase 10): un governo danese mediocre perde
+     * le elezioni anche se il regime danese non e' in discussione.
+     */
+    public function ancoraLegittimita(): float
+    {
+        return 50.0 + self::PESO_GOVERNO * $this->qualitaGoverno;
+    }
 
     /**
      * Potenza militare: media geometrica di uomini ed equipaggiamento.

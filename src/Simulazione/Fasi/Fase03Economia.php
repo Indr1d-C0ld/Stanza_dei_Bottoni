@@ -23,6 +23,14 @@ use App\Simulazione\Fase;
  */
 final class Fase03Economia implements Fase
 {
+    /**
+     * L'ansia militare di un paese in pace nel mondo di partenza: il riposo
+     * della fase 04 a livello di pace 2 (5 + 5 * (2 - 1)). Se il mondo si
+     * incattivisce l'ansia sale sopra questo livello, e la spesa militare con
+     * lei: e' la parte del riarmo che il modello deve produrre da se'.
+     */
+    private const ANSIA_DI_FONDO = 10.0;
+
     public function codice(): string { return '03'; }
     public function nome(): string   { return 'Economia e commercio'; }
 
@@ -70,11 +78,25 @@ final class Fase03Economia implements Fase
         $kConsumi     = $cal->numero('economia.pressione_consumi_k', 1.0);
         $kInvest      = $cal->numero('economia.pressione_investimenti_k', 0.35);
         $kMilitare    = $cal->numero('economia.pressione_militare_k', 1.0);
-        $spintaInvNeutra = $cal->numero('economia.spinta_investimenti_neutra', 0.71);
         $ampiezzaInv     = $cal->numero('economia.ampiezza_investimenti', 0.16);
-        $spintaMilNeutra = $cal->numero('economia.spinta_militare_neutra', 0.21);
         $ampiezzaMil     = $cal->numero('economia.ampiezza_militare', 0.09);
+        // I punti neutri: le spinte di un paese in condizioni NORMALI — un
+        // governo popolare quanto la norma del paese (50 sulla scala del
+        // mediano), l'ansia militare di fondo del mondo di partenza, nessuna
+        // insurrezione. Erano due costanti misurate a mano su un seme vecchio
+        // (0,71 e 0,21), in cui la legittimita' partiva da 60 e nessuno
+        // sentiva pressione sui consumi; col seme di adesso il paese medio
+        // puntava al 19% di investimenti invece del suo 22% dal primo giorno,
+        // e la spesa militare saliva da sola (docs/30). Derivandoli dalle
+        // stesse formule non possono piu' invecchiare.
+        $consumiNormali = $kConsumi * (55.0 - 50.0) / 55.0;
+        $militareNormale = $kMilitare * self::ANSIA_DI_FONDO / 100.0;
+        $totaleNormale = $consumiNormali + $kInvest + $militareNormale;
+        $spintaInvNeutra = ($kInvest / $totaleNormale) * (1.0 - 0.45 * ($consumiNormali / $totaleNormale));
+        $spintaMilNeutra = $militareNormale / $totaleNormale;
         $rientro         = $cal->numero('economia.rientro_strutturale', 0.60);
+        $orizzonte       = $cal->numero('economia.orizzonte_proiezioni', 5.0);
+        $ritornoMedia    = $cal->numero('economia.ritorno_alla_media_anno', 0.14);
         $margine         = $cal->numero('economia.margine_strutturale', 0.02);
         $recuperoUomini  = $cal->numero('economia.recupero_uomini_anno', 0.35);
         $elasticitaUomini = $cal->numero('economia.elasticita_uomini', 0.5);
@@ -87,10 +109,29 @@ final class Fase03Economia implements Fase
 
         $inRecessione = 0;
 
+        // Il ciclo economico: quanto oscilla un'economia ricca e una povera,
+        // e quanta parte dell'oscillazione e' del mondo intero.
+        $stabile      = $c->delMondo();
+        $periodoCiclo = (int) $cal->numero('economia.ciclo.periodo', 52);
+        $volRicchi    = $cal->numero('economia.ciclo.volatilita_ricchi', 0.014);
+        $volPoveri    = $cal->numero('economia.ciclo.volatilita_poveri', 0.029);
+        $mondoRicchi  = $cal->numero('economia.ciclo.quota_mondo_ricchi', 0.30);
+        $mondoPoveri  = $cal->numero('economia.ciclo.quota_mondo_poveri', 0.10);
+        $quotaRegione = $cal->numero('economia.ciclo.quota_regione', 0.10);
+        $ondaMondo    = $stabile->onda('03_ciclo_mondo', 0, $c->tick, $periodoCiclo, 5);
+        $ondeRegione  = [];
+
         foreach ($mondo->elenco() as $n) {
             // --- le tre pressioni ---------------------------------------
             // Un governo impopolare è spinto ad aumentare i consumi.
-            $pressioneConsumi = $kConsumi * max(0.0, (55.0 - $n->legittimita) / 55.0);
+            // Impopolare rispetto alla norma del SUO paese: un governo
+            // malgascio nella media del Madagascar non compra consenso a
+            // spese degli investimenti piu' di uno danese nella media della
+            // Danimarca. Col livello assoluto i paesi governati peggio
+            // investivano meno per sempre, e la crescita perdeva mezzo punto
+            // che la proiezione del FMI aveva gia' messo in conto (docs/30).
+            $popolarita = $n->legittimita - ($n->ancoraLegittimita() - 50.0);
+            $pressioneConsumi = $kConsumi * max(0.0, (55.0 - $popolarita) / 55.0);
             $pressioneInvest  = $kInvest;
             // Una minaccia interna spinge alla spesa militare: è la radice del
             // rapporto di forze insorti/governo.
@@ -152,14 +193,38 @@ final class Fase03Economia implements Fase
             // senza questo rientro, ogni evento "investimenti" alzava la
             // tendenza di crescita PER SEMPRE e il mondo aveva una pompa
             // inflazionistica senza contrappeso.
-            $n->crescitaStrutturale += ($n->crescitaBase - $n->crescitaStrutturale) * $rientro * $perTick;
+            //
+            // La base e' la proiezione di medio periodo del FMI (2026-2030).
+            // Oltre quell'orizzonte nessuno sa niente di meglio della media:
+            //
+            //   PRITCHETT, SUMMERS (2014), «Asiaphoria Meets Regression to the
+            //   Mean», NBER Working Paper 20573 — il ritorno alla media e' «il
+            //   fatto empirico piu' robusto» sulla crescita dei paesi: la
+            //   crescita di un decennio dice pochissimo su quella del
+            //   successivo (correlazione fra 0,1 e 0,3).
+            //
+            // La tendenza PRO CAPITE di ogni paese torna quindi verso quella
+            // del paese mediano, con la popolazione che resta la sua. Prima
+            // non tornava mai: chi partiva a -4% restava a -4% per sempre.
+            $oltre = max(0.0, $c->tick * $perTick - $orizzonte);
+            $base = $n->crescitaPopolazione + $mondo->crescitaProCapiteMediana
+                + ($n->crescitaBase - $n->crescitaPopolazione - $mondo->crescitaProCapiteMediana)
+                  * exp(-$ritornoMedia * $oltre);
+            $n->crescitaStrutturale += ($base - $n->crescitaStrutturale) * $rientro * $perTick;
             // e il tetto e' relativo alla base del paese, non assoluto: il
             // limite a 0,09 lasciava salire di quattro punti chi partiva basso.
-            $n->crescitaStrutturale = min($n->crescitaBase + $margine, $n->crescitaStrutturale);
+            $n->crescitaStrutturale = min($base + $margine, $n->crescitaStrutturale);
 
+            // La convergenza. Prima era una formula fabbricata — la crescita
+            // schiacciata verso l'1,4% in proporzione al reddito su 50.000
+            // dollari — che stravolgeva anche il punto di partenza: la
+            // Germania cresceva dell'1,5% invece dello 0,96 del FMI. Adesso
+            // il rallentamento di chi si arricchisce e' dentro le proiezioni
+            // del FMI fino al loro orizzonte, e oltre e' il ritorno alla media
+            // qui sopra. Un termine di Barro in piu' lo contava due volte: la
+            // crescita mondiale scendeva al 2,2%.
             $maturazione  = min(1.0, $n->pilProCapite / 50000.0);
-            $strutturale  = $n->crescitaStrutturale * (1.0 - 0.85 * $maturazione)
-                          + 0.014 * $maturazione;
+            $strutturale  = $n->crescitaStrutturale;
 
             $crescita = $strutturale
                 + $resa * ($n->quotaInvestimenti - $n->quotaInvestimentiIniziale)
@@ -182,13 +247,22 @@ final class Fase03Economia implements Fase
             // insurrezioni vere sono contenute in una regione. Il naxalismo non
             // ferma l'India. Sette punti trattavano ogni guerriglia come se
             // occupasse tutto il paese.
-            $crescita -= match (true) {
-                $n->netPeace >= 6 => 0.023,
-                $n->netPeace >= 5 => 0.014,
-                $n->netPeace >= 4 => 0.006,
-                $n->netPeace >= 3 => 0.002,
-                default           => 0.0,
+            //
+            // E SOLO IL PEGGIO DI ALLORA. La tendenza viene dalle proiezioni
+            // del FMI, che le guerre in corso alla divergenza le hanno gia'
+            // messe in conto: la Nigeria, il Pakistan, l'Etiopia, il Messico
+            // pagavano due volte la stessa guerra, e il mondo cresceva mezzo
+            // punto meno del FMI (docs/30). Una guerra nuova, o che si
+            // aggrava, costa per intero; una che finisce non regala niente,
+            // perche' la pace ricostruisce piano.
+            $costoGuerra = static fn(int $livello): float => match (true) {
+                $livello >= 6 => 0.023,
+                $livello >= 5 => 0.014,
+                $livello >= 4 => 0.006,
+                $livello >= 3 => 0.002,
+                default       => 0.0,
             };
+            $crescita -= max(0.0, $costoGuerra($n->netPeace) - $costoGuerra($n->conflittoIniziale));
 
             // Sanzioni ed embarghi in corso. Non e' piu' un numero che decade
             // da solo: e' la somma di quel che costa, adesso, ogni rubinetto
@@ -197,9 +271,38 @@ final class Fase03Economia implements Fase
             $crescita -= $n->pressioneEsterna;
 
 
-            // Il ciclo: shock persistenti, non rumore bianco, altrimenti le
-            // aspettative non si muovono mai e nessun governo cade.
-            $ciclo = $c->caso->rumore('03_ciclo', crc32($n->iso3), (int) ($c->tick / 26), 0.030);
+            // --- il ciclo -----------------------------------------------
+            // Shock persistenti, non rumore bianco, altrimenti le aspettative
+            // non si muovono mai e nessun governo cade. Lo diceva anche la
+            // stesura di prima — ma il suo «tick/26» si tirava col caso del
+            // TICK, che cambia seme ogni settimana: era rumore bianco di ±3
+            // punti, che in un anno si media a un quarto di punto. Il ciclo non
+            // c'era, e in recessione finivano sempre gli stessi paesi, quelli
+            // con la tendenza negativa (docs/30).
+            //
+            // Adesso e' un'onda lenta col caso del mondo, in tre pezzi:
+            //
+            //   KOSE, OTROK, WHITEMAN (2003), «International Business Cycles:
+            //   World, Region, and Country-Specific Factors», American
+            //   Economic Review 93(4) — una componente mondiale, che spiega
+            //   una parte grande della varianza delle economie avanzate e una
+            //   piccola di quelle in via di sviluppo, una regionale minore, e
+            //   il resto nazionale;
+            //
+            //   KOREN, TENREYRO (2007), «Volatility and Development», Quarterly
+            //   Journal of Economics 122(1) — la volatilita' cala col reddito:
+            //   le economie povere sono concentrate in pochi settori rischiosi
+            //   e oscillano due volte tanto.
+            $volatilita = $volPoveri + ($volRicchi - $volPoveri) * $maturazione;
+            $quotaMondo = $mondoPoveri + ($mondoRicchi - $mondoPoveri) * $maturazione;
+            $quotaNazione = max(0.0, 1.0 - $quotaMondo - $quotaRegione);
+            $ciclo = $volatilita * (
+                sqrt($quotaMondo) * $ondaMondo
+                + sqrt($quotaRegione) * ($ondeRegione[$n->regione]
+                    ??= $stabile->onda('03_ciclo_regione', crc32($n->regione), $c->tick, $periodoCiclo, 17))
+                + sqrt($quotaNazione) * $stabile->onda('03_ciclo_paese', crc32($n->iso3), $c->tick,
+                    $periodoCiclo, (int) (crc32('fase|' . $n->iso3) % $periodoCiclo))
+            );
             $crescita += $ciclo + $c->caso->rumore('03_economia', crc32($n->iso3), $c->tick, 0.006);
             $crescita  = max($tettoBasso, min($tettoAlto, $crescita));
 

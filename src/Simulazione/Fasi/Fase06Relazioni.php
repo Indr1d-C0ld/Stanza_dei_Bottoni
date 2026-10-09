@@ -127,6 +127,57 @@ final class Fase06Relazioni implements Fase
         $irregolare = static fn(string $iso): bool =>
             in_array($codiciCaduti[$iso] ?? '', ['rivoluzione', 'colpo_di_stato'], true);
 
+        // Quali cadute irregolari mettono alla prova una garanzia, e chi fra i
+        // garanti ne porta il peso (docs/30).
+        //
+        // Un patto di difesa promette protezione da un nemico ESTERNO. Prima
+        // ogni colpo di Stato e ogni rivoluzione costavano la faccia a tutti i
+        // firmatari, e i patti multilaterali del Correlates of War — il
+        // Trattato di Rio, la Lega Araba, i patti africani — la spalmavano su
+        // decine di paesi: nel mondo vivo, dopo tre anni e mezzo e undici
+        // cadute senza nessuna mano straniera, gli Stati Uniti avevano
+        // un'integrita' di 0,2 su 128, l'Arabia Saudita 7, il Brasile 41, e
+        // settantasei paesi stavano sotto la meta'. L'integrita' non diceva piu'
+        // chi mantiene la parola: diceva chi ha firmato patti con paesi fragili.
+        //
+        // Adesso conta la caduta su cui c'e' una mano straniera — un'ingerenza
+        // ostile andata a segno nell'ultimo anno, o una guerra in corso con un
+        // altro Stato — ed e' il caso di Crawford, in cui le insurrezioni le
+        // armano le potenze. E nei patti a molti il conto non e' uguale per
+        // tutti: lo paga per intero il garante piu' forte, gli altri in
+        // proporzione al loro peso. E' la teoria economica delle alleanze di
+        // OLSON e ZECKHAUSER (1966), «An Economic Theory of Alliances», Review
+        // of Economics and Statistics 48(3): la difesa comune e' un bene
+        // pubblico, e chi conta di piu' ne porta il carico — e quindi anche la
+        // colpa quando manca. Il Belgio non perde la faccia per Haiti.
+        $finestraIngerenza = (int) $cal->numero('relazioni.finestra_ingerenza', 52);
+        $inGuerra = [];
+        foreach ($mondo->guerre as $g) {
+            $inGuerra[(string) $g['aggressore']] = true;
+            $inGuerra[(string) $g['difensore']] = true;
+        }
+        $messiAllaProva = [];   // iso del cliente => chi ci ha messo le mani ('' se e' una guerra)
+        foreach (array_keys($codiciCaduti) as $iso) {
+            $cliente = $mondo->nazioni[$iso];
+            if (!$irregolare($iso)) {
+                continue;
+            }
+            $ingerenza = $cliente->ingerenzaTick > 0 && $c->tick - $cliente->ingerenzaTick <= $finestraIngerenza;
+            if ($ingerenza || isset($inGuerra[$iso])) {
+                $messiAllaProva[$iso] = $ingerenza ? $cliente->ingerenzaDa : '';
+            }
+        }
+        $garantePiuForte = [];
+        if ($messiAllaProva !== []) {
+            foreach ($mondo->relazioni->tutte() as $chiave => $r) {
+                [$isoA, $isoB] = explode('|', $chiave);
+                if (isset($messiAllaProva[$isoB]) && $r->obbligo >= 64 && isset($mondo->nazioni[$isoA])) {
+                    $garantePiuForte[$isoB] = max($garantePiuForte[$isoB] ?? 0.0,
+                        $mondo->nazioni[$isoA]->influenzaTotale);
+                }
+            }
+        }
+
         foreach ($mondo->relazioni->tutte() as $chiave => $r) {
             [$isoA, $isoB] = explode('|', $chiave);
             $a = $mondo->nazioni[$isoA] ?? null;
@@ -171,21 +222,26 @@ final class Fase06Relazioni implements Fase
             // non avevano garantito niente: nel mondo vivo la mediana
             // dell'integrita' era scesa a 19 su 128, e l'integrita' non
             // distingueva piu' chi mantiene la parola da chi no.
-            if ($irregolare($isoB) && $r->obbligo >= 64) {
+            //
+            // E solo se la caduta ha una mano straniera, e non e' la mano del
+            // garante stesso: chi arma i ribelli del proprio cliente non ha
+            // mancato una promessa, l'ha tradita in un altro modo — e quello lo
+            // paga la sua reputazione, non la sua integrita' di garante.
+            if (isset($messiAllaProva[$isoB]) && $messiAllaProva[$isoB] !== $isoA && $r->obbligo >= 64) {
                 $prima = $a->integrita;
                 // La formula di Crawford: un trattato di difesa nucleare (128)
-                // azzera l'integrità del garante. Le promesse grosse costano.
-                $a->integrita *= 1.0 - ($r->obbligo / 128.0);
+                // azzera l'integrità del garante. Le promesse grosse costano —
+                // a chi porta il peso del patto, in proporzione.
+                $quota = min(1.0, $a->influenzaTotale / max(1e-9, $garantePiuForte[$isoB] ?? $a->influenzaTotale));
+                $a->integrita *= 1.0 - ($r->obbligo / 128.0) * $quota;
                 if ($prima - $a->integrita > 1.0) {
                     $perditeIntegrita++;
-                    if ($r->obbligo >= 64) {
-                        $c->annota('integrita_perduta', [
-                            'garante' => $a->nome,
-                            'cliente' => $b->nome,
-                            'obbligo' => $r->obbligo,
-                            'residuo' => round($a->integrita),
-                        ]);
-                    }
+                    $c->annota('integrita_perduta', [
+                        'garante' => $a->nome,
+                        'cliente' => $b->nome,
+                        'obbligo' => $r->obbligo,
+                        'residuo' => round($a->integrita),
+                    ]);
                 }
             }
 

@@ -222,8 +222,9 @@ Crawford: i suoi ~10 cambi di esecutivo irregolari l'anno erano giusti per il
 1948-77. Oggi il Cline Center e Powell & Thyne contano 2,2-3,8 colpi riusciti
 l'anno, a cui si aggiungono una o due rivoluzioni; UCDP conta 36 paesi in
 conflitto armato (circa 30 negli anni Dieci) e 11 in guerra. Il profilo
-`osservazione` fa 4,1-4,7 cambi irregolari l'anno, 26-29 paesi in conflitto e
-8-17 in guerra, e le prove automatiche lo verificano.
+`osservazione` fa 3,7-4,4 cambi irregolari l'anno, 22-24 paesi in conflitto e
+6-8 in insurrezione grave o guerra civile, con un'economia in recessione su
+dieci ogni anno come nei dati del FMI; le prove automatiche lo verificano.
 
 ---
 
@@ -367,13 +368,21 @@ scaduto.
 | **Ethnic Power Relations (EPR) Core**, ETH Zurigo | la disuguaglianza orizzontale: quanta popolazione è esclusa dal potere esecutivo, e in quanti gruppi | 2021 |
 | **Correlates of War** — *Formal Alliances v4.1* | gli obblighi di trattato veri, per diade direzionata | 2012, con gli allargamenti NATO successivi aggiunti a mano e datati, e gli scioglimenti che il dataset non sa: l'Ucraina fuori dalla CSI (2018), la Georgia (2009) |
 | **UCDP/PRIO** — *Armed Conflict Dataset* | i conflitti armati in corso al momento della divergenza | 2024 |
+| **FMI** — *World Economic Outlook*, indicatore NGDP_RPCH | la crescita recente (mediana 2023-25) e la tendenza di medio periodo (proiezioni 2026-30) di ogni paese, al posto delle voci del Factbook ferme al 2018 per alcuni | aprile 2026 |
+| **Banca Mondiale** — *Worldwide Governance Indicators* | stabilità politica, efficacia del governo, stato di diritto: dove riposa la legittimità di ciascun paese, e quanto è esposto alla guerra civile | edizione 2026, media 2023-25; Taiwan, assente dall'API, prende la Corea del Sud |
+| **Nunn & Puga (2012)**, *Ruggedness*, REStat 94(1) | il terreno accidentato dove la guerriglia si nasconde | 2010 |
 | **Freedom House** — *Freedom in the World* | i sedici micro-Stati che V-Dem non copre | stima dichiarata |
 
 ### I modelli e le misure
 
 | fonte | che cosa dà al motore |
 |---|---|
-| **Fearon & Laitin (2003)**, *Ethnicity, Insurgency, and Civil War*, APSR 97(1) | i predittori dell'insorgenza: popolazione grande e povertà, non l'etnia. Il reclutamento insurrezionale scala con la popolazione e col reddito inverso; l'innesco è una probabilità annua (1,9% in media nel 1945-99) |
+| **Fearon & Laitin (2003)**, *Ethnicity, Insurgency, and Civil War*, APSR 97(1) | i predittori dell'insorgenza: popolazione grande e povertà, non l'etnia |
+| **Fearon (2010)**, *Governance and Civil War Onset*, documento di base del World Development Report 2011 | i coefficienti, non solo i segni: l'innesco delle insurrezioni (tutti i conflitti UCDP) e il terreno su cui crescono (le guerre maggiori), con reddito, popolazione, terreno, petrolio, regime parziale, instabilità e stabilità politica |
+| **Kose, Otrok & Whiteman (2003)**, AER 93(4); **Koren & Tenreyro (2007)**, QJE 122(1) | il ciclo economico in tre pezzi — mondiale, regionale, nazionale — e più ampio nei paesi poveri |
+| **Pritchett & Summers (2014)**, *Asiaphoria Meets Regression to the Mean* | oltre l'orizzonte del FMI, le tendenze di crescita tornano alla media |
+| **Gilley (2006)**, *The Meaning and Measure of State Legitimacy* | la legittimità dello Stato va con la qualità del governo |
+| **Olson & Zeckhauser (1966)**, *An Economic Theory of Alliances* | nei patti a molti, la colpa di una garanzia mancata la porta chi conta di più |
 | **Vasquez**, *The War Puzzle* (1993); **Senese & Vasquez** (2008); **Diehl & Goertz**, *War and Peace in International Rivalry* (2000) | le guerre fra Stati nascono soprattutto fra vicini con una disputa territoriale, dentro rivalità di lunga durata |
 | **Huth**, *Extended Deterrence and the Prevention of War* (1988) | non si attacca chi ha un garante impegnato e più forte |
 | **Mearsheimer**, *The Tragedy of Great Power Politics* (2001) | il «potere d'arresto dell'acqua»: chi attraversa il mare porta al fronte una frazione della sua forza |
@@ -393,12 +402,12 @@ scaduto.
 ### E il cruscotto che tiene tutto onesto
 
 ```bash
-php bin/realismo.php --anni=15      # diciannove grandezze contro la loro fascia
+php bin/realismo.php --anni=15      # ventuno grandezze contro la loro fascia
 php bin/audit.php                   # che cosa è dichiarato e mai usato
-php bin/prova.php                   # quattrocentoventi prove
+php bin/prova.php                   # quattrocentoquarantacinque prove
 ```
 
-`bin/realismo.php` confronta diciannove grandezze con la fascia in cui il mondo
+`bin/realismo.php` confronta ventuno grandezze con la fascia in cui il mondo
 vero le tiene, **ciascuna con la fonte accanto**. La distinzione che ci sta
 dentro non è pedanteria: un *livello* si giudica al seme, perché dopo quindici
 anni di crescita non è più confrontabile col dato di oggi; un *tasso* si giudica
@@ -459,6 +468,15 @@ sessanta che non voleva dire niente e faceva sessantaquattro milioni di morti in
 una guerra bilaterale, le tre pompe nell'economia, la variabile che nessuno
 leggeva, la riscrittura che abbiamo **deciso di non fare** e perché.
 
+**`docs/30-il-mondo-coltivato.md`** è il controllo del mondo vivo dopo tre
+anni e mezzo: l'integrità dei garanti azzerata da colpi di Stato su cui
+nessuno aveva messo le mani, un ciclo economico che era rumore bianco perché si
+tirava col caso del tick, tendenze di crescita da un Factbook fermo al 2018, la
+legittimità che tornava a 50 per tutti, le guerre civili nei paesi piccoli e
+poveri sbagliati. Adesso il seme legge il FMI e la Banca Mondiale, e le guerre
+civili seguono i coefficienti stimati da Fearon. Ventuno grandezze su ventuno in
+fascia, su otto mondi.
+
 **`docs/29-il-registro-e-le-contromosse.md`** racconta una partita in
 solitario che ha trovato il buco più grande del lato giocatore: il motore
 sapeva tutto delle operazioni, e la scrivania non ne diceva niente.
@@ -494,9 +512,10 @@ sapeva produrre.
 - **Metà dei conflitti seminati si spegne in quindici anni**, e altrettanti ne
   nascono altrove. In parte è giusto — i conflitti veri finiscono — ma il
   modello non sa *quali* devono durare.
-- **La crescita sta sul lato basso**, fra l'1,9% e il 2,4% contro un riferimento
-  del 2,9%: il freno di maturazione agisce su tendenze che quella maturità la
-  incorporano già, e c'è un doppio conteggio dichiarato.
+- **Le invasioni sono troppo rare**: una in sei mondi da quindici anni, contro
+  le quattro-sei del 2010-2025. La dottrina pesca fra le cinque coppie col
+  rapporto più intenso, e le rivalità vere ci arrivano di rado: serve un rischio
+  annuo di guerra per rivalità, dai dati (`docs/30`).
 - **La U rovesciata di Goldstone non raggiunge la sua magnitudine.** Le
   democrazie piene stanno correttamente a 0,2 volte le autocrazie, ma i regimi
   parziali restano intorno a 1 invece di 5-30. Crawford e Goldstone sono in
@@ -541,8 +560,8 @@ struttura senza valori.
 php bin/tick.php              un passo del mondo
 php bin/simula.php            quindici anni a vuoto, con le statistiche
 php bin/diagnostica.php       la salute del modello
-php bin/prova.php             le prove automatiche (420, circa due minuti)
-php bin/realismo.php          diciannove grandezze contro le fonti
+php bin/prova.php             le prove automatiche (445, qualche minuto)
+php bin/realismo.php          ventuno grandezze contro le fonti
 php bin/audit.php             che cosa è dichiarato e mai usato
 php bin/migra.php             applica le migrazioni non ancora applicate
 php bin/epoca.php             apre e chiude le epoche, e conta

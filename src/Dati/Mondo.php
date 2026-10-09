@@ -48,6 +48,19 @@ final class Mondo
     public int   $tick       = 0;
     public float $nastiness  = 0.0;
     public int   $livelloPace = 2;
+    /**
+     * La crescita PRO CAPITE di medio periodo del paese mediano, secondo il
+     * FMI: e' la media verso cui, oltre l'orizzonte delle proiezioni, tornano
+     * le tendenze dei paesi (Pritchett e Summers 2014, fase 03).
+     */
+    public float $crescitaProCapiteMediana = 0.02;
+    /**
+     * Il paese mediano del seme — reddito, popolazione, terreno — rispetto a
+     * cui si misura il rischio di guerra civile di ciascuno (fase 05).
+     *
+     * @var array{reddito:float,popolazione:float,montuoso:float}
+     */
+    public array $mediano = ['reddito' => 12000.0, 'popolazione' => 9.0e6, 'montuoso' => 11.8];
 
     public static function daSeme(string $percorsoCsv): self
     {
@@ -66,6 +79,22 @@ final class Mondo
         $gini = @include dirname($percorsoCsv) . '/disuguaglianza.php';
         $epr = @include dirname($percorsoCsv) . '/esclusione.php';
         $conflitti = @include dirname($percorsoCsv) . '/conflitti-noti.php';
+        // La crescita del FMI (bin/importa_fmi.php): recente e di medio
+        // periodo, con lo stesso anno per tutti. Chi non c'e' resta al Factbook.
+        $fmi = @include dirname($percorsoCsv) . '/crescita.php';
+        if (!is_array($fmi)) {
+            $fmi = [];
+        }
+        // Il terreno e il petrolio (bin/importa_terreno.php).
+        $terreno = @include dirname($percorsoCsv) . '/terreno.php';
+        if (!is_array($terreno)) {
+            $terreno = [];
+        }
+        // La qualita' del governo della Banca Mondiale (bin/importa_wgi.php).
+        $wgi = @include dirname($percorsoCsv) . '/governo.php';
+        if (!is_array($wgi)) {
+            $wgi = [];
+        }
         if (!is_array($conflitti)) {
             $conflitti = [];
         }
@@ -88,6 +117,8 @@ final class Mondo
             $quotaInv   = 0.22;
             $quotaCons  = 1.0 - $quotaMil - $quotaInv;
             $popolazione = (float) $d['popolazione'];
+            $recente = (float) ($fmi[$d['iso3']]['recente'] ?? $d['crescita_pil']);
+            $lungo   = (float) ($fmi[$d['iso3']]['lungo'] ?? $d['crescita_pil']);
 
             $n = new Nazione(
                 iso3:             $d['iso3'],
@@ -102,12 +133,15 @@ final class Mondo
                 popolazione:         $popolazione,
                 crescitaPopolazione: (float) $d['crescita_pop'],
                 pil:                 $pil,
-                crescitaPil:         (float) $d['crescita_pil'],
-                // La tendenza osservata è il nostro ancoraggio: il modello la
-                // fa deviare, non la inventa. Senza questo, ogni economia
-                // scivola verso il tetto di calibrazione e il mondo triplica.
-                crescitaStrutturale: max(-0.04, min(0.09, (float) $d['crescita_pil'])),
-                crescitaBase:        max(-0.04, min(0.09, (float) $d['crescita_pil'])),
+                crescitaPil:         $recente,
+                // La tendenza di medio periodo è il nostro ancoraggio: il
+                // modello la fa deviare, non la inventa. Senza questo, ogni
+                // economia scivola verso il tetto di calibrazione e il mondo
+                // triplica. E' la proiezione 2026-2030 del FMI, non la
+                // crescita degli ultimi anni: quella diceva -17,7% per il
+                // Venezuela, fermo al 2018 nel Factbook (docs/30).
+                crescitaStrutturale: max(-0.04, min(0.09, $lungo)),
+                crescitaBase:        max(-0.04, min(0.09, $lungo)),
                 quotaInvestimentiIniziale: $quotaInv,
                 quotaMilitareIniziale: $quotaMil,
                 soldatiIniziali:      (float) $d['soldati'],
@@ -134,10 +168,15 @@ final class Mondo
                 // che cresce ha credito, uno stato fragile che arranca no.
                 legittimita:  max(18.0, min(78.0,
                     28.0 + 30.0 * ((int) $d['maturita'] / 255.0)
-                    + 400.0 * (float) $d['crescita_pil']
+                    + 400.0 * $recente
                     - 8.0 * max(0.0, 1.0 - (float) $d['alfabetizzazione'] / 0.8)
                 )),
-                aspettativa:  max(0.005, min(0.06, (float) $d['crescita_pil'])),
+                // L'aspettativa e' sul consumo PRO CAPITE, che e' quel che la
+                // fase 04 le confronta. Partiva dalla crescita del PIL totale:
+                // dove la popolazione cresce del 2-3% l'anno la gente
+                // risultava delusa di altrettanto per i primi cinque anni, e
+                // la legittimita' scendeva per un errore di unita' (docs/30).
+                aspettativa:  max(0.005, min(0.06, $recente - (float) $d['crescita_pop'])),
                 clamoreSociale: 0.0,
                 qualitaVita:  1,
                 statoPolizia: 2.0,
@@ -160,10 +199,31 @@ final class Mondo
                 posturaNucleare: 1,
                 alfabetizzazione: (float) $d['alfabetizzazione'],
             );
+            $n->potenzaIniziale = $n->potenzaGoverno();
+            $n->montuoso = (float) ($terreno[$n->iso3]['montuoso'] ?? 11.8);
+            $n->petrolio = (bool) ($terreno[$n->iso3]['petrolio'] ?? false);
             $mondo->nazioni[$n->iso3] = $n;
             $mondo->ideologie[$n->iso3] = $d['ideologia_formale'];
         }
         fclose($fh);
+
+        $mediana = static function (array $v): float {
+            sort($v);
+            return $v === [] ? 0.0 : (float) $v[intdiv(count($v), 2)];
+        };
+        $tutte = array_values($mondo->nazioni);
+        $mondo->mediano = [
+            'reddito'     => $mediana(array_map(static fn(Nazione $n): float => $n->pilProCapite, $tutte)),
+            'popolazione' => $mediana(array_map(static fn(Nazione $n): float => $n->popolazione, $tutte)),
+            'montuoso'    => $mediana(array_map(static fn(Nazione $n): float => $n->montuoso, $tutte)),
+        ];
+
+        $proCapite = array_map(static fn(Nazione $n): float => $n->crescitaBase - $n->crescitaPopolazione,
+            array_values($mondo->nazioni));
+        sort($proCapite);
+        if ($proCapite !== []) {
+            $mondo->crescitaProCapiteMediana = $proCapite[intdiv(count($proCapite), 2)];
+        }
 
         // Prima l'orientamento strutturale, poi gli scostamenti dichiarati.
         $politica = @include dirname($percorsoCsv) . '/politica-nota.php';
@@ -185,6 +245,53 @@ final class Mondo
         // 26 tick, contro i 15-24 di ogni semestre successivo. Si colloca fra
         // uno e cinque anni prima della divergenza, diverso per ogni paese e
         // uguale in ogni corsa.
+        // --- la qualita' del governo, e dove riposa la legittimita' -------
+        //
+        // La media di stabilita', efficacia e stato di diritto, riportata in
+        // deviazioni standard dei NOSTRI paesi: cosi' il paese mediano sta a
+        // zero e la sua legittimita' riposa a 50, dove il resto del modello e'
+        // tarato. Chi manca prende la mediana della sua regione.
+        $composito = [];
+        $stabilita = [];
+        foreach ($mondo->nazioni as $n) {
+            $w = $wgi[$n->iso3] ?? null;
+            if (is_array($w)) {
+                $composito[$n->iso3] = ((float) $w['stabilita'] + (float) $w['efficacia'] + (float) $w['diritto']) / 3.0;
+                $stabilita[$n->iso3] = (float) $w['stabilita'];
+            }
+        }
+        // La stabilita' politica, centrata sul paese medio dei nostri e nelle
+        // unita' della Banca Mondiale, che sono quelle dei coefficienti di
+        // Fearon (2010).
+        if ($stabilita !== []) {
+            $mediaPv = array_sum($stabilita) / count($stabilita);
+            foreach ($mondo->nazioni as $n) {
+                $n->stabilitaPolitica = isset($stabilita[$n->iso3]) ? $stabilita[$n->iso3] - $mediaPv : 0.0;
+            }
+        }
+        if ($composito !== []) {
+            $media = array_sum($composito) / count($composito);
+            $varianza = 0.0;
+            foreach ($composito as $v) {
+                $varianza += ($v - $media) ** 2;
+            }
+            $sd = max(1e-9, sqrt($varianza / count($composito)));
+            $perRegione = [];
+            foreach ($mondo->nazioni as $n) {
+                if (isset($composito[$n->iso3])) {
+                    $n->qualitaGoverno = ($composito[$n->iso3] - $media) / $sd;
+                    $perRegione[$n->regione][] = $n->qualitaGoverno;
+                }
+            }
+            foreach ($mondo->nazioni as $n) {
+                if (!isset($composito[$n->iso3]) && isset($perRegione[$n->regione])) {
+                    $r = $perRegione[$n->regione];
+                    sort($r);
+                    $n->qualitaGoverno = $r[intdiv(count($r), 2)];
+                }
+            }
+        }
+
         foreach ($mondo->nazioni as $n) {
             $n->annoUltimoCambio = -(52 + (int) (crc32('ultimo_cambio|' . $n->iso3) % 208));
             // Lo stesso vale per la deriva politica: a zero per tutti, ogni
@@ -194,6 +301,12 @@ final class Mondo
             // societa.ampiezza_deriva), diversa per paese e uguale in ogni corsa.
             $u = (crc32('deriva|' . $n->iso3) % 100000) / 100000.0;
             $n->derivaPolitica = (2.0 * $u - 1.0) * sqrt(3.0) * 2.0;
+            // E la legittimita' parte dove riposa. Prima partiva da una
+            // formula sua — maturita', crescita, alfabetizzazione — con media
+            // 60, mentre il modello la riportava a 50: il mondo passava i
+            // primi anni a scendere di tre punti l'anno per un'incoerenza del
+            // seme, non per qualcosa che accadeva (docs/30).
+            $n->legittimita = max(5.0, min(95.0, $n->ancoraLegittimita() + $n->derivaPolitica));
         }
 
         // --- le insurrezioni in corso al momento della divergenza -------
@@ -251,6 +364,10 @@ final class Mondo
             $a->netPeace = 6;
             $d->netPeace = 6;
             $d->ansiaMilitare = 100.0;
+        }
+
+        foreach ($mondo->nazioni as $n) {
+            $n->conflittoIniziale = $n->netPeace;
         }
 
         $mondo->preparaRelazioni($politica['rapporti'] ?? []);

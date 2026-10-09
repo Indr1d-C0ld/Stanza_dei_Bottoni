@@ -32,7 +32,21 @@ final class ContestoTick
         public readonly ?Basedati $db = null,
         public readonly bool $aVuoto = false,
         public readonly ?Mondo $mondo = null,
+        /**
+         * Il caso del MONDO, col seme radice e non con quello del tick: per
+         * le grandezze che devono restare le stesse da una settimana
+         * all'altra — il ciclo economico, la tregua dopo un cambio di governo.
+         * Col caso del tick un indice come «tick/26» non tiene niente fermo:
+         * cambia il seme, e il tiro e' nuovo ogni settimana (docs/30).
+         */
+        public readonly ?Caso $casoDelMondo = null,
     ) {}
+
+    /** Il caso che non cambia col tick (vedi casoDelMondo). */
+    public function delMondo(): Caso
+    {
+        return $this->casoDelMondo ?? $this->caso;
+    }
 
     /** @param array<string,mixed> $dati */
     public function annota(string $genere, array $dati): void

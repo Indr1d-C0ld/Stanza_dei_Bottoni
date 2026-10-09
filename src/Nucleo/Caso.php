@@ -54,6 +54,36 @@ final class Caso
         return ($this->frazione($fase, $entita, $indice) * 2.0 - 1.0) * $ampiezza;
     }
 
+    /** Una normale standard (Box-Muller su due frazioni). */
+    public function normale(string $fase, int $entita, int $indice): float
+    {
+        $u1 = 1.0 - $this->frazione($fase . '|u', $entita, $indice);   // (0,1]: il logaritmo non vede lo zero
+        $u2 = $this->frazione($fase . '|v', $entita, $indice);
+        return sqrt(-2.0 * log($u1)) * cos(2.0 * M_PI * $u2);
+    }
+
+    /**
+     * Un'onda lenta: una normale standard in ogni istante, che cambia con
+     * continuita' invece che a scalini. Si estrae un nodo ogni `periodo`
+     * passi e fra due nodi si interpola; la divisione riporta la varianza a
+     * uno anche a meta' strada, dove l'interpolazione la ridurrebbe a un
+     * mezzo. Due istanti a un periodo di distanza condividono meta' della
+     * loro storia, e a due periodi sono indipendenti.
+     *
+     * Ha senso solo col caso del MONDO (ContestoTick::delMondo()): col caso
+     * del tick i nodi cambierebbero a ogni passo.
+     */
+    public function onda(string $fase, int $entita, int $passo, int $periodo, int $sfasamento = 0): float
+    {
+        $periodo = max(1, $periodo);
+        $t = $passo + $sfasamento;
+        $k = intdiv($t, $periodo) - ($t < 0 && $t % $periodo !== 0 ? 1 : 0);
+        $f = ($t - $k * $periodo) / $periodo;
+        $a = $this->normale($fase, $entita, $k);
+        $b = $this->normale($fase, $entita, $k + 1);
+        return ((1.0 - $f) * $a + $f * $b) / sqrt((1.0 - $f) ** 2 + $f ** 2);
+    }
+
     /** Il seme di un tick deriva dal seme radice del mondo. */
     public static function semeDelTick(int $semeRadice, int $tick): int
     {

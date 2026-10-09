@@ -289,6 +289,13 @@ final class Fase07Conflitto implements Fase
             }
         }
         $capace = $forzaCoalizione > $aggressore->potenzaGoverno() * 0.4;
+        // Chi porta il peso del patto ne porta anche la colpa, gli altri in
+        // proporzione: la stessa regola delle cadute nella fase 06 (Olson e
+        // Zeckhauser 1966, docs/30).
+        $piuForte = 0.0;
+        foreach ($chiamati as [$garante]) {
+            $piuForte = max($piuForte, $garante->influenzaTotale);
+        }
 
         foreach ($chiamati as [$garante, $r, $volenteroso]) {
             if ($capace && $volenteroso) {
@@ -306,7 +313,8 @@ final class Fase07Conflitto implements Fase
             } else {
                 // La formula di Crawford: l'integrità cala in proporzione
                 // all'impegno che non si è onorato.
-                $garante->integrita *= 1.0 - ($r->obbligo / 128.0);
+                $quota = min(1.0, $garante->influenzaTotale / max(1e-9, $piuForte));
+                $garante->integrita *= 1.0 - ($r->obbligo / 128.0) * $quota;
                 $c->annota('garanzia_tradita', [
                     'garante'  => $garante->nome,
                     'protetto' => $protetto->nome,

@@ -31,6 +31,12 @@ final class Fase02Maturazione implements Fase
 {
     private const ORDINE = ['info' => 0, 'eco' => 1, 'soc' => 2, 'int' => 3, 'mil' => 4, 'nuc' => 5];
 
+    /**
+     * Le ingerenze che lasciano una mano straniera sulla caduta di un governo:
+     * se cade entro un anno, chi l'aveva garantito non l'ha protetto (docs/30).
+     */
+    private const INGERENZE = ['armare_insorti', 'finanziamento_opposizione', 'destabilizzare', 'colpo_di_stato'];
+
     public function codice(): string { return '02'; }
     public function nome(): string   { return 'Maturazione degli eventi'; }
 
@@ -60,6 +66,10 @@ final class Fase02Maturazione implements Fase
             }
 
             $this->applica($e, $mandante, $bersaglio, $c);
+            if (in_array($e->verbo, self::INGERENZE, true)) {
+                $bersaglio->ingerenzaTick = $c->tick;
+                $bersaglio->ingerenzaDa   = $mandante->iso3;
+            }
             $this->contraccolpo($e, $mondo, $c);
 
             // "L'etica riflette il modo in cui il mondo giudica i moventi delle

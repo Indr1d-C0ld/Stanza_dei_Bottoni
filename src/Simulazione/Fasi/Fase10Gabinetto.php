@@ -91,6 +91,10 @@ final class Fase10Gabinetto implements Fase
                 continue;
             }
 
+            // La popolarita' del governo: la legittimita' letta rispetto al
+            // punto di riposo del paese, riportata sulla scala del mediano.
+            $popolarita = $n->legittimita - ($n->ancoraLegittimita() - 50.0);
+
             if ($n->prossimaElezione === 0) {
                 // Prima assegnazione: mandati fra quattro e cinque anni, sfasati
                 // fra loro — il mondo non vota tutto lo stesso giorno.
@@ -117,7 +121,9 @@ final class Fase10Gabinetto implements Fase
                 //
                 // Il metro giusto e' la forchetta contemporanea: 4-8 anni nelle
                 // democrazie competitive, decenni nei sistemi autoritari.
-                $rischio = $rischioCrisi / (1.0 + exp(($n->legittimita - 42.0) / 7.0));
+                // Si giudica il governo, non il regime: lo scarto dal punto di
+                // riposo del paese (Nazione::ancoraLegittimita, docs/30).
+                $rischio = $rischioCrisi / (1.0 + exp(($popolarita - 42.0) / 7.0));
                 if (($c->tick - $n->annoUltimoCambio) > ($tickAnno / 2)
                     && $c->caso->prova('10_sfiducia', crc32($n->iso3), $c->tick, $rischio / $tickAnno)) {
                     $this->ricambio($n, $c, 'sfiducia', $bacini);
@@ -131,7 +137,7 @@ final class Fase10Gabinetto implements Fase
 
             // Chi governa male perde. La curva è centrata poco sopra la media:
             // a legittimità 40 l'uscente cade quasi sempre, a 65 quasi mai.
-            $probabilitaRicambio = 1.0 / (1.0 + exp(($n->legittimita - $centro) / $pendenza));
+            $probabilitaRicambio = 1.0 / (1.0 + exp(($popolarita - $centro) / $pendenza));
             if (!$c->caso->prova('10_urne', crc32($n->iso3), $c->tick, $probabilitaRicambio)) {
                 // Riconfermato: un mandato fresco vale qualche punto di credito.
                 $n->legittimita = min(100.0, $n->legittimita + 3.0);
@@ -438,7 +444,7 @@ final class Fase10Gabinetto implements Fase
         // La luna di miele esiste ma e' corta: se ogni ricambio regalasse
         // dieci punti, con tre ricambi per paese in quindici anni il mondo
         // diventerebbe lentamente sempre piu' contento di se'. E cosi' era.
-        $n->legittimita = (50.0 + $n->derivaPolitica) + 4.0
+        $n->legittimita = ($n->ancoraLegittimita() + $n->derivaPolitica) + 4.0
             + $c->caso->rumore('10_luna_di_miele', crc32($n->iso3), $c->tick, 4.0);
         $n->clamoreSociale *= 0.55;
         $n->cambiEsecutivo++;

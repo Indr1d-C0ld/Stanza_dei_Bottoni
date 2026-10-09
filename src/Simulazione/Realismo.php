@@ -64,13 +64,26 @@ final class Realismo
         // --- tassi e rapporti: come si comporta il motore ---------------------
         'crescita_popolazione' => [0.6,  1.2,  '%/anno',      'corsa',
             'ONU, World Population Prospects 2024: il mondo cresce dello 0,9% l\'anno'],
-        'crescita_pil'         => [1.8,  4.0,  '%/anno',      'corsa',
-            'Banca Mondiale: 2,9% nel 2024, ~3,4% medio dal 2000 in PPA. IL MODELLO STA '
-            . 'SOTTO, fra 1,9% e 2,4%, e il pavimento e\' basso per dirlo invece che per '
-            . 'nasconderlo: il freno di maturazione agisce sulle tendenze gia\' osservate del '
-            . 'seme, che quella maturita\' la incorporano di suo, e c\'e\' un doppio conteggio '
-            . 'dichiarato in docs/26. Col pavimento a 2,0 la fascia falliva su un seme su '
-            . 'quattro per due centesimi, che e\' uno strumento ballerino, non una misura'],
+        'crescita_pil'         => [2.2,  4.0,  '%/anno',      'corsa',
+            'FMI, World Economic Outlook aprile 2026: il mondo in PPA cresce del 3,1-3,3% '
+            . 'l\'anno nelle proiezioni 2026-2030. Oltre, rallenta: per l\'OCSE (Guillemette '
+            . 'e Turner 2021, «The long game», Economic Policy Paper 22) la crescita '
+            . 'potenziale mondiale scende dal 2,9% al 2,7% nei primi anni Trenta e al 2,1% nei '
+            . 'primi anni Quaranta, cioe\' circa 2,5-2,7% di media su quindici anni dal 2026. '
+            . 'Il modello faceva 1,9-2,4 per un freno di maturazione sopra tendenze che la '
+            . 'maturita\' la incorporavano gia\', e per le guerre del seme pagate due volte '
+            . '(docs/26, docs/30); adesso fa 2,3-3,1'],
+        'quota_in_recessione'  => [6,    15,   '% dei paesi', 'corsa',
+            'FMI, World Economic Outlook aprile 2026: la quota di economie col PIL reale in '
+            . 'calo in un anno, fuori dalle crisi mondiali, sta fra il 4 e il 19% e vale il '
+            . '10% di mediana (2010-2019 e 2021-2025; il 2009 fa 50%, il 2020 83%). Qui e\' '
+            . 'la media degli anni della corsa'],
+        'ricambio_recessioni'  => [35,   75,   '% dei paesi', 'corsa',
+            'Quanti paesi hanno avuto ALMENO un anno di recessione nella corsa. Nel FMI '
+            . '(WEO aprile 2026), sul 2010-2024 SENZA il 2020 — il modello non ha pandemie — '
+            . 'e\' il 52% delle economie; sul solo 2010-2019 il 46%. Senza ciclo il modello '
+            . 'ne aveva meno di un sesto, sempre gli stessi: chi partiva con la tendenza '
+            . 'negativa (docs/30)'],
         'onere_militare'       => [1.8,  3.6,  '% del PIL',   'corsa',
             'SIPRI 2024: 2,5% del prodotto mondiale, e in salita — la piu\' ripida dal 1988. '
             . 'Il tetto e\' alto apposta: il mondo vero e\' passato dal 2,2% del 2020 al 2,5% '
@@ -173,11 +186,32 @@ final class Realismo
         // su quelle aperte a fine corsa direbbe «zero» in un mondo pacificato.
         $guerreViste = [];
 
+        // Le recessioni si contano sul PIL di un ANNO, non sul tasso di una
+        // settimana: il tasso istantaneo porta dentro il rumore della
+        // settimana e faceva sembrare in recessione un paese su cinque.
+        $pilUnAnnoFa = [];
+        foreach ($mondo->elenco() as $n) {
+            $pilUnAnnoFa[$n->iso3] = $n->pil;
+        }
+        $recessioniAnno = [];
+        $maiInRecessione = $pilUnAnnoFa;
+
         for ($t = 1; $t <= $anni * $tickAnno; $t++) {
             $mondo->tick = $t;
             $esecutore->esegui($t, $seme);
             foreach ($mondo->guerre as $g) {
                 $guerreViste[$g['aggressore'] . '>' . $g['difensore'] . '@' . $g['inizio']] = $g['morti'];
+            }
+            if ($t % $tickAnno === 0) {
+                $giu = 0;
+                foreach ($mondo->elenco() as $n) {
+                    if ($n->pil < ($pilUnAnnoFa[$n->iso3] ?? 0.0)) {
+                        $giu++;
+                        unset($maiInRecessione[$n->iso3]);
+                    }
+                    $pilUnAnnoFa[$n->iso3] = $n->pil;
+                }
+                $recessioniAnno[] = $giu / max(1, count($mondo->nazioni));
             }
         }
 
@@ -255,6 +289,9 @@ final class Realismo
             // Se nessuno e' in pace accanto a una guerra il rapporto non si
             // puo' formare: si dichiara neutro invece di dividere per zero.
             'raggruppamento'    => $mediaPace > 0.0 ? $mediaGuerra / $mediaPace : 1.5,
+            'quota_in_recessione' => $recessioniAnno === [] ? 0.0
+                : array_sum($recessioniAnno) / count($recessioniAnno) * 100.0,
+            'ricambio_recessioni' => (1.0 - count($maiInRecessione) / max(1, count($mondo->nazioni))) * 100.0,
             'guerre_aperte'     => (float) count($mondo->guerre),
             'morti_guerra_anno' => array_sum($guerreViste) / 1e6 / max(1, $anni),
         ];

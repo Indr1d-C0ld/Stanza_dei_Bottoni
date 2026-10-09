@@ -204,7 +204,11 @@ foreach ((array) $campiFermi as $campo) {
                           'quotaInvestimentiIniziale', 'quotaMilitareIniziale',
                           'soldatiIniziali', 'crescitaBase', 'crescitaPopolazione',
                           'disuguaglianza', 'esclusioneEtnica', 'gruppiEsclusi',
-                          'alfabetizzazione', 'maturita'], true)) {
+                          'alfabetizzazione', 'maturita',
+                          // dal seme (docs/30): la qualita' del governo, il
+                          // terreno, i punti di partenza.
+                          'qualitaGoverno', 'stabilitaPolitica', 'montuoso',
+                          'potenzaIniziale', 'conflittoIniziale'], true)) {
         continue;
     }
     // Ne' quelli transitori: la scossa esterna nasce e muore dentro lo stesso
