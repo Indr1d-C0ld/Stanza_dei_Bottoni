@@ -282,6 +282,8 @@ switch ($pezzi[0] ?? '') {
             'contestabili'   => $crisi->contestabili((int) $poltrona['nazione_id']),
             'gradini'        => (array) $calCrisi->leggi('crisi.gradini', []),
             'offerte'        => $reclutamento->offerteRicevute((int) $poltrona['id']),
+            'offerteFatte'   => in_array($poltrona['ruolo'], Reclutamento::RUOLI_AMMESSI, true)
+                                ? $reclutamento->offerteFatte((int) $poltrona['id']) : [],
             'nostriUomini'   => in_array($poltrona['ruolo'], Reclutamento::RUOLI_AMMESSI, true)
                                 ? $reclutamento->nostriUomini((int) $poltrona['nazione_id']) : null,
             'rubrica'        => in_array($poltrona['ruolo'], Reclutamento::RUOLI_AMMESSI, true)

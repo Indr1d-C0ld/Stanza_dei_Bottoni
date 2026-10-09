@@ -37,6 +37,53 @@ final class Fase02Maturazione implements Fase
      */
     private const INGERENZE = ['armare_insorti', 'finanziamento_opposizione', 'destabilizzare', 'colpo_di_stato'];
 
+    /**
+     * Quanto colpiscono le operazioni coperte a intensita' piena. Stanno qui
+     * perche' le usa il motore e le racconta il registro delle operazioni a
+     * chi le ha ordinate: due copie dello stesso numero divergono (docs/39).
+     */
+    public const EFFETTI_COPERTE = [
+        'sabotaggio'     => ['pil' => 0.004, 'equipaggiamento' => 0.025],
+        'destabilizzare' => ['legittimita' => 5.5, 'clamore' => 10.0],
+        'colpo_di_stato' => ['legittimita' => 17.0, 'clamore' => 18.0],
+    ];
+
+    /**
+     * Che cosa ha fatto un'operazione coperta arrivata a segno, detto a chi
+     * l'ha ordinata: il suo servizio ne conosce l'esito, non il mondo.
+     * $intensita e' quella effettiva, in centesimi, dopo la competenza del
+     * servizio che l'ha eseguita.
+     */
+    public static function raccontaEffetto(string $verbo, int $intensita): ?string
+    {
+        $i = max(0, min(100, $intensita)) / 100.0;
+        $n = static fn(float $x, int $cifre = 1): string => number_format($x, $cifre, ',', '.');
+        // L'articolo davanti a un numero si sceglie da come si legge: lo 0,2,
+        // l'1, l'8, l'11, il 2.
+        $conArticolo = static function (string $cifra): string {
+            $intera = explode(',', $cifra)[0];
+            return match (true) {
+                $intera === '0'                                  => 'lo ' . $cifra,
+                in_array($intera, ['1', '11', '8'], true)
+                    || str_starts_with($intera, '8')             => 'l\'' . $cifra,
+                default                                          => 'il ' . $cifra,
+            };
+        };
+        $e = self::EFFETTI_COPERTE[$verbo] ?? null;
+        return match ($verbo) {
+            'sabotaggio'     => sprintf('Ha tolto %s%% del prodotto e %s%% dell\'equipaggiamento militare.',
+                                    $conArticolo($n(100 * $e['pil'] * $i, 2)),
+                                    $conArticolo($n(100 * $e['equipaggiamento'] * $i))),
+            'destabilizzare' => sprintf('Ha tolto %s punti di legittimità al governo e ha acceso la piazza.',
+                                    $n($e['legittimita'] * $i)),
+            'colpo_di_stato' => sprintf('Ha tolto %s punti di legittimità al governo. Se cade, lo decide il '
+                                    . 'paese: un regime chiuso si difende, una democrazia cambia governo e basta.',
+                                    $n($e['legittimita'] * $i)),
+            'armare_insorti' => 'Le armi sono arrivate ai ribelli.',
+            default          => null,
+        };
+    }
+
     public function codice(): string { return '02'; }
     public function nome(): string   { return 'Maturazione degli eventi'; }
 
@@ -194,8 +241,8 @@ final class Fase02Maturazione implements Fase
 
             // --- operazioni coperte -------------------------------------------
             case 'sabotaggio':
-                $b->pil *= 1.0 - 0.004 * $i;
-                $b->equipaggiamento *= 1.0 - 0.025 * $i;
+                $b->pil *= 1.0 - self::EFFETTI_COPERTE['sabotaggio']['pil'] * $i;
+                $b->equipaggiamento *= 1.0 - self::EFFETTI_COPERTE['sabotaggio']['equipaggiamento'] * $i;
                 break;
             case 'armare_insorti':
                 // Le armi consegnate agli insorti valgono piu' del loro peso:
@@ -209,14 +256,14 @@ final class Fase02Maturazione implements Fase
             case 'destabilizzare':
                 // Si somma alla pressione, non sostituisce la realta': non puoi
                 // far cadere un governo che reggerebbe comunque.
-                $b->legittimita = max(0.0, $b->legittimita - 5.5 * $i);
-                $b->clamoreSociale += 10.0 * $i;
+                $b->legittimita = max(0.0, $b->legittimita - self::EFFETTI_COPERTE['destabilizzare']['legittimita'] * $i);
+                $b->clamoreSociale += self::EFFETTI_COPERTE['destabilizzare']['clamore'] * $i;
                 break;
             case 'colpo_di_stato':
                 // Il verbo non scavalca il modello: lo carica. Sara' la fase 05,
                 // piu' avanti in questo stesso tick, a decidere se cade davvero.
-                $b->legittimita = max(0.0, $b->legittimita - 17.0 * $i);
-                $b->clamoreSociale += 18.0 * $i;
+                $b->legittimita = max(0.0, $b->legittimita - self::EFFETTI_COPERTE['colpo_di_stato']['legittimita'] * $i);
+                $b->clamoreSociale += self::EFFETTI_COPERTE['colpo_di_stato']['clamore'] * $i;
                 $c->annota('trama', ['da' => $a->nome, 'contro' => $b->nome]);
                 break;
 

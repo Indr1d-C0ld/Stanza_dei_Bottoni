@@ -53,7 +53,7 @@ final class Operazioni
             'SELECT o.id, o.verbo, o.stato, o.creato_tick, o.scade_tick, o.richiede_controfirma,
                     o.firmato_da_apparato, o.intensita, o.copertura, o.evento_id,
                     b.nome AS bersaglio, n.nome AS nazione,
-                    e.stato AS esito, e.maturazione_tick, e.chiuso_tick,
+                    e.stato AS esito, e.maturazione_tick, e.chiuso_tick, e.intensita AS intensita_effettiva,
                     g.nome AS firmatario
              FROM sdb_ordine o
              JOIN sdb_nazione b ON b.id = o.bersaglio_id

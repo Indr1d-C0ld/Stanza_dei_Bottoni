@@ -420,7 +420,7 @@ scaduto.
 ```bash
 php bin/realismo.php --anni=15      # ventidue grandezze contro la loro fascia
 php bin/audit.php                   # che cosa è dichiarato e mai usato
-php bin/prova.php                   # cinquecentoventi prove
+php bin/prova.php                   # cinquecentoventitré prove
 ```
 
 `bin/realismo.php` confronta ventidue grandezze con la fascia in cui il mondo
@@ -492,6 +492,14 @@ legittimità che tornava a 50 per tutti, le guerre civili nei paesi piccoli e
 poveri sbagliati. Adesso il seme legge il FMI e la Banca Mondiale, e le guerre
 civili seguono i coefficienti stimati da Fearon. Ventuno grandezze su ventuno in
 fascia, su otto mondi.
+
+**`docs/39-la-partita-di-prova.md`** è tredici settimane all'Intelligence
+iraniana, in un ambiente isolato dal mondo vivo. Chi offriva denaro a un
+ministro straniero non sapeva più niente della sua offerta, e chi ordinava un
+sabotaggio sapeva solo che era «arrivato a segno»: adesso la scrivania dice le
+risposte e il registro dice che cosa ha fatto ogni operazione. E la partita ha
+trovato un difetto del motore, che è il prossimo lavoro: l'Iran, l'Iraq e
+l'Afghanistan finiscono in guerra civile in ogni seme.
 
 **`docs/38-quel-che-resta.md`** chiude gli ultimi due punti. Lo scarto residuo
 dei colpi di Stato sta in un errore standard e mezzo da un dato di 35 colpi, e
@@ -573,6 +581,11 @@ sapeva produrre.
   sono fatti politici datati — il Giappone e la Corea del Nord, Israele e il
   Libano dopo il 2023, l'Ungheria di Orban — che restano scritti a mano, con
   la loro ragione accanto (`docs/37`).
+- **L'Iran, l'Iraq e l'Afghanistan finiscono in guerra civile in ogni seme**,
+  entro un anno, mentre nel mondo vero un conflitto minore diventa guerra
+  l'8,8% delle volte. La crescita degli insorti usa i coefficienti con cui
+  Fearon stima l'*inizio* delle guerre civili, petrolio compreso, che nel dato
+  non accelera l'escalation affatto (`docs/39`).
 - **Le ostilità dopo il 2020 senza combattimenti** non le vede nessuna fonte
   strutturale: le rivalità strategiche si fermano al 2020, l'UCDP conta solo
   le armi. Si scrivono a mano, con la loro data, negli «eventi recenti»
@@ -612,7 +625,7 @@ struttura senza valori.
 php bin/tick.php              un passo del mondo
 php bin/simula.php            quindici anni a vuoto, con le statistiche
 php bin/diagnostica.php       la salute del modello
-php bin/prova.php             le prove automatiche (520, qualche minuto)
+php bin/prova.php             le prove automatiche (523, qualche minuto)
 php bin/realismo.php          ventidue grandezze contro le fonti
 php bin/audit.php             che cosa è dichiarato e mai usato
 php bin/migra.php             applica le migrazioni non ancora applicate

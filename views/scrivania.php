@@ -192,7 +192,9 @@ $tensioni = [1=>'quiete',2=>'pace',3=>'tensione',4=>'conflitto aperto',5=>'guerr
         $o['esito'] === 'in_volo'   => ['in-sospeso', 'Partito' . ($firma !== '' ? " (firmato $firma)" : '')
             . '. In corso: arriva a destinazione verso il '
             . App\Nucleo\Calendario::tick((int) $o['maturazione_tick']) . '.'],
-        $o['esito'] === 'realizzato' => ['', 'Arrivato a segno il ' . App\Nucleo\Calendario::tick((int) ($o['chiuso_tick'] ?? $o['maturazione_tick'])) . '.'],
+        $o['esito'] === 'realizzato' => ['', 'Arrivato a segno il ' . App\Nucleo\Calendario::tick((int) ($o['chiuso_tick'] ?? $o['maturazione_tick'])) . '.'
+            . (($effetto = App\Simulazione\Fasi\Fase02Maturazione::raccontaEffetto((string) $o['verbo'],
+                (int) ($o['intensita_effettiva'] ?? $o['intensita']))) !== null ? ' ' . htmlspecialchars($effetto) : '')],
         $o['esito'] === 'fermato'    => ['ostile', 'Fermato' . ($o['chiuso_tick'] !== null
             ? ' il ' . App\Nucleo\Calendario::tick((int) $o['chiuso_tick']) : '')
             . ': non è arrivato a segno. Qualcuno l\'ha visto in tempo, o il governo ci ha ripensato.'],
@@ -201,7 +203,8 @@ $tensioni = [1=>'quiete',2=>'pace',3=>'tensione',4=>'conflitto aperto',5=>'guerr
   ?>
     <article class="voce-cartella <?= $classe === 'in-sospeso' ? 'in-sospeso' : '' ?>">
       <p class="riga-uno"><strong><?= $verbo ?></strong> contro <?= htmlspecialchars((string) $o['bersaglio']) ?>,
-         intensità <?= (int) $o['intensita'] ?>%<?= (int) $o['copertura'] > 0 ? ', copertura ' . (int) $o['copertura'] . '%' : '' ?>
+         intensità <?= (int) $o['intensita'] ?>%<?= $o['intensita_effettiva'] !== null && (int) $o['intensita_effettiva'] !== (int) $o['intensita']
+             ? ' (eseguita al ' . (int) $o['intensita_effettiva'] . '%: conta la competenza del servizio)' : '' ?><?= (int) $o['copertura'] > 0 ? ', copertura ' . (int) $o['copertura'] . '%' : '' ?>
          <span class="tenue">— ordinato il <?= App\Nucleo\Calendario::tick((int) $o['creato_tick']) ?></span></p>
       <p class="riga-due <?= $classe === 'ostile' ? 'ostile' : ($classe === 'tenue' ? 'tenue' : '') ?>"><?= $destino ?></p>
       <?php foreach ($o['attribuzioni'] as $a): ?>
@@ -468,6 +471,31 @@ $tensioni = [1=>'quiete',2=>'pace',3=>'tensione',4=>'conflitto aperto',5=>'guerr
           <span class="tenue"><?= htmlspecialchars(App\Gioco\Canale::etichettaRuolo((string) $u['ruolo'])) ?>
           di <?= htmlspecialchars((string) $u['paese']) ?>, dal <?= App\Nucleo\Calendario::tick((int) $u['reclutata_tick']) ?></span>
           <?php if ((int) $u['sospettata']): ?><span class="esito cattivo">è sotto sospetto</span><?php endif; ?>
+      </li>
+    <?php endforeach; ?>
+    </ul>
+  <?php endif; ?>
+
+  <?php if (!empty($offerteFatte)): ?>
+    <h3>Le offerte fatte</h3>
+    <ul class="fazioni">
+    <?php foreach ($offerteFatte as $o):
+      $quando = App\Nucleo\Calendario::tick((int) ($o['risposta_tick'] ?? $o['tick']));
+      [$classe, $esito] = match ((string) $o['stato']) {
+          'aperta'     => ['', 'sul tavolo: deve rispondere entro il '
+                              . App\Nucleo\Calendario::tick((int) $o['scade_tick'])],
+          'accettata'  => ['buono', 'accettata il ' . $quando . ': lavora per noi'],
+          'rifiutata'  => ['cattivo', 'rifiutata il ' . $quando
+                              . '. Da loro la proposta resta agli atti: è una prova'],
+          'denunciata' => ['cattivo', 'denunciata in pubblico il ' . $quando
+                              . ': il mondo sa che ci abbiamo provato, e i rapporti ne soffrono'],
+          'scaduta'    => ['', 'nessuna risposta: scaduta il ' . $quando],
+          default      => ['', (string) $o['stato']],
+      }; ?>
+      <li><strong><?= htmlspecialchars((string) $o['destinatario']) ?></strong>
+          <span class="tenue"><?= htmlspecialchars(App\Gioco\Canale::etichettaRuolo((string) $o['ruolo'])) ?>
+          di <?= htmlspecialchars((string) $o['paese']) ?>, offerta del <?= App\Nucleo\Calendario::tick((int) $o['tick']) ?></span>
+          <span class="esito <?= $classe ?>"><?= htmlspecialchars($esito) ?></span>
       </li>
     <?php endforeach; ?>
     </ul>

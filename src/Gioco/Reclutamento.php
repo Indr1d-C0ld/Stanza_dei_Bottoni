@@ -66,7 +66,8 @@ final class Reclutamento
             [(int) $poltrona['nazione_id'], (int) $poltrona['id'], $destinatario, trim($testo),
              (int) $denaro, (int) $dossier, (int) $appoggio, $tick, $tick + 6],
         );
-        return [true, sprintf('Proposta recapitata a %s di %s. Ora tocca a lui.',
+        return [true, sprintf('Proposta recapitata a %s di %s. Ora la decisione è sua: '
+            . 'la risposta la vedi qui, fra le offerte fatte.',
             Gabinetto::RUOLI[$d['ruolo']] ?? $d['ruolo'], $d['paese'])];
     }
 
@@ -137,6 +138,26 @@ final class Reclutamento
                 return [true, 'Hai reso pubblica la proposta. Il mondo lo saprà, e il tuo nome ci guadagna.'];
         }
         return [false, 'Risposta non prevista.'];
+    }
+
+    /**
+     * Le offerte fatte da questa poltrona e come sono finite, dalla piu'
+     * recente. Prima chi offriva non sapeva piu' niente: la proposta spariva
+     * dalla scrivania, e un rifiuto era indistinguibile da un silenzio
+     * (docs/39).
+     *
+     * @return list<array<string,mixed>>
+     */
+    public function offerteFatte(int $poltrona, int $quante = 10): array
+    {
+        return $this->db->esegui(
+            'SELECT o.id, o.stato, o.tick, o.scade_tick, o.risposta_tick,
+                    o.offre_denaro, o.offre_dossier, o.offre_appoggio,
+                    p.ruolo, p.nome AS destinatario, n.nome AS paese
+             FROM sdb_offerta o
+             JOIN sdb_poltrona p ON p.id = o.a_poltrona
+             JOIN sdb_nazione n ON n.id = p.nazione_id
+             WHERE o.da_poltrona = ? ORDER BY o.id DESC LIMIT ' . max(1, $quante), [$poltrona])->fetchAll();
     }
 
     /** @return list<array<string,mixed>> chi lavora per noi, dentro casa d'altri */

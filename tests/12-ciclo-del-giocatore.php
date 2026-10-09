@@ -241,6 +241,11 @@ try {
         Prove::che('il Capo russo rifiuta', ($r[0] ?? false) === true, $r[1] ?? '');
     }
     $passo('nostri uomini', fn() => $s->reclutamento->nostriUomini((int) $poltA['nazione_id']));
+    // Chi offre vede come e' finita: prima la proposta spariva dalla sua
+    // scrivania e un rifiuto non si distingueva da un silenzio (docs/39).
+    $fatte = $passo('offerte fatte', fn() => $s->reclutamento->offerteFatte((int) $poltA['id']));
+    Prove::che('e Washington vede il rifiuto fra le offerte fatte',
+        is_array($fatte) && ($fatte[0]['stato'] ?? '') === 'rifiutata', (string) ($fatte[0]['stato'] ?? '—'));
 
     // ------------------------------------------------------------ la crisi
     Prove::gruppo('Ciclo del giocatore: la crisi');

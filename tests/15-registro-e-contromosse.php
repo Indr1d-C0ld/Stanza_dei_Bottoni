@@ -146,3 +146,13 @@ try {
 } finally {
     $pdoReg->rollBack();
 }
+
+Prove::gruppo('Il registro dice anche che cosa ha fatto un\'operazione andata a segno');
+
+// Chi l'ha ordinata ne conosce l'esito; il mondo no (docs/39). I numeri sono
+// gli stessi che il motore applica: stanno in un posto solo.
+$racconto = App\Simulazione\Fasi\Fase02Maturazione::raccontaEffetto('sabotaggio', 61);
+Prove::che('un sabotaggio al 61% ha tolto lo 0,24% del prodotto e l\'1,5% dell\'equipaggiamento',
+    $racconto === 'Ha tolto lo 0,24% del prodotto e l\'1,5% dell\'equipaggiamento militare.', (string) $racconto);
+Prove::che('e i verbi non coperti non hanno racconto',
+    App\Simulazione\Fasi\Fase02Maturazione::raccontaEffetto('emissario', 50) === null);
