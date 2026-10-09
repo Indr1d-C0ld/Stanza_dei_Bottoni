@@ -259,6 +259,7 @@ final class Deposito
             'cambi_esecutivo', 'cambi_irregolari', 'vittorie_insorti', 'scandali_subiti',
             'anno_ultimo_cambio', 'prossima_elezione', 'mandato_tick',
             'ingerenza_tick', 'ingerenza_da', 'repressione', 'censura', 'costo_guerra', 'rimbalzo',
+            'ultimo_colpo',
         ];
         $segnaposti = '(?, ?, ' . implode(', ', array_fill(0, count($campi), '?')) . ')';
         $blocchi = [];
@@ -282,7 +283,8 @@ final class Deposito
                 $n->reputazioneSporca, $n->consumoProCapitePrec, $n->azioniInVolo,
                 $n->cambiEsecutivo, $n->cambiIrregolari, $n->vittorieInsorti, $n->scandaliSubiti,
                 $n->annoUltimoCambio, $n->prossimaElezione, $n->mandatoTick,
-                $n->ingerenzaTick, $n->ingerenzaDa, $n->repressione, $n->censura, $n->costoGuerra, $n->rimbalzo);
+                $n->ingerenzaTick, $n->ingerenzaDa, $n->repressione, $n->censura, $n->costoGuerra, $n->rimbalzo,
+                $n->ultimoColpo);
         }
         if ($blocchi === []) {
             return;
@@ -667,6 +669,11 @@ final class Deposito
             // 0036): resta il valore del seme, che non e' mai zero esatto.
             $n->costoGuerra = (float) ($r['costo_guerra'] ?? 0.0);
             $n->rimbalzo    = (float) ($r['rimbalzo'] ?? 0.0);
+            // MAI_COLPO e' anche il valore delle righe anteriori alla
+            // migrazione 0039: allora resta quel che dice il seme.
+            if ((int) ($r['ultimo_colpo'] ?? Nazione::MAI_COLPO) !== Nazione::MAI_COLPO) {
+                $n->ultimoColpo = (int) $r['ultimo_colpo'];
+            }
             if ((float) ($r['repressione'] ?? 0.0) > 0.0) {
                 $n->repressione = (float) $r['repressione'];
                 $n->censura     = (float) $r['censura'];

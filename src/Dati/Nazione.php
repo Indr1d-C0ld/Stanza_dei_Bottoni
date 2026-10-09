@@ -215,6 +215,12 @@ final class Nazione
         public float  $rimbalzo = 0.0,
         public int    $ingerenzaTick = 0,
         public string $ingerenzaDa = '',
+        /**
+         * Il tick dell'ultimo colpo di Stato riuscito: negativo se e' prima
+         * del seme (Powell e Thyne), MAI_COLPO se non ce n'e' stato. Serve
+         * alla trappola del colpo (fase 05, docs/37).
+         */
+        public int    $ultimoColpo = self::MAI_COLPO,
         // Le quattro dipendenze contemporanee. Restano a zero finche' non
         // importeremo la matrice commerciale: le colonne esistono perche' il
         // modello le prevede, non perche' siano gia' popolate.
@@ -327,6 +333,9 @@ final class Nazione
      * per classificare i regimi.
      */
     /** Sotto questa apertura il regime e' un'autocrazia piena: reprime e tiene. */
+    /** Nessun colpo di Stato riuscito noto: vale -9999 anche nella base dati (migrazione 0039). */
+    public const MAI_COLPO = -9999;
+
     private const AUTOCRAZIA_PIENA = 0.05;
 
     /** Il vertice dell'arco: la democrazia parziale, quella che salta. */

@@ -447,7 +447,11 @@ return [
         // piu' basso, con la soglia e lo spostamento dei regimi parziali
         // ritoccati per tenere il livello: tutte e quattro le fasce dentro
         // l'intervallo di Poisson al 95% del dato.
-        'rischio_massimo_anno'   => 0.030,
+        //
+        // 0,024 da docs/37: con la trappola del colpo qui sotto, che triplica
+        // il rischio di chi ne ha appena avuto uno, il tetto scende perche' i
+        // colpi l'anno restino quelli veri (1,3-1,5 contro 1,4).
+        'rischio_massimo_anno'   => 0.024,
         'pendenza'               => 18.0,
         // [TARATO] Sotto questa democrazia liberale una caduta e' un colpo di
         // Stato, sopra una crisi di governo. Era la soglia delle elezioni,
@@ -455,6 +459,13 @@ return [
         // e 0,55, e sopra 0,55 nessuno in 1.488 anni-paese (Powell e Thyne;
         // docs/36).
         'democrazia_regolare'    => 0.55,
+        // [TARATO] La trappola del colpo (Londregan e Poole 1990): un colpo
+        // riuscito negli ultimi dieci anni moltiplica il rischio per 3,1.
+        // Powell e Thyne, regimi parziali del 2000-2025, regressione di
+        // Poisson a parita' di stabilita' politica WGI: log 1,14 +- 0,37, cioe'
+        // 38,7 colpi ogni mille anni-paese contro 10,4 (docs/37).
+        'trappola'               => 3.1,
+        'trappola_anni'          => 10.0,
     ],
 
     // ----------------------------------------------------------- relazioni

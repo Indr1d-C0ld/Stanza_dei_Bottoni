@@ -108,6 +108,11 @@ final class Mondo
         if (!is_array($diritti)) {
             $diritti = [];
         }
+        // L'ultimo colpo di Stato riuscito (bin/importa_colpi.php).
+        $colpi = @include dirname($percorsoCsv) . '/colpi.php';
+        if (!is_array($colpi)) {
+            $colpi = [];
+        }
         // La faziosita' di Polity5 (bin/importa_faziosita.php).
         $faziosi = @include dirname($percorsoCsv) . '/faziosita.php';
         if (!is_array($faziosi)) {
@@ -232,6 +237,11 @@ final class Mondo
                 $n->censura = 1.0 - $fe;
             }
             $n->faziosita = (float) ($faziosi[$n->iso3] ?? 0.0);
+            // Il tick 0 e' il 5 gennaio 2026; un colpo prima sta in negativo.
+            if (isset($colpi[$n->iso3])) {
+                [$annoColpo, $meseColpo] = $colpi[$n->iso3];
+                $n->ultimoColpo = (int) round(((int) $annoColpo + ((int) $meseColpo - 0.5) / 12.0 - 2026.0) * 52.0);
+            }
             $n->statoPolizia = $n->basePolizia();
             $n->controlloInfo = 100.0 * $n->censura;
             $n->montuoso = (float) ($terreno[$n->iso3]['montuoso'] ?? 11.8);
@@ -261,13 +271,14 @@ final class Mondo
 
         // Prima l'orientamento strutturale, poi gli scostamenti dichiarati.
         $politica = @include dirname($percorsoCsv) . '/politica-nota.php';
-        $politica = is_array($politica) ? $politica : ['orientamenti' => [], 'rapporti' => []];
+        $politica = is_array($politica) ? $politica : ['rapporti' => []];
         // L'orientamento e' l'ALLINEAMENTO internazionale, e lo misura il voto
         // all'ONU (db/seed/onu.php): il paese mediano a zero, il polo
         // occidentale — gli Stati Uniti — a +128, sulla stessa scala in giu'.
         // Prima veniva dal tipo di governo del Factbook piu' 45 correzioni
-        // scritte a mano; restano per chi all'ONU non vota (Taiwan, il
-        // Kosovo). La radicalita' del regime, che prima si leggeva qui, e'
+        // scritte a mano. Chi all'ONU non vota (Taiwan, il Kosovo) prende il
+        // valore della sua forma di governo; le correzioni, che non
+        // riguardavano nessuno dei due, non ci sono piu' (docs/37). La radicalita' del regime, che prima si leggeva qui, e'
         // un'altra cosa e sta in Nazione::radicalita() (docs/33).
         $onu = @include dirname($percorsoCsv) . '/onu.php';
         $punti = is_array($onu) ? (array) ($onu['punti'] ?? []) : [];
@@ -283,7 +294,7 @@ final class Mondo
             $n->posturaNucleare = $politica['postura_nucleare'][$n->iso3] ?? 1;
             $n->orientamento = isset($punti[$n->iso3])
                 ? (int) max(-128, min(128, round(((float) $punti[$n->iso3] - $medianaOnu) * $scala)))
-                : ($politica['orientamenti'][$n->iso3] ?? self::orientamentoDa($mondo->ideologie[$n->iso3] ?? ''));
+                : self::orientamentoDa($mondo->ideologie[$n->iso3] ?? '');
         }
 
         $mondo->relazioni = new Relazioni();
@@ -471,9 +482,10 @@ final class Mondo
     /**
      * Costruisce le coppie che hanno una ragione di esistere, e le inizializza.
      *
-     * Le affinità iniziali sono FABBRICATE: non abbiamo (ancora) dati reali su
-     * alleanze e trattati. Derivano da distanza ideologica, contiguità e
-     * asimmetria di potenza — tre cose che spiegano molto e non spiegano tutto.
+     * Le affinità iniziali si stimano dai dati (voti all'ONU, patti, dispute,
+     * rivalità strategiche, paesi ostili alla Russia: docs/32, docs/36); la
+     * formula su distanza ideologica, contiguità e asimmetria di potenza qui
+     * sotto resta [FABBRICATO] per chi all'ONU non vota.
      */
     /** @param list<array{0:string,1:string,2:int}> $rapportiNoti */
     public function preparaRelazioni(array $rapportiNoti = []): void

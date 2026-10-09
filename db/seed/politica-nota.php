@@ -3,48 +3,31 @@
 declare(strict_types=1);
 
 /**
- * Quel che il Factbook non dice, e che noi dobbiamo dire lo stesso.
+ * Quel che i dati non dicono, e che noi dobbiamo dire lo stesso.
  *
- * Il tipo di governo del World Factbook è una descrizione giuridica: la Russia
- * vi compare come "semi-presidential federation" e l'Ucraina pure. Derivandone
- * l'orientamento politico, i due paesi risultano amici all'83%. Non va bene.
+ * Era una tabella FABBRICATA: orientamenti politici e rapporti fra Stati
+ * scritti a mano, perche' il tipo di governo del Factbook faceva della Russia
+ * e dell'Ucraina due paesi amici all'83%. Da allora i dati l'hanno svuotata:
  *
- * Questa tabella è FABBRICATA e dichiarata tale, esattamente come l'indice di
- * maturità istituzionale che Chris Crawford confessò di aver inventato ("mi
- * sono affidato alla mia vasta conoscenza degli affari mondiali — ehm! — e ho
- * compiuto un gioco di prestigio"). È un atto d'autore, è discutibile, ed è
- * versionata apposta perché la si possa discutere.
+ *   - l'ORIENTAMENTO viene dai voti all'ONU (docs/33). I 45 orientamenti che
+ *     stavano qui valevano solo per chi non vota, e nessuno di quei 45 e' fra
+ *     loro: erano morti, e li ho tolti (docs/37). Taiwan e il Kosovo prendono
+ *     il valore della loro forma di governo;
+ *   - l'AFFINITA' di ogni coppia si stima da voti all'ONU, patti di ATOP,
+ *     dispute militarizzate, rivalita' strategiche e paesi ostili alla Russia
+ *     (bin/importa_onu.php, docs/32 e docs/36). I pesi si stimano proprio su
+ *     questi rapporti, che spiega all'81%.
  *
- * Va sostituita, quando avremo integrato le fonti, con V-Dem per gli
- * orientamenti e Correlates of War per i rapporti bilaterali.
- *
- * I RAPPORTI, da ottobre 2026 (docs/32), non sono piu' la sola fonte:
- * l'affinita' di ogni coppia si misura dai voti all'ONU, dai patti di ATOP e
- * dalle dispute militarizzate, coi pesi stimati proprio su questi rapporti
- * (bin/importa_onu.php, R² 0,62). Restano qui, e vincono, dove i dati non
- * vedono la rivalita': l'Arabia Saudita e l'Iran, il Giappone e la Corea del
- * Nord, i Baltici e la Russia non si sono mai sparati addosso direttamente.
+ * I rapporti restano qui, e vincono, per il resto: i fatti politici datati che
+ * nessuna variabile strutturale vede — il Giappone e i rapimenti, la guerra
+ * fra Israele e Hezbollah, l'Ungheria di Orban. Dove si discostano molto dalla
+ * stima dei dati portano accanto la ragione e la data. Le sanzioni come
+ * variabile le ho provate (OpenSanctions, la mappa delle sanzioni dell'UE) e
+ * spiegano mezzo punto in piu': i loro bersagli sono gia' le rivalita' e i
+ * paesi ostili alla Russia (docs/37).
  */
 
 return [
-
-    /**
-     * Posizione sull'asse politico, -128 .. +128, dove la formula automatica
-     * prende un abbaglio. Non è "buoni e cattivi": è quanto un governo si
-     * riconosce nel blocco liberale o in quello autoritario, perché è questo
-     * che determina con chi tende ad allinearsi.
-     */
-    'orientamenti' => [
-        'RUS' => -60, 'BLR' => -75, 'PRK' => -110, 'CHN' => -85, 'IRN' => -70,
-        'SYR' => -65, 'VEN' => -60, 'CUB' => -80, 'NIC' => -60, 'ERI' => -75,
-        'TKM' => -70, 'TJK' => -55, 'UZB' => -45, 'AZE' => -50, 'KAZ' => -35,
-        'EGY' => -35, 'SAU' => -40, 'ARE' => -30, 'QAT' => -20, 'TUR' => -15,
-        'HUN' =>  10, 'SRB' => -15, 'MMR' => -70, 'LAO' => -70, 'VNM' => -55,
-        'AFG' => -70, 'ZWE' => -50, 'SDN' => -55, 'MLI' => -45, 'BFA' => -45,
-        'NER' => -40, 'GNQ' => -60, 'RWA' => -30, 'ETH' => -25, 'PAK' => -10,
-        'IND' =>  20, 'BRA' =>  25, 'ZAF' =>  15, 'IDN' =>  20, 'MEX' =>  30,
-        'ISR' =>  50, 'UKR' =>  45, 'GEO' =>  25, 'MDA' =>  35, 'ARM' =>  -5,
-    ],
 
     /**
      * Postura nucleare, sulla scala a sette livelli del "quadrante destro"
@@ -94,6 +77,9 @@ return [
         ['USA', 'GBR',  110], ['USA', 'CAN',  115], ['USA', 'AUS',  110],
         ['USA', 'JPN',  105], ['USA', 'KOR',  100], ['USA', 'DEU',   95],
         ['USA', 'FRA',   90], ['USA', 'ITA',   95], ['USA', 'POL',  100],
+        // Stati Uniti e Israele: 38 miliardi di aiuti militari nel memorandum
+        // del 2016 per il 2019-2028; nessun patto di difesa formale, e i dati
+        // danno +54.
         ['USA', 'ISR',  110], ['GBR', 'FRA',   95], ['DEU', 'FRA',  115],
         ['DEU', 'POL',   85], ['FRA', 'ITA',   95], ['NLD', 'DEU',  110],
         ['ESP', 'PRT',  110], ['SWE', 'FIN',  115], ['NOR', 'SWE',  110],
@@ -110,8 +96,14 @@ return [
         ['IND', 'PAK', -100], ['PAK', 'IND',  -95],
         ['PRK', 'KOR',  -95], ['KOR', 'PRK',  -85],
         ['ISR', 'IRN', -110], ['IRN', 'ISR', -115],
+        // Israele e Hezbollah in guerra dall'8/10/2023, tregua del 27/11/2024
+        // con le truppe israeliane ancora nel sud del Libano: i dati
+        // strutturali (nessuna disputa fra Stati dal 2006) danno +16.
         ['ISR', 'SYR',  -90], ['ISR', 'LBN',  -70],
-        ['SAU', 'IRN',  -85], ['IRN', 'SAU',  -85],
+        // Le relazioni diplomatiche, rotte nel 2016, sono state ristabilite a
+        // Pechino il 10/03/2023: la rivalita' strategica resta (Thompson,
+        // Sakuwa e Suhas), l'ostilita' aperta no. Era -85.
+        ['SAU', 'IRN',  -60], ['IRN', 'SAU',  -60],
         ['USA', 'IRN', -100], ['USA', 'PRK', -105], ['USA', 'CUB',  -60],
         ['USA', 'RUS',  -85], ['RUS', 'USA',  -85],
         ['USA', 'CHN',  -45], ['CHN', 'USA',  -45],
@@ -120,7 +112,15 @@ return [
         ['ARM', 'AZE',  -95], ['AZE', 'ARM',  -95],
         ['SRB', 'XKX',  -90], ['XKX', 'SRB',  -85],
         ['DZA', 'MAR',  -60], ['MAR', 'DZA',  -60],
+        // La pace del 2018 (Abiy, Nobel 2019) ha chiuso la rivalita' per
+        // Thompson, Sakuwa e Suhas; ma dopo l'accordo di Pretoria sul Tigray
+        // (11/2022) i due paesi sono tornati ostili, e Abiy rivendica uno
+        // sbocco sul Mar Rosso dall'ottobre 2023.
         ['ETH', 'ERI',  -55], ['SDN', 'SSD',  -45],
+        // Il Giappone vieta ogni importazione dalla Corea del Nord dal 2006 e
+        // ogni esportazione dal 2009, per i missili e per i cittadini rapiti
+        // negli anni Settanta-Ottanta; i dati, senza dispute fra i due e senza
+        // sanzioni giapponesi nelle fonti aperte, danno +40.
         ['GRC', 'TUR',  -35], ['JPN', 'PRK',  -80], ['JPN', 'CHN',  -35],
 
         // La guerra in Ucraina (dal 24/02/2022). Prima di questa sezione il
@@ -169,6 +169,9 @@ return [
         ['BRA', 'ARG',   75], ['IND', 'BGD',   60], ['IND', 'NPL',   65],
         ['ZAF', 'NAM',   75], ['ZAF', 'BWA',   80], ['NGA', 'GHA',   70],
         ['SAU', 'ARE',   95], ['SAU', 'BHR',   95], ['ARE', 'EGY',   80],
+        // Australia e Nuova Zelanda: mercato unico (Closer Economic Relations,
+        // 1983), libera circolazione delle persone, l'ANZUS; i dati vedono
+        // solo un patto e danno +54.
         ['IDN', 'MYS',   70], ['AUS', 'NZL',  115], ['MEX', 'CAN',   75],
     ],
 ];

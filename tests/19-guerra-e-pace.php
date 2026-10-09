@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 /**
- * La guerra e la pace (docs/33, docs/34, docs/35): i garanti che combattono, i
+ * La guerra e la pace (docs/33-docs/37): i garanti che combattono, i
  * ribelli col tetto, l'orientamento e la radicalita', i civili, il rimbalzo, la
- * faziosita'. Tutto in memoria.
+ * faziosita', la trappola del colpo. Tutto in memoria.
  */
 
 use App\Dati\Mondo;
@@ -99,7 +99,7 @@ Prove::gruppo('Si fa un colpo di Stato anche dove si vota, e si odia anche senza
 
 Prove::vicino('sotto 0,55 di democrazia liberale una caduta e\' un colpo di Stato (19 colpi su 36 fra 0,25 e 0,55)',
     0.55, $calGP->numero('colpo_di_stato.democrazia_regolare'), 0.001);
-Prove::che('la curva del colpo e\' quella misurata, non quella ripida di prima (pendenza 18, tetto 3%)',
+Prove::che('la curva del colpo e\' quella misurata, non quella ripida di prima (pendenza 18, tetto sotto il 3,5% l\'anno)',
     $calGP->numero('colpo_di_stato.pendenza') >= 14.0 && $calGP->numero('colpo_di_stato.rischio_massimo_anno') <= 0.035);
 
 $m = Mondo::daSeme($semeGP);
@@ -112,3 +112,17 @@ Prove::che('i paesi che la Russia dichiara ostili lo sono anche qui: il Portogal
     $aff('RUS', 'PRT') < 0.0, (string) round($aff('RUS', 'PRT')));
 Prove::che('e chi non c\'entra resta indifferente o amico: la Russia e il Brasile',
     $aff('RUS', 'BRA') > 20.0, (string) round($aff('RUS', 'BRA')));
+
+// ------------------------------------------------------- la trappola del colpo
+Prove::gruppo('Chi ha appena avuto un colpo di Stato ne ha altri');
+
+$m = Mondo::daSeme($semeGP);
+Prove::che('il seme sa dei colpi recenti: il Niger nel 2023, il Mali nel 2021 (Powell e Thyne)',
+    $m->nazioni['NER']->ultimoColpo < 0 && $m->nazioni['NER']->ultimoColpo > -3 * 52
+    && $m->nazioni['MLI']->ultimoColpo > -5 * 52,
+    $m->nazioni['NER']->ultimoColpo . ' ' . $m->nazioni['MLI']->ultimoColpo);
+Prove::che('e di chi non ne ha avuti: l\'Iraq e il Pakistan',
+    $m->nazioni['IRQ']->ultimoColpo === \App\Dati\Nazione::MAI_COLPO
+    && $m->nazioni['PAK']->ultimoColpo === \App\Dati\Nazione::MAI_COLPO);
+Prove::vicino('un colpo nei dieci anni prima triplica il rischio (3,1: Powell e Thyne, a parita\' di stabilita\')',
+    3.1, $calGP->numero('colpo_di_stato.trappola'), 0.001);

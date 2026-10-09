@@ -41,10 +41,12 @@ final class Fase05SicurezzaInterna implements Fase
         $pesoEsclusione     = $cal->numero('insurrezione.peso_esclusione', 3.0);
         $pesoFrammentazione = $cal->numero('insurrezione.peso_frammentazione', 0.5);
         $sogliaColpo = $cal->numero('colpo_di_stato.soglia_legittimita', 34.0);
-        $rischioMax  = $cal->numero('colpo_di_stato.rischio_massimo_anno', 0.030);
+        $rischioMax  = $cal->numero('colpo_di_stato.rischio_massimo_anno', 0.024);
         $pendenza    = $cal->numero('colpo_di_stato.pendenza', 18.0);
         $resistenzaEstremi = $cal->numero('colpo_di_stato.resistenza_estremisti', 2.0);
         $blindatura        = $cal->numero('colpo_di_stato.blindatura', 3.0);
+        $trappola          = $cal->numero('colpo_di_stato.trappola', 3.1);
+        $trappolaTick      = (int) round($cal->numero('colpo_di_stato.trappola_anni', 10.0) * $tickAnno);
         $vittoriaInsorti   = $cal->numero('insurrezione.vittoria_insorti_anno', 0.18);
         $rispostaGoverno   = $cal->numero('insurrezione.risposta_governo', 6.0);
         $innescoBase       = $cal->numero('insurrezione.innesco_base_anno', 0.010);
@@ -461,6 +463,18 @@ final class Fase05SicurezzaInterna implements Fase
             // meta' anche la sua, che e' del momento.
             $faziosita = $gab !== null ? ($n->faziosita + $gab->faziosita()) / 2.0 : $n->faziosita;
             $rischioAnnuo *= 1.0 + $pesoFaziosita * $faziosita * $n->regimeParziale();
+
+            // LA TRAPPOLA DEL COLPO. Chi ha appena avuto un colpo di Stato ne
+            // ha altri: LONDREGAN e POOLE (1990), «Poverty, the Coup Trap, and
+            // the Seizure of Executive Power», World Politics 42(2). Fra i
+            // regimi parziali del 2000-2025 un colpo riuscito nei dieci anni
+            // prima moltiplica per 3,1 quello dell'anno dopo, a parita' di
+            // stabilita' politica (Powell e Thyne; 38,7 ogni mille anni-paese
+            // contro 10,4). Senza, il modello dava all'Iraq e al Pakistan piu'
+            // rischio che al Mali e al Niger (docs/37).
+            if ($c->tick - $n->ultimoColpo < $trappolaTick) {
+                $rischioAnnuo *= $trappola;
+            }
             // Il clamore accelera, senza essere lui a decidere.
             $rischioAnnuo *= 1.0 + $n->clamoreSociale / 120.0;
 
@@ -674,6 +688,7 @@ final class Fase05SicurezzaInterna implements Fase
         $n->cambiEsecutivo++;
         if ($irregolare) {
             $n->cambiIrregolari++;
+            $n->ultimoColpo = $c->tick;
         }
         $n->annoUltimoCambio = $c->tick;
         $c->annota($irregolare ? 'colpo_di_stato' : 'cambio_governo', [

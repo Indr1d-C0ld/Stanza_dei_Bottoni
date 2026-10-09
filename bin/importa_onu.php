@@ -35,8 +35,9 @@ declare(strict_types=1);
  * e i pesi NON si scelgono: si stimano qui, ai minimi quadrati, sui rapporti
  * dichiarati di db/seed/politica-nota.php. La scala resta quella dei rapporti
  * dichiarati; il valore di ogni coppia viene dai dati. I rapporti dichiarati
- * restano dove i dati non vedono la rivalita' — l'Arabia Saudita e l'Iran, il
- * Giappone e la Corea del Nord non si sono mai sparati addosso direttamente.
+ * restano dove i dati non vedono la politica — il Giappone e la Corea del
+ * Nord, Israele e il Libano dopo il 2023, l'Ungheria di Orban — ciascuno con
+ * la sua ragione in db/seed/politica-nota.php.
  *
  * Fonte: Voeten, «United Nations General Assembly Ideal Point Estimates,
  * 1946-2025», Harvard Dataverse doi:10.7910/DVN/LEJUQZ, versione 39

@@ -401,6 +401,7 @@ scaduto.
 | **Quinlivan (1999)**, *International Security* 24(2); **Powell (2012)**, JCR 56(6) | la blindatura delle autocrazie piene (*coup-proofing*): zero colpi riusciti in 265 anni-paese nel 2000-2025 |
 | **Collier et al. (2003)**, *Breaking the Conflict Trap*, Banca Mondiale | quanto costa una guerra civile: 2,3 punti di crescita l'anno |
 | **Powell & Thyne**, colpi di Stato e leader (versione del 29/08/2026) | i colpi riusciti per tipo di regime, 1,4 l'anno nel 2000-2025, e la quota irregolare delle uscite dal potere: 5,1%. I «~10 l'anno» di Crawford sono gli anni Sessanta, e il «circa un quinto» di Archigos vale dal 1875. Fascia per fascia di democrazia liberale: metà dei colpi cade dove si vota, fra 0,25 e 0,55 |
+| **Londregan & Poole (1990)**, *Poverty, the Coup Trap, and the Seizure of Executive Power*, World Politics 42(2) | la trappola del colpo: un colpo riuscito triplica il rischio per dieci anni (3,1 sul dato 2000-2025) |
 | **Thompson, Sakuwa & Suhas (2021)**, *Analyzing Strategic Rivalries in World Politics*, Springer | le 56 rivalità strategiche in corso nel 2020, comprese quelle che non sparano: l'Iran e l'Arabia Saudita, l'Algeria e il Marocco |
 | **Governo russo**, ordinanze 430-r (5/3/2022) e 2018 (23/7/2022) | i 49 paesi «ostili»: le sanzioni dopo l'invasione dell'Ucraina, che le dispute militarizzate non contano |
 | **NATO**, dichiarazione del vertice dell'Aia (giugno 2025) | il 3,5% del PIL per la difesa entro il 2035, e il tetto della fascia sull'onere militare |
@@ -419,7 +420,7 @@ scaduto.
 ```bash
 php bin/realismo.php --anni=15      # ventidue grandezze contro la loro fascia
 php bin/audit.php                   # che cosa è dichiarato e mai usato
-php bin/prova.php                   # cinquecentosedici prove
+php bin/prova.php                   # cinquecentodiciannove prove
 ```
 
 `bin/realismo.php` confronta ventidue grandezze con la fascia in cui il mondo
@@ -492,6 +493,14 @@ poveri sbagliati. Adesso il seme legge il FMI e la Banca Mondiale, e le guerre
 civili seguono i coefficienti stimati da Fearon. Ventuno grandezze su ventuno in
 fascia, su otto mondi.
 
+**`docs/37-la-trappola-del-colpo.md`** aggiunge un meccanismo che mancava: chi
+ha appena avuto un colpo di Stato ne ha altri, tre volte tanto per dieci anni
+(Londregan e Poole; 38,7 colpi ogni mille anni-paese contro 10,4 nel dato di
+oggi). Prima il modello dava all'Iraq e al Pakistan, senza colpi da decenni,
+più rischio che al Mali e al Niger. Prova le sanzioni come variabile e le lascia
+fuori, perché non spiegano niente di nuovo; dà ai rapporti scritti a mano la loro
+ragione e la loro data.
+
 **`docs/36-i-conti-che-tornano.md`** chiude i quattro difetti che `docs/35`
 aveva lasciato. Il più grosso non era quello cercato: metà dei colpi di Stato
 veri cade in paesi che votano (il Mali, il Niger, la Birmania, la Thailandia), e
@@ -554,13 +563,13 @@ sapeva produrre.
 ### Quel che oggi non funziona come dovrebbe
 
 - **Le affinità di partenza spiegano l'81% dei rapporti dichiarati.** Il resto
-  — gli Stati Uniti e l'Iran, il Giappone e la Corea del Nord — resta scritto a
-  mano finché non ci sono le sanzioni del Global Sanctions Data Base, che si
-  ottiene solo su richiesta (`docs/36`).
+  sono fatti politici datati — il Giappone e la Corea del Nord, Israele e il
+  Libano dopo il 2023, l'Ungheria di Orban — che restano scritti a mano, con
+  la loro ragione accanto (`docs/37`).
 - **Le rivalità strategiche sono ferme al 2020**: quel che è cambiato dopo lo
   portano le dispute e i rapporti dichiarati (`docs/36`).
-- **Fra 0,15 e 0,25 di democrazia liberale** i colpi stanno nella parte alta
-  dell'intervallo del dato (`docs/36`).
+- **Fra 0,15 e 0,25 di democrazia liberale** i colpi stanno ancora nella parte
+  alta dell'intervallo del dato, anche con la trappola del colpo (`docs/37`).
 
 Sono difetti noti e scritti, non nascosti.
 
@@ -596,7 +605,7 @@ struttura senza valori.
 php bin/tick.php              un passo del mondo
 php bin/simula.php            quindici anni a vuoto, con le statistiche
 php bin/diagnostica.php       la salute del modello
-php bin/prova.php             le prove automatiche (516, qualche minuto)
+php bin/prova.php             le prove automatiche (519, qualche minuto)
 php bin/realismo.php          ventidue grandezze contro le fonti
 php bin/audit.php             che cosa è dichiarato e mai usato
 php bin/migra.php             applica le migrazioni non ancora applicate

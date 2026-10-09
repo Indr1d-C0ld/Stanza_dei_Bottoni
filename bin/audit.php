@@ -116,7 +116,9 @@ $attesi = ['nazioni.csv', 'democrazia.php', 'disuguaglianza.php', 'esclusione.ph
            // docs/32: ATOP e i voti all'ONU
            'patti-difesa.php', 'onu.php',
            // docs/35: Banca Mondiale e FMI per il commercio, Polity5 per la faziosita'
-           'commercio-dati.php', 'commercio-bilaterale.php', 'faziosita.php'];
+           'commercio-dati.php', 'commercio-bilaterale.php', 'faziosita.php',
+           // docs/37: Powell e Thyne per la trappola del colpo
+           'colpi.php'];
 foreach ($attesi as $s) {
     $p = $radice . '/db/seed/' . $s;
     if (!is_file($p)) {

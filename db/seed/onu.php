@@ -11,22 +11,22 @@
 // I pesi dell'affinita' strutturale, stimati ai minimi quadrati su 132 rapporti
 // dichiarati (R² = 0.81):
 //
-//   affinita' = 58.0 -14.4 * distanza +37.3 * difesa bilaterale
-//              +48.0 * patto integrato +85.0 * patto sulla carta / radice(membri-1)
-//              -3.3 * dispute (fino a dieci) -85.4 * rivalita' strategica
-//              -84.6 * ostile per la Russia
+//   affinita' = 58.7 -14.9 * distanza +37.1 * difesa bilaterale
+//              +47.4 * patto integrato +80.1 * patto sulla carta / radice(membri-1)
+//              -4.0 * dispute (fino a dieci) -79.9 * rivalita' strategica
+//              -84.3 * ostile per la Russia
 
 return [
     'pesi' => [
-        'costante'      => 58.039,
-        'distanza'      => -14.383,
-        'bilaterale'    => 37.293,
-        'integrato'     => 47.958,
-        'multilaterale' => 84.952,
-        'dispute'       => -3.326,
-        'strategica'    => -85.438,
-        'ostile_russia' => -84.623,
-        'r2'            => 0.808,
+        'costante'      => 58.693,
+        'distanza'      => -14.895,
+        'bilaterale'    => 37.066,
+        'integrato'     => 47.412,
+        'multilaterale' => 80.088,
+        'dispute'       => -4.011,
+        'strategica'    => -79.866,
+        'ostile_russia' => -84.303,
+        'r2'            => 0.811,
     ],
     // Thompson, Sakuwa e Suhas (2021), rivalita' strategiche in corso nel 2020.
     'strategiche' => [
