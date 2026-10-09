@@ -402,7 +402,8 @@ scaduto.
 | **SIPRI** — *Military Expenditure* e *Yearbook* | l'onere militare mondiale, gli Stati dotati di nucleare, e la spesa ucraina del 2024 (34% del PIL) dove il Factbook si ferma al 2021 |
 | **IISS** — *The Military Balance* | gli effettivi sotto le armi, e il tetto del 5% della popolazione (la Corea del Nord, il paese più militarizzato del mondo) |
 | **ONU** — *World Population Prospects* | la crescita della popolazione |
-| **Eckhardt**, ripreso dal **CICR** | la quota civile dei morti di guerra: circa metà, da tre secoli |
+| **UCDP GED v26.1** (Sundberg & Melander 2013, JPR 50(4)) | i civili morti nei combattimenti delle guerre fra Stati: 0,09 per combattente nel 1989-2025, non l'uno a uno di Eckhardt su tre secoli |
+| **UCDP e FMI** insieme | il rimbalzo dopo una guerra: +1,9 punti sopra la mediana mondiale nei cinque anni dopo le 49 guerre finite nel 1990-2019 (0,8 di mediana) |
 | **Acklam** | l'inversa della normale, per ricavare dal Gini il rapporto fra consumo mediano e medio |
 
 ### E il cruscotto che tiene tutto onesto
@@ -410,7 +411,7 @@ scaduto.
 ```bash
 php bin/realismo.php --anni=15      # ventuno grandezze contro la loro fascia
 php bin/audit.php                   # che cosa è dichiarato e mai usato
-php bin/prova.php                   # quattrocentottantasei prove
+php bin/prova.php                   # quattrocentonovantasette prove
 ```
 
 `bin/realismo.php` confronta ventuno grandezze con la fascia in cui il mondo
@@ -483,6 +484,10 @@ poveri sbagliati. Adesso il seme legge il FMI e la Banca Mondiale, e le guerre
 civili seguono i coefficienti stimati da Fearon. Ventuno grandezze su ventuno in
 fascia, su otto mondi.
 
+**`docs/34-i-civili-e-la-pace.md`** chiude la guerra coi dati: un civile ogni
+undici combattenti nelle guerre fra Stati di oggi (non uno a uno), e il
+rimbalzo dell'economia quando la guerra finisce.
+
 **`docs/33-gli-aspetti-aperti.md`** riprende quel che restava: l'orientamento
 separato dalla radicalità del regime (il primo dai voti all'ONU, la seconda dalla
 repressione di V-Dem, che dopo un colpo di Stato sale di quanto è salita dopo i
@@ -522,12 +527,6 @@ sapeva produrre.
 
 ### Quel che oggi non funziona come dovrebbe
 
-- **Un civile per ogni militare caduto** è la media storica, e vale per tutte
-  le guerre: in quella russo-ucraina i civili sono molti meno — ma il modello
-  conta anche meno caduti militari delle stime indipendenti, e i due errori si
-  compensano nel totale (`docs/33`).
-- **La pace non ricostruisce**: una guerra che finisce non dà alcun rimbalzo
-  alla crescita.
 - **Metà dei conflitti seminati si spegne in quindici anni**, e altrettanti ne
   nascono altrove. In parte è giusto — i conflitti veri finiscono — ma il
   modello non sa *quali* devono durare.
@@ -579,7 +578,7 @@ struttura senza valori.
 php bin/tick.php              un passo del mondo
 php bin/simula.php            quindici anni a vuoto, con le statistiche
 php bin/diagnostica.php       la salute del modello
-php bin/prova.php             le prove automatiche (486, qualche minuto)
+php bin/prova.php             le prove automatiche (497, qualche minuto)
 php bin/realismo.php          ventuno grandezze contro le fonti
 php bin/audit.php             che cosa è dichiarato e mai usato
 php bin/migra.php             applica le migrazioni non ancora applicate

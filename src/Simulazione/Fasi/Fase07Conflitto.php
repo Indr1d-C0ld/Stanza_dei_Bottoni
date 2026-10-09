@@ -42,7 +42,7 @@ final class Fase07Conflitto implements Fase
         $perTick  = 1.0 / $tickAnno;
         $attrito  = $c->calibrazione->numero('insurrezione.attrito_anno', 0.25) * $perTick;
         $quotaCaduti = $c->calibrazione->numero('conflitto.quota_caduti', 0.33);
-        $civili      = $c->calibrazione->numero('conflitto.civili_per_militare', 1.0);
+        $civili      = $c->calibrazione->numero('conflitto.civili_per_militare', 0.09);
         $quotaAiuti  = $c->calibrazione->numero('conflitto.quota_aiuti_anno', 0.07);
         $sogliaAiuti = $c->calibrazione->numero('conflitto.soglia_aiuti', 0.25);
         $armistizioBase     = $c->calibrazione->numero('conflitto.armistizio_base_anno', 0.10);

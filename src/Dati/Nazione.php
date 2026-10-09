@@ -203,6 +203,10 @@ final class Nazione
         public float  $censura = 0.5,
         /** La forza del governo al seme: il metro del reclutamento dei ribelli (fase 05). */
         public float  $potenzaIniziale = 0.0,
+        /** Quanto la guerra costava alla crescita al tick prima, oltre a quella del seme (fase 03). */
+        public float  $costoGuerra = 0.0,
+        /** Il rimbalzo della crescita dopo una guerra finita, che si spegne in qualche anno (fase 03). */
+        public float  $rimbalzo = 0.0,
         public int    $ingerenzaTick = 0,
         public string $ingerenzaDa = '',
         // Le quattro dipendenze contemporanee. Restano a zero finche' non

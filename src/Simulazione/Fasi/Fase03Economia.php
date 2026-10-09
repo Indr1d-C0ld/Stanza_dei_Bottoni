@@ -97,6 +97,8 @@ final class Fase03Economia implements Fase
         $rientro         = $cal->numero('economia.rientro_strutturale', 0.60);
         $orizzonte       = $cal->numero('economia.orizzonte_proiezioni', 5.0);
         $ritornoMedia    = $cal->numero('economia.ritorno_alla_media_anno', 0.14);
+        $quotaRimbalzo   = $cal->numero('economia.rimbalzo.quota', 0.8);
+        $durataRimbalzo  = max(0.1, $cal->numero('economia.rimbalzo.anni', 4.0));
         $margine         = $cal->numero('economia.margine_strutturale', 0.02);
         $recuperoUomini  = $cal->numero('economia.recupero_uomini_anno', 0.35);
         $elasticitaUomini = $cal->numero('economia.elasticita_uomini', 0.5);
@@ -262,7 +264,25 @@ final class Fase03Economia implements Fase
                 $livello >= 3 => 0.002,
                 default       => 0.0,
             };
-            $crescita -= max(0.0, $costoGuerra($n->netPeace) - $costoGuerra($n->conflittoIniziale));
+            $costoOra = max(0.0, $costoGuerra($n->netPeace) - $costoGuerra($n->conflittoIniziale));
+            $crescita -= $costoOra;
+
+            // IL RIMBALZO. Quando una guerra finisce, o si attenua, l'economia
+            // recupera: nei cinque anni dopo le 49 guerre finite nel 1990-2019
+            // (UCDP, episodi oltre i mille morti l'anno; crescita del FMI) i
+            // paesi sono cresciuti in media 1,9 punti sopra la mediana
+            // mondiale, 0,8 di mediana — dopo aver perso 2,0 punti negli ultimi
+            // tre anni di guerra, che e' il costo di Collier qui sopra. Prima
+            // la pace non ricostruiva niente (docs/34). Solo per le guerre
+            // oltre quelle del seme: la ripresa di quelle il FMI l'ha gia'
+            // messa nelle sue proiezioni, come ci aveva messo la guerra.
+            $calo = $n->costoGuerra - $costoOra;
+            if ($calo > 0.0) {
+                $n->rimbalzo += $quotaRimbalzo * $calo;
+            }
+            $n->costoGuerra = $costoOra;
+            $crescita += $n->rimbalzo;
+            $n->rimbalzo *= exp(-$perTick / $durataRimbalzo);
 
             // Sanzioni ed embarghi in corso. Non e' piu' un numero che decade
             // da solo: e' la somma di quel che costa, adesso, ogni rubinetto

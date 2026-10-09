@@ -42,7 +42,7 @@ Prove::gruppo('Una guerra fa i morti di una guerra, non quelli di un secolo');
 $cal2   = Calibrazione::carica($radice, 'osservazione');
 $attrito = $cal2->numero('insurrezione.attrito_anno', 0.25) / $tickAnno;
 $quota   = $cal2->numero('conflitto.quota_caduti', 0.33);
-$civili  = $cal2->numero('conflitto.civili_per_militare', 1.0);
+$civili  = $cal2->numero('conflitto.civili_per_militare', 0.09);
 
 $m = Mondo::daSeme($radice . '/db/seed/nazioni.csv');
 $a = $m->nazioni['CHN'];

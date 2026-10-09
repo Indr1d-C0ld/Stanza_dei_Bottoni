@@ -46,6 +46,19 @@ return [
         // crescita di un decennio e quella del successivo, cioe' circa il 14%
         // l'anno di ritorno alla media (docs/30).
         'orizzonte_proiezioni'     => 5.0,
+
+        // Il rimbalzo dopo una guerra (fase 03, docs/34). Quando il costo di
+        // una guerra cala, la crescita guadagna questa quota del calo, e il
+        // guadagno si spegne con questa costante di tempo. Misurato sulle 49
+        // guerre finite nel 1990-2019 (UCDP; FMI): nei cinque anni dopo, 1,9
+        // punti l'anno sopra la mediana mondiale in media, 0,8 di mediana
+        // (il Kuwait e la Bosnia tirano la media). Con 0,8 e quattro anni una
+        // guerra civile piena che finisce da' circa 1,8 punti subito e 1,1 di
+        // media sui cinque anni.
+        'rimbalzo' => [
+            'quota' => 0.8,
+            'anni'  => 4.0,
+        ],
         'ritorno_alla_media_anno'  => 0.14,
 
         // Il ciclo economico (fase 03, docs/30): un'onda lenta in tre pezzi.
@@ -266,13 +279,17 @@ return [
         // prigioniero o disperso: il rapporto caduti/perdite totali sta intorno
         // a uno su tre da Verdun in poi.
         'quota_caduti'        => 0.33,
-        // Civili morti per ogni militare caduto. Eckhardt, ripreso dal CICR:
-        // la quota civile dei morti di guerra resta intorno al 50% da tre
-        // secoli, cioe' circa un civile per militare. Nelle guerre totali sale
-        // a 2 (seconda guerra mondiale), nelle guerre aeree asimmetriche
-        // scende sotto 0,2: uno non copre l'altro, e la media e' la scelta
-        // meno sbagliata per un modello che non distingue i tipi di guerra.
-        'civili_per_militare' => 1.0,
+        // Civili morti nei combattimenti per ogni combattente caduto, nelle
+        // guerre fra Stati. Era 1,0, la media di Eckhardt su tre secoli, che
+        // comprende le guerre totali; nelle guerre fra Stati di oggi l'UCDP
+        // GED v26.1 ne conta 0,09 (1989-2025, bin/misura_civili.php): 0,03
+        // nella guerra russo-ucraina dal 2023, 0,28 nel 2022 di Mariupol. Con
+        // 1,0 la guerra russo-ucraina del modello faceva 150.000 morti l'anno
+        // contro i 76.000-102.000 dell'UCDP, che i civili uccisi in battaglia li
+        // conta gia'; con 0,09 ne fa circa 82.000 (docs/34). Le uccisioni
+        // deliberate di civili (la violenza unilaterale) sono un'altra cosa,
+        // e il modello non le ha.
+        'civili_per_militare' => 0.09,
         // Gli aiuti militari a un paese in guerra: la quota del proprio
         // bilancio militare annuo che manda chi parteggia pienamente, e
         // l'inclinazione minima per parteggiare (differenza di affinita' su

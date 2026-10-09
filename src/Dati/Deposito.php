@@ -258,7 +258,7 @@ final class Deposito
             'reputazione_sporca', 'consumo_pro_capite_prec', 'azioni_in_volo',
             'cambi_esecutivo', 'cambi_irregolari', 'vittorie_insorti', 'scandali_subiti',
             'anno_ultimo_cambio', 'prossima_elezione', 'mandato_tick',
-            'ingerenza_tick', 'ingerenza_da', 'repressione', 'censura',
+            'ingerenza_tick', 'ingerenza_da', 'repressione', 'censura', 'costo_guerra', 'rimbalzo',
         ];
         $segnaposti = '(?, ?, ' . implode(', ', array_fill(0, count($campi), '?')) . ')';
         $blocchi = [];
@@ -282,7 +282,7 @@ final class Deposito
                 $n->reputazioneSporca, $n->consumoProCapitePrec, $n->azioniInVolo,
                 $n->cambiEsecutivo, $n->cambiIrregolari, $n->vittorieInsorti, $n->scandaliSubiti,
                 $n->annoUltimoCambio, $n->prossimaElezione, $n->mandatoTick,
-                $n->ingerenzaTick, $n->ingerenzaDa, $n->repressione, $n->censura);
+                $n->ingerenzaTick, $n->ingerenzaDa, $n->repressione, $n->censura, $n->costoGuerra, $n->rimbalzo);
         }
         if ($blocchi === []) {
             return;
@@ -665,6 +665,8 @@ final class Deposito
             $n->ingerenzaDa         = (string) ($r['ingerenza_da'] ?? '');
             // Zero vuol dire «mai salvato» (righe anteriori alla migrazione
             // 0036): resta il valore del seme, che non e' mai zero esatto.
+            $n->costoGuerra = (float) ($r['costo_guerra'] ?? 0.0);
+            $n->rimbalzo    = (float) ($r['rimbalzo'] ?? 0.0);
             if ((float) ($r['repressione'] ?? 0.0) > 0.0) {
                 $n->repressione = (float) $r['repressione'];
                 $n->censura     = (float) $r['censura'];

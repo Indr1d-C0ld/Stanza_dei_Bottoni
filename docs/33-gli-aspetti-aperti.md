@@ -142,12 +142,9 @@ adesso rimette anche i giocatori al loro posto.
 
 ## Che cosa resta aperto
 
-- **Un civile per militare** in tutte le guerre. Nella guerra russo-ucraina i
-  civili sono molti meno, ma il modello conta anche meno caduti militari delle
-  stime indipendenti (circa 75.000 l'anno, contro stime che per le due parti
-  insieme vanno da circa 100.000 in su), e i due errori si compensano nel
-  totale. Correggerne uno solo peggiorerebbe la cifra che si vede.
-- **La pace non ricostruisce.** Una guerra che finisce non dà alcun rimbalzo
-  alla crescita.
+- **Un civile per militare** in tutte le guerre, e **la pace non
+  ricostruisce**: risolti in `docs/34`, coi dati dell'UCDP e del FMI. (Qui
+  scrivevo che i civili in eccesso compensavano caduti militari troppo pochi:
+  era sbagliato, i caduti militari erano gia' quasi giusti.)
 - **Il 38% dei rapporti dichiarati** resta scritto a mano, finché non c'è una
   fonte di eventi abbastanza densa.
