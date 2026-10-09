@@ -618,8 +618,11 @@ return [
             // 2010-2025 (UCDP/PRIO; Russia-Ucraina due volte, Armenia-
             // Azerbaigian due volte, Kirghizistan-Tagikistan).
             // Con 1 uscivano due guerre in sei mondi, con 5 tre per mondo, con 10
-            // da quattro a otto.
-            'condizionamento' => 6.0,
+            // da quattro a otto. Con le affinita' misurate (docs/32) le coppie
+            // ostili sono di piu': 6 ne faceva cinque-sette, 4,5 ne fa tre-nove,
+            // media cinque — Russia-Ucraina, Arabia Saudita-Yemen,
+            // Azerbaigian-Armenia, Cina-Taiwan, Etiopia-Eritrea, Iran-Afghanistan.
+            'condizionamento' => 4.5,
         ],
         // [FABBRICATO] la durata tipica di un'operazione coperta, in tick. Serve
         // a normalizzare la probabilita' di sventarla: la prova si ripete a

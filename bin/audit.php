@@ -112,7 +112,9 @@ $attesi = ['nazioni.csv', 'democrazia.php', 'disuguaglianza.php', 'esclusione.ph
            'nomi-italiani.php', 'nomi-personaggi.php', 'confini.csv',
            'conflitti-noti.php', 'guerre-note.php',
            // docs/30 e docs/31: FMI, Banca Mondiale, Nunn e Puga, COW e UCDP, V-Dem
-           'crescita.php', 'governo.php', 'terreno.php', 'rivalita.php', 'repressione.php'];
+           'crescita.php', 'governo.php', 'terreno.php', 'rivalita.php', 'repressione.php',
+           // docs/32: ATOP e i voti all'ONU
+           'patti-difesa.php', 'onu.php'];
 foreach ($attesi as $s) {
     $p = $radice . '/db/seed/' . $s;
     if (!is_file($p)) {

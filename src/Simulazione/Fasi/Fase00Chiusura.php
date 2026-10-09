@@ -670,7 +670,7 @@ final class Fase00Chiusura implements Fase
         $tassoRivali   = $cal->numero('dottrina.guerra.rivalita', 0.0053);
         $tassoDurature = $cal->numero('dottrina.guerra.duratura', 0.0126);
         $tassoAltri    = $cal->numero('dottrina.guerra.senza_rivalita', 0.00053);
-        $condizionamento = $cal->numero('dottrina.guerra.condizionamento', 6.0);
+        $condizionamento = $cal->numero('dottrina.guerra.condizionamento', 4.5);
         $attesa = (int) ($d['attesa'] ?? 260);
         $ruolo = \App\Dati\Gabinetto::DOMINIO_DI['mil'];
 

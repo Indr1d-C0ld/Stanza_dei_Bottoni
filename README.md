@@ -366,7 +366,8 @@ scaduto.
 | **V-Dem Institute**, Università di Göteborg — *Liberal Democracy Index* | l'asse democrazia-autocrazia: chi vota, quando un ricambio è irregolare, chi si disarma, quanto un regime stringe sull'informazione | 2025 |
 | **Banca Mondiale** (PIP/WDI) — *indice di Gini* | la disuguaglianza verticale, da cui il consumo mediano | anno mediano 2021 |
 | **Ethnic Power Relations (EPR) Core**, ETH Zurigo | la disuguaglianza orizzontale: quanta popolazione è esclusa dal potere esecutivo, e in quanti gruppi | 2021 |
-| **Correlates of War** — *Formal Alliances v4.1* | gli obblighi di trattato veri, per diade direzionata | 2012, con gli allargamenti NATO successivi aggiunti a mano e datati, e gli scioglimenti che il dataset non sa: l'Ucraina fuori dalla CSI (2018), la Georgia (2009) |
+| **ATOP v5.1** (Leeds et al.) — *Alliance Treaty Obligations and Provisions* | gli obblighi di trattato veri, membro per membro, per diade direzionata, e se il patto è bilaterale, integrato o sulla carta | 2018, con i patti successivi aggiunti a mano e datati (Russia-Corea del Nord 2024, Arabia Saudita-Pakistan 2025, Turchia-Azerbaigian 2021, Sahel 2023, NATO fino alla Svezia) e gli scioglimenti (CSI, CSTO, ECOWAS, Algeria-Marocco, Ruanda-Congo, Armenia-Azerbaigian) |
+| **Voeten**, *UNGA Ideal Point Estimates 1946-2025* (Bailey, Strezhnev & Voeten 2017, JCR 61(2)) | quanto ogni Stato vota con l'Occidente o col Sud del mondo: con i patti e le dispute, l'affinità di partenza di ogni coppia, coi pesi stimati sui rapporti dichiarati (R² 0,62) | 2023-2025 |
 | **UCDP/PRIO** — *Armed Conflict Dataset* | i conflitti armati in corso al momento della divergenza | 2024 |
 | **FMI** — *World Economic Outlook*, indicatore NGDP_RPCH | la crescita recente (mediana 2023-25) e la tendenza di medio periodo (proiezioni 2026-30) di ogni paese, al posto delle voci del Factbook ferme al 2018 per alcuni | aprile 2026 |
 | **Banca Mondiale** — *Worldwide Governance Indicators* | stabilità politica, efficacia del governo, stato di diritto: dove riposa la legittimità di ciascun paese, e quanto è esposto alla guerra civile | edizione 2026, media 2023-25; Taiwan, assente dall'API, prende la Corea del Sud |
@@ -409,7 +410,7 @@ scaduto.
 ```bash
 php bin/realismo.php --anni=15      # ventuno grandezze contro la loro fascia
 php bin/audit.php                   # che cosa è dichiarato e mai usato
-php bin/prova.php                   # quattrocentosessantasette prove
+php bin/prova.php                   # quattrocentottantasei prove
 ```
 
 `bin/realismo.php` confronta ventuno grandezze con la fascia in cui il mondo
@@ -482,6 +483,10 @@ poveri sbagliati. Adesso il seme legge il FMI e la Banca Mondiale, e le guerre
 civili seguono i coefficienti stimati da Fearon. Ventuno grandezze su ventuno in
 fascia, su otto mondi.
 
+**`docs/32-onu-e-atop.md`** è il secondo: le alleanze di ATOP, aggiornate riga
+per riga al 2025, e l'affinità di ogni coppia misurata dai voti all'ONU, dai
+patti e dalle dispute, coi pesi stimati invece che scelti.
+
 **`docs/31-i-dati-del-mondo.md`** è il primo blocco di dati che ne è seguito:
 la guerra fra Stati non è più una lotteria ma un rischio annuo per rivalità,
 misurato sulle dispute vere del Correlates of War e dell'UCDP, e cade sulle
@@ -525,9 +530,10 @@ sapeva produrre.
 - **Metà dei conflitti seminati si spegne in quindici anni**, e altrettanti ne
   nascono altrove. In parte è giusto — i conflitti veri finiscono — ma il
   modello non sa *quali* devono durare.
-- **Le affinità di partenza** vengono ancora da una formula ideologica più
-  rapporti scritti a mano, e le alleanze dal Correlates of War del 2012: il
-  prossimo blocco di dati sono i voti all'ONU e ATOP (`docs/31`).
+- **Le affinità di partenza spiegano il 62% dei rapporti dichiarati.** Il
+  resto sono rivalità senza scontri diretti — l'Arabia Saudita e l'Iran, il
+  Giappone e la Corea del Nord — e lì restano i rapporti scritti a mano
+  (`docs/32`).
 - **La U rovesciata di Goldstone non raggiunge la sua magnitudine.** Le
   democrazie piene stanno correttamente a 0,2 volte le autocrazie, ma i regimi
   parziali restano intorno a 1 invece di 5-30. Crawford e Goldstone sono in
@@ -572,7 +578,7 @@ struttura senza valori.
 php bin/tick.php              un passo del mondo
 php bin/simula.php            quindici anni a vuoto, con le statistiche
 php bin/diagnostica.php       la salute del modello
-php bin/prova.php             le prove automatiche (467, qualche minuto)
+php bin/prova.php             le prove automatiche (486, qualche minuto)
 php bin/realismo.php          ventuno grandezze contro le fonti
 php bin/audit.php             che cosa è dichiarato e mai usato
 php bin/migra.php             applica le migrazioni non ancora applicate

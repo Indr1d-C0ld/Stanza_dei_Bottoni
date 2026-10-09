@@ -482,9 +482,14 @@ final class Mondo
             ? @include $this->cartellaSeme . '/alleanze.php'
             : false;
         if (is_array($alleanzeNote)) {
-            foreach (array_keys($alleanzeNote) as $chiave) {
+            foreach ($alleanzeNote as $chiave => $gradino) {
                 $pezzi = explode('|', (string) $chiave);
-                if (count($pezzi) !== 2) {
+                // Solo le promesse di difesa (e le basi) fanno nascere una
+                // relazione: ATOP porta anche migliaia di patti di non
+                // aggressione e di consultazione fra paesi che non hanno altro
+                // da spartire, e la matrice raddoppierebbe (docs/32). Dove la
+                // relazione c'e' gia', il loro gradino si applica lo stesso.
+                if (count($pezzi) !== 2 || (int) $gradino < 64) {
                     continue;
                 }
                 $a = $this->nazioni[$pezzi[0]] ?? null;
@@ -493,8 +498,47 @@ final class Mondo
             }
         }
 
+        // E ogni rivalita': un'inimicizia con una storia di dispute e' un
+        // rapporto anche fra paesi che non confinano e non contano nulla.
+        foreach (array_keys($this->rivalita) as $chiave) {
+            [$x, $z] = explode('|', (string) $chiave);
+            if (isset($this->nazioni[$x], $this->nazioni[$z])) {
+                $aggiungi($this->nazioni[$x], $this->nazioni[$z]);
+                $aggiungi($this->nazioni[$z], $this->nazioni[$x]);
+            }
+        }
+
+        // L'affinita' strutturale si MISURA: voti all'ONU, patti di difesa,
+        // dispute militarizzate, coi pesi stimati da bin/importa_onu.php sui
+        // rapporti dichiarati (docs/32). Prima era la formula ideologica qui
+        // sotto per tutti, e fuori dai 137 rapporti scritti a mano quasi ogni
+        // coppia del mondo valeva 25. Resta per chi non vota all'ONU (Taiwan,
+        // il Kosovo).
+        $onu = $this->cartellaSeme !== '' ? @include $this->cartellaSeme . '/onu.php' : false;
+        $punti = is_array($onu) ? (array) ($onu['punti'] ?? []) : [];
+        $pesi  = is_array($onu) ? (array) ($onu['pesi'] ?? []) : [];
+        $patti = $this->cartellaSeme !== '' ? @include $this->cartellaSeme . '/patti-difesa.php' : false;
+        $patti = is_array($patti) ? $patti : [];
+
         foreach ($coppie as [$a, $b]) {
             $confinanti = $this->relazioni->confinanti($a->iso3, $b->iso3);
+
+            if ($pesi !== [] && isset($punti[$a->iso3], $punti[$b->iso3])) {
+                $patto = $patti[$a->iso3 . '|' . $b->iso3] ?? $patti[$b->iso3 . '|' . $a->iso3] ?? '';
+                $rivali = strcmp($a->iso3, $b->iso3) < 0 ? $a->iso3 . '|' . $b->iso3 : $b->iso3 . '|' . $a->iso3;
+                $affinita = (float) $pesi['costante']
+                    + (float) $pesi['distanza'] * abs((float) $punti[$a->iso3] - (float) $punti[$b->iso3])
+                    + ($patto === 'bilaterale' ? (float) $pesi['bilaterale'] : 0.0)
+                    + ($patto === 'integrato' ? (float) ($pesi['integrato'] ?? 0.0) : 0.0)
+                    + (str_starts_with($patto, 'multilaterale:')
+                        ? (float) $pesi['multilaterale'] / sqrt(max(1, (int) explode(':', $patto)[1] - 1)) : 0.0)
+                    + (float) $pesi['dispute'] * min(10, $this->rivalita[$rivali] ?? 0);
+                $affinita = max(-127.0, min(127.0, $affinita));
+                $r = new Relazione(affinita: $affinita, confinanti: $confinanti, ancora: $affinita);
+                $r->aggiornaUmore();
+                $this->relazioni->imposta($a->iso3, $b->iso3, $r);
+                continue;
+            }
 
             // Distanza ideologica. Il valore di riposo fra due Stati che non
             // hanno nulla da spartire e' l'INDIFFERENZA, non l'amicizia:

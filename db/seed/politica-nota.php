@@ -17,6 +17,13 @@ declare(strict_types=1);
  *
  * Va sostituita, quando avremo integrato le fonti, con V-Dem per gli
  * orientamenti e Correlates of War per i rapporti bilaterali.
+ *
+ * I RAPPORTI, da ottobre 2026 (docs/32), non sono piu' la sola fonte:
+ * l'affinita' di ogni coppia si misura dai voti all'ONU, dai patti di ATOP e
+ * dalle dispute militarizzate, coi pesi stimati proprio su questi rapporti
+ * (bin/importa_onu.php, R² 0,62). Restano qui, e vincono, dove i dati non
+ * vedono la rivalita': l'Arabia Saudita e l'Iran, il Giappone e la Corea del
+ * Nord, i Baltici e la Russia non si sono mai sparati addosso direttamente.
  */
 
 return [
