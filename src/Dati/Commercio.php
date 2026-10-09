@@ -74,6 +74,9 @@ final class Commercio
      */
     private const TETTO_QUOTA = 0.55;
 
+    /** I giri del riequilibrio RAS fra la gravita' e le esportazioni vere (docs/35). */
+    private const GIRI_RIEQUILIBRIO = 25;
+
     /**
      * Quanto si concentra un settore.
      *
@@ -134,13 +137,50 @@ final class Commercio
 
     // ---------------------------------------------------------------- costruzione
 
-    /** @param array<string,array<string,float>> $vocazioni */
+    /**
+     * Quanto ciascun paese esporta e importa davvero, per settore, nelle unita'
+     * del PIL del modello (Banca Mondiale, db/seed/commercio-dati.php). Dove
+     * c'e', vince sulle inclinazioni e sull'apertura qui sotto (docs/35).
+     *
+     * @var array<string,array<string,float>>
+     */
+    public array $esportaVero = [];
+    /** @var array<string,array<string,float>> */
+    public array $importaVero = [];
+
+    /**
+     * Chi vende a chi, davvero: bilaterale[cliente][fornitore] in milioni di
+     * dollari di beni (FMI, IMTS; db/seed/commercio-bilaterale.php). Dove c'e',
+     * prende il posto della gravita' (docs/35).
+     *
+     * @var array<string,array<string,float>>
+     */
+    public array $bilaterale = [];
+
+    /**
+     * @param array<string,array<string,float>> $vocazioni
+     * @param array<string,array{esporta:array<string,float>,importa:array<string,float>}> $dati
+     */
     public static function iniziale(Mondo $mondo, array $vocazioni = [],
-        float $morso = 0.42, float $quotaFornitore = 0.45): self
+        float $morso = 0.42, float $quotaFornitore = 0.45, array $dati = [], array $bilaterale = []): self
     {
         $c = new self();
         $c->morso = $morso;
         $c->quotaFornitore = $quotaFornitore;
+        foreach ($dati as $iso => $d) {
+            $n = $mondo->nazioni[$iso] ?? null;
+            if ($n === null) {
+                continue;
+            }
+            foreach (self::SETTORI as $s) {
+                $c->esportaVero[$iso][$s] = (float) ($d['esporta'][$s] ?? 0.0) * $n->pil;
+                $c->importaVero[$iso][$s] = (float) ($d['importa'][$s] ?? 0.0) * $n->pil;
+            }
+        }
+        foreach ($bilaterale as $coppia => $valore) {
+            [$fornitore, $cliente] = explode('|', (string) $coppia);
+            $c->bilaterale[$cliente][$fornitore] = (float) $valore;
+        }
         $c->profili($mondo, $vocazioni);
         $c->intreccia($mondo);
         return $c;
@@ -207,6 +247,18 @@ final class Commercio
                 'finanza'     => $peso * (0.030 + 0.080 * $ricch),
                 'manifattura' => $peso * 0.120,
             ];
+            // Coi dati veri il fabbisogno e' l'uso del settore: quel che si
+            // importa davvero piu' quel che si produce in casa e non si esporta.
+            // La formula qui sopra era un fabbisogno nozionale, e messo accanto
+            // ai flussi veri dava dipendenze senza senso: la Bielorussia al 100%
+            // dalla Russia per i manufatti, la Germania al 3% dal suo primo
+            // fornitore di energia (docs/35).
+            if (isset($this->importaVero[$n->iso3])) {
+                foreach (self::SETTORI as $s) {
+                    $this->fabbisogno[$n->iso3][$s] = $this->importaVero[$n->iso3][$s]
+                        + max(0.0, $this->produzione[$n->iso3][$s] - ($this->esportaVero[$n->iso3][$s] ?? 0.0));
+                }
+            }
         }
     }
 
@@ -249,101 +301,253 @@ final class Commercio
                     $offerta[$iso] = $vende;
                 }
             }
+            // Dove ci sono i dati, l'offerta e' l'esportazione vera del settore:
+            // il Belgio vende il 45% del suo PIL in manufatti, l'Arabia Saudita
+            // il 22% in petrolio — non quel che le inclinazioni ne deducevano.
+            foreach ($this->esportaVero as $iso => $settori) {
+                if (($settori[$settore] ?? 0.0) > 0.0) {
+                    $offerta[$iso] = $settori[$settore];
+                } else {
+                    unset($offerta[$iso]);
+                }
+            }
             arsort($offerta);
-            // Oltre i primi sessanta il resto e' polvere, e il costo si triplica.
-            $offerta = array_slice($offerta, 0, 60, true);
             if ($offerta === []) {
                 continue;
             }
 
+            // Quanto ciascun cliente compra fuori in questo settore.
+            $domanda = [];
             foreach ($elenco as $cliente) {
-                // Quanto si compra fuori. Non e' solo il buco fra quel che
-                // serve e quel che si produce: un'economia aperta compra
-                // all'estero anche quel che sa fare: Francia e Germania si
-                // vendono automobili a vicenda. Senza questo, fra due paesi che
-                // producono entrambi un settore non esisteva nessun flusso, e
-                // un embargo fra loro costava esattamente zero a tutti e due.
+                if (isset($this->importaVero[$cliente])) {
+                    $domanda[$cliente] = $this->importaVero[$cliente][$settore] ?? 0.0;
+                    continue;
+                }
+                // Senza dati: quanto si compra fuori. Non e' solo il buco fra
+                // quel che serve e quel che si produce: un'economia aperta
+                // compra all'estero anche quel che sa fare — Francia e Germania
+                // si vendono automobili a vicenda.
                 $apertura = $this->apertura[$cliente] ?? 0.30;
-                $manca = max(
+                $domanda[$cliente] = max(
                     $this->fabbisogno[$cliente][$settore] * $apertura,
                     $this->fabbisogno[$cliente][$settore] - $this->produzione[$cliente][$settore],
                 );
-                if ($manca <= 0.0) {
-                    continue;
-                }
-
-                // Il peso di ogni fornitore possibile.
-                $pesi = [];
-                foreach ($offerta as $fornitore => $avanzo) {
-                    if ($fornitore === $cliente) {
-                        continue;
-                    }
-                    // L'avanzo conta meno che proporzionalmente: essere il
-                    // doppio piu' grande non vuol dire vendere il doppio, o un
-                    // solo paese finirebbe per fornire mezzo mondo.
-                    $pesi[$fornitore] = $avanzo ** $esponente
-                        / $this->attrito($mondo, $cliente, $fornitore);
-                }
-                if ($pesi === []) {
-                    continue;
-                }
-                arsort($pesi);
-                // Un paese non compra da centottanta posti: da pochi, e quanto
-                // pochi dipende da che cosa compra.
-                $pesi = array_slice($pesi, 0, $quanti, true);
-                $somma = array_sum($pesi);
-                if ($somma <= 0.0) {
-                    continue;
-                }
-
-                // Nessuno mette tutte le uova in un paniere solo. Il tetto si
-                // applica e quel che avanza si ridistribuisce, due volte:
-                // basta a togliere i casi assurdi senza appiattire tutto.
-                $quote = [];
-                foreach ($pesi as $fornitore => $p) {
-                    $quote[$fornitore] = $p / $somma;
-                }
-                for ($giro = 0; $giro < 2; $giro++) {
-                    $eccesso = 0.0;
-                    $sotto   = 0.0;
-                    foreach ($quote as $fornitore => $q) {
-                        if ($q > self::TETTO_QUOTA) {
-                            $eccesso += $q - self::TETTO_QUOTA;
-                            $quote[$fornitore] = self::TETTO_QUOTA;
-                        } else {
-                            $sotto += $q;
-                        }
-                    }
-                    if ($eccesso <= 0.0 || $sotto <= 0.0) {
-                        break;
-                    }
-                    foreach ($quote as $fornitore => $q) {
-                        if ($q < self::TETTO_QUOTA) {
-                            $quote[$fornitore] = $q + $eccesso * ($q / $sotto);
-                        }
-                    }
-                }
-
-                foreach ($quote as $fornitore => $frazione) {
-                    $quantita = $manca * $frazione;
-                    if ($quantita < $manca * 0.02) {
-                        continue;   // sotto il due per cento non e' una dipendenza
-                    }
-                    $this->flusso[$fornitore][$cliente][$settore] = $quantita;
-                    $this->exportTotale[$fornitore] = ($this->exportTotale[$fornitore] ?? 0.0) + $quantita;
-
-                    // Quota del fabbisogno che passa da questo fornitore: e' la
-                    // dipendenza. La sostituibilita' e' il suo contrario,
-                    // temperato da quanto quel settore si rimpiazza in fretta.
-                    $quota = $quantita / max(1.0, $this->fabbisogno[$cliente][$settore]);
-                    $this->sostituibilita[$fornitore][$cliente][$settore] = (int) round(
-                        100.0 * (1.0 - min(1.0, $quota)) * self::FACILITA_SETTORE[$settore]);
-                }
             }
+
+            // IL RIEQUILIBRIO. La gravita' sceglie chi compra da chi, ma da sola
+            // fa vendere a ciascuno quel che taglia e posizione suggeriscono,
+            // non quel che esporta davvero. Si equilibra quindi la matrice di
+            // gravita' COMPLETA sui due margini — quanto ciascuno esporta,
+            // quanto ciascuno importa — col metodo classico delle tavole di
+            // commercio, il fitting proporzionale iterativo (RAS: Stone 1961;
+            // Bacharach 1970), che su una matrice positiva converge. Solo dopo
+            // si tengono, per ogni cliente, i suoi fornitori principali
+            // (docs/35). Correggere i fattori sulla rete gia' sfoltita
+            // oscillava: cambiando un fattore cambiavano le classifiche.
+            $peso = $this->esportaVero !== []
+                ? $this->equilibra($mondo, $settore, $offerta, $domanda, $esponente)
+                : [];
+            $this->alloca($mondo, $settore, $offerta, $domanda, $peso, $esponente, $quanti, true);
         }
     }
 
-    /** Quanto costa far viaggiare la merce fra due paesi. */
+    /**
+     * Il peso di partenza di un fornitore per un cliente, in un settore.
+     *
+     * Dove il cliente ha i dati bilaterali del FMI, e' quanto quel fornitore
+     * gli vende davvero, ripartito sui settori secondo la composizione delle
+     * esportazioni del fornitore. Altrimenti e' la gravita': il fornitore piu'
+     * grosso e piu' vicino vince.
+     */
+    private function pesoBase(Mondo $mondo, string $cliente, string $fornitore, string $settore,
+        float $offerta, float $esponente): float
+    {
+        if (isset($this->bilaterale[$cliente])) {
+            $flusso = $this->bilaterale[$cliente][$fornitore] ?? 0.0;
+            if ($flusso <= 0.0) {
+                return 0.0;
+            }
+            $composizione = $this->esportaVero[$fornitore] ?? $this->produzione[$fornitore] ?? [];
+            $totale = array_sum($composizione);
+            return $flusso * ($totale > 0.0 ? ($composizione[$settore] ?? 0.0) / $totale : 0.2);
+        }
+        return $offerta ** $esponente / $this->attrito($mondo, $cliente, $fornitore);
+    }
+
+    /**
+     * Il fitting proporzionale iterativo: trova per ogni fornitore il
+     * moltiplicatore che, dentro i pesi di partenza, gli fa vendere quel che
+     * esporta davvero mentre ogni cliente compra quel che importa.
+     *
+     * @param array<string,float> $offerta
+     * @param array<string,float> $domanda
+     * @return array<string,float> il moltiplicatore di ogni fornitore
+     */
+    private function equilibra(Mondo $mondo, string $settore, array $offerta, array $domanda, float $esponente): array
+    {
+        $peso = array_fill_keys(array_keys($offerta), 1.0);
+        $totaleDomanda = array_sum($domanda);
+        $totaleOfferta = array_sum($offerta);
+        if ($totaleDomanda <= 0.0 || $totaleOfferta <= 0.0) {
+            return $peso;
+        }
+        // I due totali del mondo non coincidono (dati diversi, paesi senza
+        // dati): si porta l'offerta sulla domanda, che e' quel che conta per
+        // la dipendenza di chi compra.
+        $obiettivo = [];
+        foreach ($offerta as $f => $v) {
+            $obiettivo[$f] = $v * $totaleDomanda / $totaleOfferta;
+        }
+        $base = [];
+        foreach ($domanda as $cliente => $m) {
+            if ($m <= 0.0) {
+                continue;
+            }
+            foreach ($offerta as $f => $v) {
+                if ($f !== $cliente) {
+                    $g = $this->pesoBase($mondo, $cliente, $f, $settore, $v, $esponente);
+                    if ($g > 0.0) {
+                        $base[$cliente][$f] = $g;
+                    }
+                }
+            }
+        }
+        for ($giro = 0; $giro < self::GIRI_RIEQUILIBRIO; $giro++) {
+            $venduto = [];
+            foreach ($base as $cliente => $riga) {
+                $somma = 0.0;
+                foreach ($riga as $f => $g) {
+                    $somma += $g * $peso[$f];
+                }
+                if ($somma <= 0.0) {
+                    continue;
+                }
+                foreach ($riga as $f => $g) {
+                    $venduto[$f] = ($venduto[$f] ?? 0.0) + $domanda[$cliente] * $g * $peso[$f] / $somma;
+                }
+            }
+            foreach ($peso as $f => $p) {
+                if (isset($this->esportaVero[$f]) && ($venduto[$f] ?? 0.0) > 0.0) {
+                    $peso[$f] = $p * $obiettivo[$f] / $venduto[$f];
+                }
+            }
+        }
+        return $peso;
+    }
+
+    /**
+     * Distribuisce la domanda di un settore fra i fornitori, coi pesi di
+     * partenza e i moltiplicatori del riequilibrio. Restituisce quanto vende
+     * ciascuno; se $scrivi, registra flussi, esportazioni e sostituibilita'.
+     *
+     * @param array<string,float> $offerta
+     * @param array<string,float> $domanda
+     * @param array<string,float> $moltiplicatore
+     * @return array<string,float>
+     */
+    private function alloca(Mondo $mondo, string $settore, array $offerta, array $domanda, array $moltiplicatore,
+        float $esponente, int $quanti, bool $scrivi): array
+    {
+        $venduto = [];
+        $candidati = [];
+        $totale = [];
+        foreach ($domanda as $cliente => $manca) {
+            if ($manca <= 0.0) {
+                continue;
+            }
+
+            // Il peso di ogni fornitore possibile.
+            $pesi = [];
+            foreach ($offerta as $fornitore => $avanzo) {
+                if ($fornitore === $cliente) {
+                    continue;
+                }
+                $g = $this->pesoBase($mondo, $cliente, $fornitore, $settore, $avanzo, $esponente)
+                    * ($moltiplicatore[$fornitore] ?? 1.0);
+                if ($g > 0.0) {
+                    $pesi[$fornitore] = $g;
+                }
+            }
+            if ($pesi === []) {
+                continue;
+            }
+            arsort($pesi);
+            // Un paese non compra da centottanta posti: da pochi, e quanto
+            // pochi dipende da che cosa compra. Ma dove i pesi vengono dai dati
+            // la concentrazione c'e' gia', ed e' quella vera: il taglio ai
+            // primi N toglieva di mezzo gli esportatori piccoli — la
+            // Slovacchia, la Slovenia, i Baltici — che vendono a molti clienti
+            // quote modeste (docs/35).
+            if ($this->esportaVero === []) {
+                $pesi = array_slice($pesi, 0, $quanti, true);
+            }
+            $somma = array_sum($pesi);
+            if ($somma <= 0.0) {
+                continue;
+            }
+
+            // Nessuno mette tutte le uova in un paniere solo. Il tetto si
+            // applica e quel che avanza si ridistribuisce, due volte: basta a
+            // togliere i casi assurdi senza appiattire tutto.
+            $quote = [];
+            foreach ($pesi as $fornitore => $p) {
+                $quote[$fornitore] = $p / $somma;
+            }
+            for ($giro = 0; $giro < 2; $giro++) {
+                $eccesso = 0.0;
+                $sotto   = 0.0;
+                foreach ($quote as $fornitore => $q) {
+                    if ($q > self::TETTO_QUOTA) {
+                        $eccesso += $q - self::TETTO_QUOTA;
+                        $quote[$fornitore] = self::TETTO_QUOTA;
+                    } else {
+                        $sotto += $q;
+                    }
+                }
+                if ($eccesso <= 0.0 || $sotto <= 0.0) {
+                    break;
+                }
+                foreach ($quote as $fornitore => $q) {
+                    if ($q < self::TETTO_QUOTA) {
+                        $quote[$fornitore] = $q + $eccesso * ($q / $sotto);
+                    }
+                }
+            }
+
+            foreach ($quote as $fornitore => $frazione) {
+                $candidati[] = [$fornitore, $cliente, $manca * $frazione, $manca];
+                $totale[$fornitore] = ($totale[$fornitore] ?? 0.0) + $manca * $frazione;
+            }
+        }
+
+        // Un flusso conta se e' importante per una delle due parti: almeno il
+        // 2% di quel che il cliente compra (l'1% coi dati veri), o almeno il 3%
+        // di quel che il fornitore vende. Col solo primo criterio la Slovenia
+        // non vendeva a nessuno: e' lo 0,6% delle importazioni tedesche, ma la
+        // Germania e' il suo primo cliente (docs/35).
+        $sogliaCliente = $this->esportaVero === [] ? 0.02 : 0.01;
+        foreach ($candidati as [$fornitore, $cliente, $quantita, $manca]) {
+            if ($quantita < $manca * $sogliaCliente
+                && ($this->esportaVero === [] || $quantita < 0.03 * ($totale[$fornitore] ?? 0.0))) {
+                continue;
+            }
+            $venduto[$fornitore] = ($venduto[$fornitore] ?? 0.0) + $quantita;
+            if (!$scrivi) {
+                continue;
+            }
+            $this->flusso[$fornitore][$cliente][$settore] = $quantita;
+            $this->exportTotale[$fornitore] = ($this->exportTotale[$fornitore] ?? 0.0) + $quantita;
+
+            // Quota del fabbisogno che passa da questo fornitore: e' la
+            // dipendenza. La sostituibilita' e' il suo contrario, temperato da
+            // quanto quel settore si rimpiazza in fretta.
+            $quota = $quantita / max(1.0, $this->fabbisogno[$cliente][$settore]);
+            $this->sostituibilita[$fornitore][$cliente][$settore] = (int) round(
+                100.0 * (1.0 - min(1.0, $quota)) * self::FACILITA_SETTORE[$settore]);
+        }
+        return $venduto;
+    }
+
     private function attrito(Mondo $mondo, string $a, string $b): float
     {
         $r = $mondo->relazioni->fra($a, $b);

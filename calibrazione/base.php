@@ -343,11 +343,15 @@ return [
         // misurato: da 4 a 25 il rapporto fra parziali e autocrazie si muoveva
         // solo da 1,1 a 1,6).
         //
-        // Con la pendenza a 7: dodici punti valgono ~5 volte le probabilita',
-        // e la faziosita' li raddoppia fino a ventiquattro, cioe' ~30 volte.
-        // E' il rapporto che Goldstone misura fra una democrazia parziale
-        // fazionalizzata e un'autocrazia piena.
+        // Con la pendenza a 7: dodici punti valgono ~5 volte le probabilita'.
+        // La faziosita' non li raddoppia piu' (vedi peso_faziosita).
         'spostamento_regime'   => 12.0,
+        // [TARATO] Quanto la faziosita' (Polity5, PARCOMP «factional»)
+        // aggiunge al rischio di colpo di un regime parziale. Powell e Thyne
+        // per PARCOMP fra i regimi parziali di Polity: 21,9 colpi riusciti
+        // ogni mille anni-paese nei faziosi contro 18,8 negli altri nel
+        // 2000-2018, 24,9 contro 20,7 nel 1990-2018. Un quinto (docs/35).
+        'peso_faziosita'       => 0.2,
         // Quanto la CHIUSURA protegge, in punti di legittimita'. E' il ramo
         // sinistro della U: un'autocrazia piena reprime e tiene. Senza questo
         // termine la repressione costava legittimita' e non comprava niente, e
@@ -384,6 +388,13 @@ return [
         // dicesse la stessa cosa sarebbe una manopola da tenere allineata a
         // mano con la prima.
         'resistenza_estremisti'  => 2.0,
+        // Quanto un'autocrazia piena e' blindata contro i colpi di Stato: il
+        // rischio si moltiplica per exp(-blindatura) quando la democrazia
+        // liberale di V-Dem scende sotto 0,05, e sfuma fino a 0,10 (Fase05,
+        // docs/35). [TARATO] sul dato: zero colpi riusciti in 265 anni-paese
+        // di autocrazia piena nel 2000-2025 (Powell e Thyne; V-Dem), cioe' al
+        // piu' 11 ogni mille col 95% di confidenza, contro 12,9 nei parziali.
+        'blindatura'             => 3.0,
         // Il rischio di cadere e' una curva logistica sulla legittimita', non
         // un cancello: massimo annuo quando la legittimita' e' a zero, e
         // pendenza della curva. A legittimita' pari al "centro" il rischio e'

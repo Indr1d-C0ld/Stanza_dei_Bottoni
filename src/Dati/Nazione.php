@@ -201,6 +201,12 @@ final class Nazione
         public float  $repressione = 0.25,
         /** Quanto il regime censura, 0..1: 1 - liberta' di espressione di V-Dem 2025. */
         public float  $censura = 0.5,
+        /**
+         * Se la politica e' faziosa, 0..1: competizione in blocchi che si
+         * contendono lo Stato (Polity5, PARCOMP «factional»). E' del regime,
+         * non del momento: viene dal seme e non cambia (fase 05, docs/35).
+         */
+        public float  $faziosita = 0.0,
         /** La forza del governo al seme: il metro del reclutamento dei ribelli (fase 05). */
         public float  $potenzaIniziale = 0.0,
         /** Quanto la guerra costava alla crescita al tick prima, oltre a quella del seme (fase 03). */

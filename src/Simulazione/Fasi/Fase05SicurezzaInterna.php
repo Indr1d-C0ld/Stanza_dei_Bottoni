@@ -44,11 +44,13 @@ final class Fase05SicurezzaInterna implements Fase
         $rischioMax  = $cal->numero('colpo_di_stato.rischio_massimo_anno', 0.065);
         $pendenza    = $cal->numero('colpo_di_stato.pendenza', 7.0);
         $resistenzaEstremi = $cal->numero('colpo_di_stato.resistenza_estremisti', 2.0);
+        $blindatura        = $cal->numero('colpo_di_stato.blindatura', 3.0);
         $vittoriaInsorti   = $cal->numero('insurrezione.vittoria_insorti_anno', 0.18);
         $rispostaGoverno   = $cal->numero('insurrezione.risposta_governo', 6.0);
         $innescoBase       = $cal->numero('insurrezione.innesco_base_anno', 0.010);
         $innescoMassimo    = $cal->numero('insurrezione.innesco_massimo_anno', 0.10);
         $spostamentoRegime = $cal->numero('instabilita.spostamento_regime', 12.0);
+        $pesoFaziosita     = $cal->numero('instabilita.peso_faziosita', 0.2);
         $protezioneChiusura = $cal->numero('instabilita.protezione_chiusura', 10.0);
         $pesoQualitaVita = $cal->numero('instabilita.peso_qualita_vita', 2.7);
         $pesoVicinato  = $cal->numero('instabilita.peso_vicinato', 1.2);
@@ -378,14 +380,13 @@ final class Fase05SicurezzaInterna implements Fase
             // un fattore lineare non la tocca.
             //
             // Spostando il centro si dice invece la cosa giusta, che e' anche
-            // quella di Goldstone: un regime parziale fazionalizzato cade con
-            // una legittimita' con cui un'autocrazia piena reggerebbe. Con la
+            // quella di Goldstone: un regime parziale cade con una
+            // legittimita' con cui un'autocrazia piena reggerebbe. Con la
             // pendenza a 7, dodici punti di spostamento valgono circa cinque
-            // volte le probabilita', ventiquattro ne valgono trenta — che e'
-            // il rapporto che PITF misura fra i due estremi.
+            // volte le probabilita'. La faziosita' raddoppiava lo spostamento
+            // (fino a trenta volte, il numero di PITF): non piu', vedi sotto.
             $gab = $mondo->gabinetti[$n->iso3] ?? null;
-            $faziosita = $gab !== null ? $gab->faziosita() : 0.0;
-            $centro += $spostamentoRegime * $n->regimeParziale() * (1.0 + $faziosita);
+            $centro += $spostamentoRegime * $n->regimeParziale();
 
             // E LA CHIUSURA PROTEGGE. Era il pezzo mancante, ed e' il ramo
             // sinistro della U di Goldstone: le autocrazie piene non cadono
@@ -419,6 +420,43 @@ final class Fase05SicurezzaInterna implements Fase
             $centro += $pesoQualitaVita * (6.0 - $n->qualitaVita);
 
             $rischioAnnuo = $rischioMax / (1.0 + exp(($n->legittimita - $centro) / $pendenza));
+
+            // LA BLINDATURA. Le autocrazie piene non subiscono colpi di Stato:
+            // nel 2000-2025 zero colpi riusciti in 265 anni-paese con la
+            // democrazia liberale di V-Dem sotto 0,05 l'anno prima, contro 12,9
+            // ogni mille nei regimi parziali (Powell e Thyne, versione del
+            // 29/08/2026; docs/35). E' il «coup-proofing» — QUINLIVAN (1999),
+            // «Coup-Proofing: Its Practice and Consequences in the Middle
+            // East», International Security 24(2); POWELL (2012), «Determinants
+            // of the Attempting and Outcome of Coups d'etat», Journal of
+            // Conflict Resolution 56(6): unita' d'elite fedeli, forze parallele
+            // che si bilanciano, sorveglianza sui militari. Lo spostamento del
+            // centro qui sopra non bastava piu' da quando la legittimita' ha
+            // un'ancora per paese: i regimi chiusi partono bassi, e il modello
+            // faceva cadere la Corea del Nord, l'Eritrea e il Turkmenistan tre
+            // o quattro volte piu' spesso dei regimi parziali.
+            //
+            // Sulla democrazia liberale di V-Dem, come il dato: non
+            // sull'apertura istituzionale, che sottrae la stretta di polizia e
+            // censura e metteva fra le autocrazie piene meta' dei regimi
+            // parziali.
+            $chiusuraPiena = max(0.0, min(1.0, (0.10 - $n->democrazia) / 0.05));
+            $rischioAnnuo *= exp(-$blindatura * $chiusuraPiena);
+
+            // LA FAZIOSITA', per tutti e col peso che ha davvero. Veniva dal
+            // gabinetto, che c'e' solo per le quattordici potenze giocabili, e
+            // raddoppiava lo spostamento dei regimi parziali: le «trenta volte»
+            // di Goldstone. Ma quel numero e' sull'instabilita' in generale
+            // (guerre civili, genocidi, crolli) del 1955-2003, e confronta un
+            // parziale fazioso con un'autocrazia piena: e' quasi tutto tipo di
+            // regime, che il modello ha gia'. Fra regimi parziali, coi colpi di
+            // Powell e Thyne e la PARCOMP di Polity5, i faziosi cadono 21,9
+            // volte ogni mille anni-paese contro 18,8 nel 2000-2018 (24,9 contro
+            // 20,7 dal 1990): un quinto in piu' (docs/35). La faziosita' e'
+            // quella di Polity, del regime; dove c'e' un gabinetto conta per
+            // meta' anche la sua, che e' del momento.
+            $faziosita = $gab !== null ? ($n->faziosita + $gab->faziosita()) / 2.0 : $n->faziosita;
+            $rischioAnnuo *= 1.0 + $pesoFaziosita * $faziosita * $n->regimeParziale();
             // Il clamore accelera, senza essere lui a decidere.
             $rischioAnnuo *= 1.0 + $n->clamoreSociale / 120.0;
 

@@ -650,6 +650,9 @@ reclutamento insurrezionale per via di Fearon & Laitin. Aggiungerlo due volte
 sarebbe contarlo due volte. Meglio tre predittori onesti che quattro di cui uno
 inventato.
 
+*(Superato in `docs/35`: la faziosità viene da Polity5 per tutti i paesi, e la
+U ha ora la sua magnitudine grazie alla blindatura delle autocrazie piene.)*
+
 **La faziosità copre 14 nazioni su 189**, perché i gabinetti esistono solo per
 le potenze giocabili: è una scelta di disegno del motore, non un difetto, ma il
 predittore più forte di PITF vale quindi solo dove c'è una struttura di élite

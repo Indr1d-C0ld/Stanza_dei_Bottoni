@@ -114,7 +114,9 @@ $attesi = ['nazioni.csv', 'democrazia.php', 'disuguaglianza.php', 'esclusione.ph
            // docs/30 e docs/31: FMI, Banca Mondiale, Nunn e Puga, COW e UCDP, V-Dem
            'crescita.php', 'governo.php', 'terreno.php', 'rivalita.php', 'repressione.php',
            // docs/32: ATOP e i voti all'ONU
-           'patti-difesa.php', 'onu.php'];
+           'patti-difesa.php', 'onu.php',
+           // docs/35: Banca Mondiale e FMI per il commercio, Polity5 per la faziosita'
+           'commercio-dati.php', 'commercio-bilaterale.php', 'faziosita.php'];
 foreach ($attesi as $s) {
     $p = $radice . '/db/seed/' . $s;
     if (!is_file($p)) {
@@ -213,7 +215,9 @@ foreach ((array) $campiFermi as $campo) {
                           // dal seme (docs/30): la qualita' del governo, il
                           // terreno, i punti di partenza.
                           'qualitaGoverno', 'stabilitaPolitica', 'montuoso',
-                          'potenzaIniziale', 'conflittoIniziale', 'repressione', 'censura'], true)) {
+                          'potenzaIniziale', 'conflittoIniziale', 'repressione', 'censura',
+                          // docs/35: la faziosita' di Polity e' del regime
+                          'faziosita'], true)) {
         continue;
     }
     // Ne' quelli transitori: la scossa esterna nasce e muore dentro lo stesso

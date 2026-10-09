@@ -108,6 +108,11 @@ final class Mondo
         if (!is_array($diritti)) {
             $diritti = [];
         }
+        // La faziosita' di Polity5 (bin/importa_faziosita.php).
+        $faziosi = @include dirname($percorsoCsv) . '/faziosita.php';
+        if (!is_array($faziosi)) {
+            $faziosi = [];
+        }
         // La qualita' del governo della Banca Mondiale (bin/importa_wgi.php).
         $wgi = @include dirname($percorsoCsv) . '/governo.php';
         if (!is_array($wgi)) {
@@ -226,6 +231,7 @@ final class Mondo
                 $n->repressione = ((1.0 - $pi) + (1.0 - $fe)) / 2.0;
                 $n->censura = 1.0 - $fe;
             }
+            $n->faziosita = (float) ($faziosi[$n->iso3] ?? 0.0);
             $n->statoPolizia = $n->basePolizia();
             $n->controlloInfo = 100.0 * $n->censura;
             $n->montuoso = (float) ($terreno[$n->iso3]['montuoso'] ?? 11.8);
@@ -432,7 +438,12 @@ final class Mondo
         }
         // Il grafo si costruisce col seme; la scala del danno arriva dalla
         // calibrazione, che qui non c'e' ancora: la mette la fase 03.
-        $mondo->commercio    = Commercio::iniziale($mondo, $vocazioni);
+        // E i flussi veri, dove ci sono (bin/importa_commercio.php, docs/35).
+        $datiCommercio = @include dirname($percorsoCsv) . '/commercio-dati.php';
+        $bilaterale = @include dirname($percorsoCsv) . '/commercio-bilaterale.php';
+        $mondo->commercio    = Commercio::iniziale($mondo, $vocazioni,
+            dati: is_array($datiCommercio) ? $datiCommercio : [],
+            bilaterale: is_array($bilaterale) ? $bilaterale : []);
 
         return $mondo;
     }

@@ -219,12 +219,13 @@ geopolitico che evolve da solo.
 
 I riferimenti storici sono quelli del mondo da cui il seme parte, non quelli di
 Crawford: i suoi ~10 cambi di esecutivo irregolari l'anno erano giusti per il
-1948-77. Oggi il Cline Center e Powell & Thyne contano 2,2-3,8 colpi riusciti
-l'anno, a cui si aggiungono una o due rivoluzioni; UCDP conta 36 paesi in
-conflitto armato (circa 30 negli anni Dieci) e 11 in guerra. Il profilo
-`osservazione` fa 3,7-4,4 cambi irregolari l'anno, 22-24 paesi in conflitto e
-6-8 in insurrezione grave o guerra civile, con un'economia in recessione su
-dieci ogni anno come nei dati del FMI; le prove automatiche lo verificano.
+1948-77. Oggi Powell & Thyne contano 1,4 colpi riusciti l'anno nel 2000-2025
+(2,5 negli anni Venti), a cui si aggiungono circa 0,4 prese del potere armate;
+UCDP conta 36 paesi in conflitto armato (circa 30 negli anni Dieci) e 11 in
+guerra. Il profilo `osservazione` fa 1,6-2,6 cambi irregolari l'anno, con le
+autocrazie piene che quasi non cadono e i regimi parziali che cadono quanto nel
+mondo vero, e un'economia in recessione su dieci ogni anno come nei dati del
+FMI; le prove automatiche lo verificano.
 
 ---
 
@@ -396,9 +397,12 @@ scaduto.
 | **Kiel Institute**, *Ukraine Support Tracker* (febbraio 2025) | gli aiuti militari a un paese in guerra: circa 45 miliardi di euro l'anno all'Ucraina |
 | **Cederman, Wimmer & Min (2010)**, *Why Do Ethnic Groups Rebel?*, World Politics 62(1)<br>**Cederman, Weidmann & Gleditsch (2011)**, APSR 105(3) | la disuguaglianza orizzontale: il **motivo** accanto all'occasione |
 | **Goldstone et al. (2010)**, *A Global Model for Forecasting Political Instability*, AJPS 54(1) — il **Political Instability Task Force** | la U rovesciata del tipo di regime, la faziosità, il contagio dal vicinato, la qualità della vita |
+| **Polity5** (Marshall & Gurr), PARCOMP «factional», 2018 | quali regimi sono faziosi, per tutti i paesi e non solo per le potenze giocabili; e quanto pesa davvero: un quinto in più di colpi fra i regimi parziali |
+| **Quinlivan (1999)**, *International Security* 24(2); **Powell (2012)**, JCR 56(6) | la blindatura delle autocrazie piene (*coup-proofing*): zero colpi riusciti in 265 anni-paese nel 2000-2025 |
 | **Collier et al. (2003)**, *Breaking the Conflict Trap*, Banca Mondiale | quanto costa una guerra civile: 2,3 punti di crescita l'anno |
-| **Archigos** (Goemans, Gleditsch, Chiozza) | la quota di uscite irregolari dal potere: circa un quinto |
-| **Cline Center Coup d'État Project** e **Powell & Thyne** | i colpi di Stato riusciti per decennio — e la scoperta che i «~10 l'anno» di Crawford sono gli anni Sessanta, non il presente |
+| **Powell & Thyne**, colpi di Stato e leader (versione del 29/08/2026) | i colpi riusciti per tipo di regime, 1,4 l'anno nel 2000-2025, e la quota irregolare delle uscite dal potere: 5,1%. I «~10 l'anno» di Crawford sono gli anni Sessanta, e il «circa un quinto» di Archigos vale dal 1875 |
+| **UCDP/PRIO ACD v26.1** | quanto durano i conflitti: il 59% di quelli attivi è ancora aperto quindici anni dopo |
+| **Banca Mondiale**, *World Development Indicators*; **FMI**, *International Trade in Goods* e *World Economic Outlook* | il commercio: quanto ogni paese esporta e importa settore per settore, e chi vende a chi (9.400 coppie) |
 | **SIPRI** — *Military Expenditure* e *Yearbook* | l'onere militare mondiale, gli Stati dotati di nucleare, e la spesa ucraina del 2024 (34% del PIL) dove il Factbook si ferma al 2021 |
 | **IISS** — *The Military Balance* | gli effettivi sotto le armi, e il tetto del 5% della popolazione (la Corea del Nord, il paese più militarizzato del mondo) |
 | **ONU** — *World Population Prospects* | la crescita della popolazione |
@@ -409,12 +413,12 @@ scaduto.
 ### E il cruscotto che tiene tutto onesto
 
 ```bash
-php bin/realismo.php --anni=15      # ventuno grandezze contro la loro fascia
+php bin/realismo.php --anni=15      # ventidue grandezze contro la loro fascia
 php bin/audit.php                   # che cosa è dichiarato e mai usato
-php bin/prova.php                   # quattrocentonovantasette prove
+php bin/prova.php                   # cinquecentotre prove
 ```
 
-`bin/realismo.php` confronta ventuno grandezze con la fascia in cui il mondo
+`bin/realismo.php` confronta ventidue grandezze con la fascia in cui il mondo
 vero le tiene, **ciascuna con la fonte accanto**. La distinzione che ci sta
 dentro non è pedanteria: un *livello* si giudica al seme, perché dopo quindici
 anni di crescita non è più confrontabile col dato di oggi; un *tasso* si giudica
@@ -484,6 +488,14 @@ poveri sbagliati. Adesso il seme legge il FMI e la Banca Mondiale, e le guerre
 civili seguono i coefficienti stimati da Fearon. Ventuno grandezze su ventuno in
 fascia, su otto mondi.
 
+**`docs/35-colpi-commercio-faziosita.md`** chiude i quattro difetti vecchi
+dell'elenco qui sotto. Le autocrazie piene non cadono più tre volte più dei
+regimi parziali: zero colpi riusciti in 265 anni-paese, e il modello ora lo sa.
+I conflitti del seme durano quanto nel mondo vero. Il commercio viene dalla
+Banca Mondiale e dai flussi bilaterali del FMI, e il Belgio non esporta più
+zero. La faziosità viene da Polity5 per tutti i paesi, ma pesa un quinto e non
+trenta volte: il «trenta» di Goldstone era quasi tutto tipo di regime.
+
 **`docs/34-i-civili-e-la-pace.md`** chiude la guerra coi dati: un civile ogni
 undici combattenti nelle guerre fra Stati di oggi (non uno a uno), e il
 rimbalzo dell'economia quando la guerra finisce.
@@ -527,22 +539,15 @@ sapeva produrre.
 
 ### Quel che oggi non funziona come dovrebbe
 
-- **Metà dei conflitti seminati si spegne in quindici anni**, e altrettanti ne
-  nascono altrove. In parte è giusto — i conflitti veri finiscono — ma il
-  modello non sa *quali* devono durare.
 - **Le affinità di partenza spiegano il 62% dei rapporti dichiarati.** Il
   resto sono rivalità senza scontri diretti — l'Arabia Saudita e l'Iran, il
   Giappone e la Corea del Nord — e lì restano i rapporti scritti a mano
   (`docs/32`).
-- **La U rovesciata di Goldstone non raggiunge la sua magnitudine.** Le
-  democrazie piene stanno correttamente a 0,2 volte le autocrazie, ma i regimi
-  parziali restano intorno a 1 invece di 5-30. Crawford e Goldstone sono in
-  tensione strutturale, e la sezione 13 di `docs/26` spiega perché abbiamo
-  scelto di non riscrivere l'equazione della legittimità.
-- **La faziosità copre quattordici nazioni su centottantanove**, perché i
-  gabinetti esistono solo per le potenze giocabili.
-- **Il commercio ha un limite strutturale**: la taglia assoluta decide troppo, e
-  il Belgio esporta zero.
+- **I regimi parziali faziosi cadono più del vero**, circa 1,7 volte, perché la
+  loro legittimità di partenza è bassa (`docs/35`).
+- **Le economie piccole e molto aperte commerciano un quinto meno del vero**, e
+  l'Iran, Cuba, l'Eritrea, la Corea del Nord e la Siria restano al modello del
+  commercio di prima: per loro un dato affidabile non c'è (`docs/35`).
 
 Sono difetti noti e scritti, non nascosti.
 
@@ -578,8 +583,8 @@ struttura senza valori.
 php bin/tick.php              un passo del mondo
 php bin/simula.php            quindici anni a vuoto, con le statistiche
 php bin/diagnostica.php       la salute del modello
-php bin/prova.php             le prove automatiche (497, qualche minuto)
-php bin/realismo.php          ventuno grandezze contro le fonti
+php bin/prova.php             le prove automatiche (503, qualche minuto)
+php bin/realismo.php          ventidue grandezze contro le fonti
 php bin/audit.php             che cosa è dichiarato e mai usato
 php bin/migra.php             applica le migrazioni non ancora applicate
 php bin/epoca.php             apre e chiude le epoche, e conta

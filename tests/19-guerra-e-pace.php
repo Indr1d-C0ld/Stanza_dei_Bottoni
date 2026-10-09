@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 /**
- * La guerra e la pace (docs/33, docs/34): i garanti che combattono, i ribelli
- * col tetto, l'orientamento e la radicalita', i civili, il rimbalzo. Tutto in
- * memoria.
+ * La guerra e la pace (docs/33, docs/34, docs/35): i garanti che combattono, i
+ * ribelli col tetto, l'orientamento e la radicalita', i civili, il rimbalzo, la
+ * faziosita'. Tutto in memoria.
  */
 
 use App\Dati\Mondo;
@@ -79,3 +79,17 @@ $c2 = new ContestoTick(tick: 1, seme: 1, caso: new Caso(1), calibrazione: $calGP
     casoDelMondo: new Caso(1));
 (new Fase03Economia())->esegui($c2);
 Prove::che('chi non ha avuto guerre non rimbalza', $m2->nazioni['GHA']->rimbalzo === 0.0);
+
+// ------------------------------------------------------------------ faziosita'
+Prove::gruppo('La faziosita\' e\' del regime, e c\'e\' per tutti');
+
+$m = Mondo::daSeme($semeGP);
+$faziosi = array_filter($m->elenco(), static fn($n): bool => $n->faziosita > 0.0);
+Prove::che('la faziosita\' di Polity non riguarda piu\' solo le quattordici potenze giocabili',
+    count($faziosi) >= 25, (string) count($faziosi));
+Prove::che('il Libano, l\'Iraq e il Pakistan sono faziosi; la Norvegia e la Cina no',
+    $m->nazioni['LBN']->faziosita === 1.0 && $m->nazioni['IRQ']->faziosita === 1.0
+    && $m->nazioni['PAK']->faziosita === 1.0
+    && $m->nazioni['NOR']->faziosita === 0.0 && $m->nazioni['CHN']->faziosita === 0.0);
+Prove::vicino('e pesa quanto nei colpi veri: un quinto in piu\' fra i regimi parziali (Powell e Thyne)',
+    0.2, $calGP->numero('instabilita.peso_faziosita'), 0.001);

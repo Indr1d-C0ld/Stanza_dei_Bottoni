@@ -91,14 +91,13 @@ final class Realismo
             . 'Il tetto e\' alto apposta: il mondo vero e\' passato dal 2,2% del 2020 al 2,5% '
             . 'del 2024, cioe\' +0,075 punti l\'anno, che su quindici farebbero +1,1. Il '
             . 'modello ne fa +0,7, quindi sale piu\' piano del reale, non piu\' in fretta'],
-        'cambi_irregolari'     => [2.5,  9,    '/anno',       'corsa',
-            'Cline Center / Powell & Thyne: 2,2 colpi di Stato riusciti l\'anno nel 2000-2019, '
-            . '~3,8 negli anni Venti, piu\' le prese del potere armate — Libia 2011, '
-            . 'Centrafrica 2013, Yemen 2015, Afghanistan 2021, Siria 2024: circa 0,4 l\'anno. '
-            . 'Il pavimento era 3, finche\' i ribelli crescevano senza tetto e vincevano troppo '
-            . '(docs/33). Il ~10 di Crawford NON vale qui: '
-            . 'descrive il 1948-77 (103 colpi negli anni \'60, 95 negli anni \'70) e il nostro '
-            . 'seme e\' del 2024-25'],
+        'cambi_irregolari'     => [1.2,  6,    '/anno',       'corsa',
+            'Powell e Thyne (versione del 29/08/2026): nei paesi del seme 36 colpi di Stato '
+            . 'riusciti nel 2000-2025, 1,4 l\'anno — 2,5 negli anni Venti — piu\' circa 0,4 '
+            . 'prese del potere armate (Libia 2011, Centrafrica 2013, Yemen 2015, Afghanistan '
+            . '2021, Siria 2024). La fascia era 3-9, su un riferimento piu\' largo (Cline '
+            . 'Center); adesso e\' lo stesso dataset su cui il modello e\' tarato, regime per '
+            . 'regime (docs/35). Il ~10 di Crawford descrive il 1948-77'],
         'guerre_aperte'        => [0,    8,    'in corso',    'corsa',
             'UCDP: i conflitti interstatali attivi sono pochi, ogni anno'],
         'morti_guerra_anno'    => [0,    1.5,  'milioni/anno','corsa',
@@ -106,10 +105,20 @@ final class Realismo
         'durata_governo'       => [4,    9,    'anni',        'corsa',
             'Un esecutivo dura 4-8 anni nelle democrazie competitive e decenni nei sistemi '
             . 'autoritari; con meta\' del mondo non democratico la media globale sta in alto '
-            . 'nella forchetta. Il modello faceva 3,3 anni, sotto il minimo democratico'],
-        'quota_irregolare'     => [8,    28,   '% dei cambi', 'corsa',
-            'Archigos (Goemans, Gleditsch, Chiozza), 188 paesi dal 1875: circa un quinto '
-            . 'delle uscite dal potere avviene per via irregolare'],
+            . 'nella forchetta. Il modello faceva 3,3 anni, sotto il minimo democratico. Coi '
+            . 'leader di Powell e Thyne: 189 paesi su 35 uscite l\'anno nel 2000-2025, 5,4 anni'],
+        'quota_irregolare'     => [3,    15,   '% dei cambi', 'corsa',
+            'Powell e Thyne, elenco dei leader e dei colpi: nel 2000-2025 i paesi del seme '
+            . 'hanno avuto 35 uscite dal potere l\'anno, di cui il 5,1% per colpo di Stato o '
+            . 'presa armata. Il «circa un quinto» di Archigos vale dal 1875, cioe\' per un '
+            . 'mondo di colpi di Stato che non e\' piu\' questo (docs/35)'],
+        'persistenza_conflitti' => [42,  77,   '% dopo 15 anni', 'corsa',
+            'UCDP/PRIO ACD v26.1: dei paesi con un conflitto interno attivo in un anno del '
+            . '1990-2010, il 59% ne ha ancora uno quindici anni dopo (il 69% se era una '
+            . 'guerra). Qui: i conflitti del seme ancora aperti alla fine. Il README diceva '
+            . 'che meta\' si spegneva e che il modello non sapeva quali. La fascia e\' il 59% '
+            . 'piu\' o meno due errori binomiali: i conflitti del seme sono una trentina, e su '
+            . 'trenta casi l\'errore e\' di 8,6 punti (docs/35)'],
         'paesi_in_conflitto'   => [15,   45,   'paesi',       'corsa',
             'UCDP 2024: 61 conflitti statali attivi in 36 paesi, il massimo dal 1946'],
         'paesi_in_guerra'      => [3,    32,   'paesi',       'corsa',
@@ -186,6 +195,14 @@ final class Realismo
     public static function misura(Mondo $mondo, EsecutoreTick $esecutore, int $anni, int $tickAnno, int $seme): array
     {
         $alSeme = self::livelli($mondo);
+        // I conflitti del seme, per vedere quanti durano.
+        $seminati = [];
+        foreach ($mondo->elenco() as $n) {
+            if ($n->conflittoIniziale >= 4 && !in_array($n->iso3, array_merge(...array_map(
+                static fn(array $g): array => [$g['aggressore'], $g['difensore']], $mondo->guerre)), true)) {
+                $seminati[$n->iso3] = true;
+            }
+        }
 
         // I morti si accumulano anche nelle guerre che finiscono: contarli solo
         // su quelle aperte a fine corsa direbbe «zero» in un mondo pacificato.
@@ -282,6 +299,8 @@ final class Realismo
             // grandezza che un giocatore percepisce senza doverla calcolare,
             // ed era l'unica del modello fuori da OGNI forchetta reale.
             'durata_governo'    => $cambiAnno > 0 ? count($mondo->nazioni) / $cambiAnno : 0.0,
+            'persistenza_conflitti' => $seminati === [] ? 60.0 : 100.0 * count(array_filter(array_keys($seminati),
+                static fn(string $iso): bool => ($mondo->nazioni[$iso]->netPeace ?? 0) >= 4)) / count($seminati),
             'quota_irregolare'  => $cambi > 0 ? $irregolari / $cambi * 100 : 0.0,
             'paesi_in_conflitto' => (float) $conflitto,
             'paesi_in_guerra'    => (float) $guerra,
