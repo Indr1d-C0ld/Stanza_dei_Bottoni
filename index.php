@@ -376,19 +376,7 @@ switch ($pezzi[0] ?? '') {
 
         // Le due code: i cinque messi peggio e i cinque messi meglio. Una mappa
         // dice dove; una lista dice quanto, e servono tutte e due.
-        $ordinate = $tutte;
-        usort($ordinate, static function ($a, $b) use ($colori) {
-            return strcmp($colori[$a['codice']]['colore'] ?? '', $colori[$b['codice']]['colore'] ?? '');
-        });
-        $notevoli = [];
-        foreach (array_merge(array_slice($ordinate, 0, 5), array_slice($ordinate, -5)) as $n) {
-            $notevoli[] = [
-                'codice' => $n['codice'],
-                'nome'   => $n['nome'],
-                'colore' => $colori[$n['codice']]['colore'] ?? '#555',
-                'valore' => $colori[$n['codice']]['valore'] ?? '—',
-            ];
-        }
+        $code = Planisfero::code($colori);
 
         mostra('mappa', $comune + [
             'titolo'        => 'Il planisfero',
@@ -398,7 +386,7 @@ switch ($pezzi[0] ?? '') {
             'letturaScelta' => $letturaScelta,
             'cliccabile'    => true,
             'guerre'        => $lettura->guerre(),
-            'notevoli'      => $notevoli,
+            'code'          => $code,
         ]);
         break;
 

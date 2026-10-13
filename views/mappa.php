@@ -4,7 +4,8 @@
 /** @var array<string,array{colore:string,valore:string}> $colori */
 /** @var array<string,string> $nomiMappa */
 /** @var string $letturaScelta */
-/** @var list<array<string,mixed>> $guerre $notevoli */
+/** @var list<array<string,mixed>> $guerre */
+/** @var array{peggio:array{righe:list<string>,altri:list<string>},meglio:array{righe:list<string>,altri:list<string>}} $code */
 $letture = App\Dati\Planisfero::LETTURE;
 ?>
 <h1><?= htmlspecialchars($letture[$letturaScelta]['titolo'] ?? 'Il mondo') ?></h1>
@@ -72,16 +73,45 @@ $concluse  = array_filter($guerre, static fn ($g) => $g['fine_tick'] !== null);
 </section>
 <?php endif; ?>
 
+<?php
+// Un nome con il suo colore, il suo valore e il collegamento alla scheda.
+$riga = static function (string $iso) use ($colori, $nomiMappa): string {
+    return '<tr><td><span class="pastiglia" style="background:'
+        . htmlspecialchars($colori[$iso]['colore'] ?? '#555') . '"></span></td>'
+        . '<td><a href="' . u('/nazione/' . $iso) . '">' . htmlspecialchars($nomiMappa[$iso] ?? $iso) . '</a></td>'
+        . '<td class="tenue">' . htmlspecialchars($colori[$iso]['valore'] ?? '—') . '</td></tr>';
+};
+// Una coda. Se e' tutta un gruppo alla pari (i 23 paesi a 1 su 10, i 157 in
+// pace) cinque nomi in ordine alfabetico sarebbero arbitrari: si nominano
+// tutti finche' sono pochi, si contano quando sono tanti. Altrimenti si
+// mostrano i primi, e sotto chi sta al loro stesso valore.
+$coda = static function (array $c) use ($riga, $colori, $nomiMappa): string {
+    $nomi = static fn (array $isi) => implode(', ', array_map(static fn ($iso) => '<a href="'
+        . u('/nazione/' . $iso) . '">' . htmlspecialchars($nomiMappa[$iso] ?? $iso) . '</a>', $isi));
+    $tutti = array_merge($c['righe'], $c['altri']);
+    $valori = array_unique(array_map(static fn ($iso) => $colori[$iso]['valore'] ?? '', $tutti));
+    if ($c['altri'] !== [] && count($valori) === 1) {
+        $v = htmlspecialchars((string) reset($valori));
+        return count($tutti) <= 25
+            ? '<p>' . count($tutti) . ' paesi a pari valore, ' . $v . ': ' . $nomi($tutti) . '.</p>'
+            : '<p>' . count($tutti) . ' paesi a pari valore, ' . $v . '.</p>';
+    }
+    $html = '<table class="tabella">' . implode('', array_map($riga, $c['righe'])) . '</table>';
+    if ($c['altri'] !== []) {
+        $html .= count($c['altri']) <= 12
+            ? '<p class="tenue">Allo stesso valore dell\'ultimo anche: ' . $nomi($c['altri']) . '.</p>'
+            : '<p class="tenue">E altri ' . count($c['altri']) . ' paesi allo stesso valore dell\'ultimo.</p>';
+    }
+    return $html;
+};
+?>
 <section>
   <h2>I casi estremi</h2>
-  <p class="tenue">Le due code della lettura scelta: dove va peggio e dove va meglio.</p>
-  <table class="tabella">
-    <?php foreach ($notevoli as $r): ?>
-      <tr>
-        <td><span class="pastiglia" style="background:<?= htmlspecialchars((string) $r['colore']) ?>"></span></td>
-        <td><a href="<?= u('/nazione/' . $r['codice']) ?>"><?= htmlspecialchars((string) $r['nome']) ?></a></td>
-        <td class="tenue"><?= htmlspecialchars((string) $r['valore']) ?></td>
-      </tr>
-    <?php endforeach; ?>
-  </table>
+  <p class="tenue">Le due code della lettura scelta, sul valore e non sul colore.</p>
+  <h3>Dove va peggio</h3>
+  <?= $code['peggio']['righe'] === []
+      ? '<p class="tenue">Nessuno: tutti i paesi stanno allo stesso valore.</p>'
+      : $coda($code['peggio']) ?>
+  <h3>Dove va meglio</h3>
+  <?= $coda($code['meglio']) ?>
 </section>

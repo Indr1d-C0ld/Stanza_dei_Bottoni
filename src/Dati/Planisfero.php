@@ -68,9 +68,14 @@ final class Planisfero
     /**
      * Il colore di ogni paese, per una certa lettura.
      *
+     * La «misura» e' il valore vero, orientato in modo che piu' alto voglia dire
+     * meglio: serve a ordinare (code()), perche' il colore non si ordina. Vale
+     * null dove non c'e' niente da misurare (un paese con cui non abbiamo
+     * rapporti non e' ne' amico ne' nemico).
+     *
      * @param list<array<string,mixed>> $nazioni
      * @param array<string,float> $relazioni iso3 => affinità, per la lettura 'rapporti'
-     * @return array<string,array{colore:string,valore:string}>
+     * @return array<string,array{colore:string,valore:string,misura:?float}>
      */
     public function colori(string $lettura, array $nazioni, array $relazioni = []): array
     {
@@ -90,9 +95,90 @@ final class Planisfero
             $per[$iso] = [
                 'colore'  => $lettura === 'rapporti' ? $this->freddoCaldo($q) : $this->rossoVerde($q),
                 'valore'  => $etichetta,
+                'misura'  => match ($lettura) {
+                    'influenza' => (float) $n['influenza_totale'],
+                    'tensione'  => -(float) $n['net_peace'],
+                    'benessere' => (float) $n['qualita_vita'],
+                    'commercio' => -(float) $n['pressione_esterna'],
+                    'rapporti'  => isset($relazioni[$iso]) ? (float) $relazioni[$iso] : null,
+                    default     => (float) $n['legittimita'],
+                },
             ];
         }
         return $per;
+    }
+
+    /**
+     * Le due code di una lettura: i paesi messi peggio e quelli messi meglio.
+     *
+     * Si ordina sulla misura, non sul colore. Il colore ordinato come testo
+     * mette in fondo l'ocra di mezzo, che ha il rosso piu' acceso di tutti:
+     * cosi' la pagina dava per «peggiori» i paesi medi (docs/40).
+     *
+     * Gli ex aequo contano. Su certe letture i valori sono pochi (sei gradi di
+     * tensione, dieci di benessere) e il quinto posto e' spesso condiviso da
+     * decine di paesi: sceglierne uno per ordine alfabetico direbbe una cosa
+     * falsa. Allora la coda prende i primi $quante e conta a parte («altri»)
+     * chi sta allo stesso valore dell'ultimo. La coda dei peggiori non arriva
+     * mai al valore migliore: se 186 paesi non hanno sanzioni, non sono i
+     * peggiori di nessuno.
+     *
+     * @param array<string,array{misura:?float}> $colori nell'ordine in cui
+     *        vanno mostrati gli ex aequo (per nome)
+     * @return array{peggio:array{righe:list<string>,altri:list<string>},
+     *               meglio:array{righe:list<string>,altri:list<string>}}
+     */
+    public static function code(array $colori, int $quante = 5): array
+    {
+        $misure = [];
+        foreach ($colori as $iso => $c) {
+            if (($c['misura'] ?? null) !== null) {
+                $misure[(string) $iso] = (float) $c['misura'];
+            }
+        }
+        if ($misure === []) {
+            return ['peggio' => ['righe' => [], 'altri' => []], 'meglio' => ['righe' => [], 'altri' => []]];
+        }
+        $migliore = max($misure);
+
+        // uasort e' stabile: a parita' di misura resta l'ordine per nome.
+        $su = $misure;
+        uasort($su, static fn (float $a, float $b) => $a <=> $b);
+        $giu = $misure;
+        uasort($giu, static fn (float $a, float $b) => $b <=> $a);
+
+        $peggio = self::coda($su, $quante, static fn (float $v) => $v < $migliore);
+        $presi = array_flip(array_merge($peggio['righe'], $peggio['altri']));
+        $meglio = self::coda($giu, $quante, static fn (float $v) => true, $presi);
+        return ['peggio' => $peggio, 'meglio' => $meglio];
+    }
+
+    /**
+     * @param array<string,float> $ordinate
+     * @param callable(float):bool $ammesso
+     * @param array<string,mixed> $esclusi
+     * @return array{righe:list<string>,altri:list<string>}
+     */
+    private static function coda(array $ordinate, int $quante, callable $ammesso, array $esclusi = []): array
+    {
+        $righe = [];
+        $altri = [];
+        $confine = null;
+        foreach ($ordinate as $iso => $v) {
+            $iso = (string) $iso;
+            if (isset($esclusi[$iso]) || !$ammesso($v)) {
+                continue;
+            }
+            if (count($righe) < $quante) {
+                $righe[] = $iso;
+                $confine = $v;
+            } elseif ($v === $confine) {
+                $altri[] = $iso;
+            } else {
+                break;
+            }
+        }
+        return ['righe' => $righe, 'altri' => $altri];
     }
 
     /** @return array{0:float,1:string} */
@@ -101,8 +187,11 @@ final class Planisfero
         // L'influenza e' distribuita malissimo: la Cina sta al 17%, la mediana
         // sotto lo 0,2%. Su scala lineare il mondo sarebbe tutto rosso con tre
         // macchie verdi, e non si leggerebbe niente. La radice apre il basso.
+        // Sotto lo 0,1% due decimali danno «0,00%» a una ventina di paesi e una
+        // cifra sola a un'ottantina: li si scrive con due cifre significative.
         $q = min(1.0, ($v / 12.0) ** 0.45);
-        return [$q, number_format($v, 2, ',', '.') . '%'];
+        $decimali = $v >= 0.1 || $v <= 0.0 ? 2 : min(6, 1 - (int) floor(log10($v)));
+        return [$q, number_format($v, $decimali, ',', '.') . '%'];
     }
 
     /** @return array{0:float,1:string} */

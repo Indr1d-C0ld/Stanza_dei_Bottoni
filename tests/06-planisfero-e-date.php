@@ -121,6 +121,54 @@ foreach (array_keys(Planisfero::LETTURE) as $l) {
     Prove::uguale("la lettura «{$l}» colora tutti", 3, count($x));
 }
 
+Prove::gruppo('Planisfero: i casi estremi stanno davvero agli estremi');
+
+// La pagina ordinava le code per colore, come testo. Sulla scala rosso-ocra-
+// verde il rosso piu' acceso sta nell'ocra di mezzo, e in fondo finivano i
+// paesi medi: la «coda peggiore» della legittimita' era a 49-50 su 100,
+// quella della tensione a «conflitto aperto» con sei paesi in guerra totale.
+$mondo = [];
+foreach (['A' => 5, 'B' => 48, 'C' => 50, 'D' => 52, 'E' => 10, 'F' => 95, 'G' => 20,
+          'H' => 90, 'I' => 30, 'L' => 85, 'M' => 49, 'N' => 80, 'O' => 70] as $iso => $leg) {
+    $mondo[] = ['codice' => $iso, 'legittimita' => $leg, 'influenza_totale' => 1.0,
+                'net_peace' => 2, 'qualita_vita' => 5, 'pressione_esterna' => 0.0];
+}
+$code = Planisfero::code($p->colori('legittimita', $mondo));
+Prove::uguale('i peggiori sono i cinque piu\' bassi, dal peggiore',
+    ['A', 'E', 'G', 'I', 'B'], $code['peggio']['righe']);
+Prove::uguale('i migliori sono i cinque piu\' alti, dal migliore',
+    ['F', 'H', 'L', 'N', 'O'], $code['meglio']['righe']);
+
+// Gli ex aequo: sei paesi in guerra totale non sono «cinque», e 186 paesi
+// senza sanzioni non sono i peggiori di nessuno.
+$guerra = [];
+foreach (['A' => 6, 'B' => 6, 'C' => 2, 'D' => 6, 'E' => 4, 'F' => 6, 'G' => 6, 'H' => 6, 'I' => 2] as $iso => $np) {
+    $guerra[] = ['codice' => $iso, 'legittimita' => 50, 'influenza_totale' => 1.0,
+                 'net_peace' => $np, 'qualita_vita' => 5, 'pressione_esterna' => $iso === 'E' ? 0.01 : 0.0];
+}
+$code = Planisfero::code($p->colori('tensione', $guerra));
+Prove::uguale('in guerra totale: cinque in tabella', ['A', 'B', 'D', 'F', 'G'], $code['peggio']['righe']);
+Prove::uguale('e il sesto contato a parte, non tagliato', ['H'], $code['peggio']['altri']);
+Prove::uguale('i migliori vengono dalla pace, e non ripescano chi e\' gia\' fra i peggiori',
+    ['C', 'I', 'E'], $code['meglio']['righe']);
+$code = Planisfero::code($p->colori('commercio', $guerra));
+Prove::uguale('fra le sanzioni il peggiore e\' solo chi ne ha', ['E'], $code['peggio']['righe']);
+Prove::uguale('e chi non ne ha sta tutto dall\'altra parte', 8,
+    count($code['meglio']['righe']) + count($code['meglio']['altri']));
+$code = Planisfero::code($p->colori('benessere', $guerra));
+Prove::uguale('se tutti stanno allo stesso valore non c\'e\' un peggiore', [], $code['peggio']['righe']);
+
+// Chi non ha rapporti con noi non e' ne' il piu' amico ne' il piu' ostile.
+$code = Planisfero::code($p->colori('rapporti', $guerra, ['A' => -90.0, 'B' => 40.0, 'C' => 75.0]));
+Prove::uguale('nei rapporti il peggiore e\' il piu\' ostile', 'A', $code['peggio']['righe'][0] ?? null);
+Prove::uguale('e il migliore il piu\' amico', 'C', $code['meglio']['righe'][0] ?? null);
+Prove::uguale('chi non ha rapporti non entra nelle code', 3,
+    count($code['peggio']['righe']) + count($code['meglio']['righe']));
+
+$x = $p->colori('influenza', [['codice' => 'TON', 'legittimita' => 50, 'influenza_totale' => 0.00056,
+    'net_peace' => 2, 'qualita_vita' => 5, 'pressione_esterna' => 0.0]]);
+Prove::uguale('l\'influenza dei piccoli non si scrive «0,00%»', '0,00056%', $x['TON']['valore']);
+
 Prove::gruppo('Le date si scrivono in italiano');
 
 // Una data in formato americano o ISO in mezzo a una pagina italiana non e'

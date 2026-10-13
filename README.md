@@ -420,7 +420,7 @@ scaduto.
 ```bash
 php bin/realismo.php --anni=15      # ventidue grandezze contro la loro fascia
 php bin/audit.php                   # che cosa è dichiarato e mai usato
-php bin/prova.php                   # cinquecentoventitré prove
+php bin/prova.php                   # cinquecentotrentacinque prove
 ```
 
 `bin/realismo.php` confronta ventidue grandezze con la fascia in cui il mondo
@@ -492,6 +492,13 @@ legittimità che tornava a 50 per tutti, le guerre civili nei paesi piccoli e
 poveri sbagliati. Adesso il seme legge il FMI e la Banca Mondiale, e le guerre
 civili seguono i coefficienti stimati da Fearon. Ventuno grandezze su ventuno in
 fascia, su otto mondi.
+
+**`docs/40-i-casi-estremi.md`** corregge la pagina del planisfero: «I casi
+estremi» ordinava i paesi per colore, come testo, e sulla scala rosso-ocra-verde
+il rosso più acceso sta nell'ocra di mezzo. Così dava per peggiori i paesi
+medi: il Vietnam a 49 su 100 di legittimità invece della Siria a 19, il
+«conflitto aperto» con sei paesi in guerra totale. Adesso si ordina sul valore,
+e chi sta alla pari si nomina o si conta.
 
 **`docs/39-la-partita-di-prova.md`** è tredici settimane all'Intelligence
 iraniana, in un ambiente isolato dal mondo vivo. Chi offriva denaro a un
@@ -625,7 +632,7 @@ struttura senza valori.
 php bin/tick.php              un passo del mondo
 php bin/simula.php            quindici anni a vuoto, con le statistiche
 php bin/diagnostica.php       la salute del modello
-php bin/prova.php             le prove automatiche (523, qualche minuto)
+php bin/prova.php             le prove automatiche (535, qualche minuto)
 php bin/realismo.php          ventidue grandezze contro le fonti
 php bin/audit.php             che cosa è dichiarato e mai usato
 php bin/migra.php             applica le migrazioni non ancora applicate
